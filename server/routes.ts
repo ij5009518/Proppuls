@@ -107,12 +107,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/units", async (req, res) => {
+    console.log("=== POST /api/units endpoint hit ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    
     try {
       const unitData = insertUnitSchema.parse(req.body);
+      console.log("Unit schema validation passed:", unitData);
       const unit = await storage.createUnit(unitData);
+      console.log("Unit created successfully:", unit);
       res.status(201).json(unit);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid unit data" });
+    } catch (error: any) {
+      console.error("=== ERROR in unit creation ===");
+      console.error("Error details:", error);
+      console.error("Error message:", error?.message);
+      res.status(400).json({ 
+        message: "Invalid unit data", 
+        error: error?.message || String(error),
+        details: error?.issues || error
+      });
     }
   });
 
@@ -141,12 +153,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/tenants", async (req, res) => {
+    console.log("=== POST /api/tenants endpoint hit ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    
     try {
       const tenantData = insertTenantSchema.parse(req.body);
+      console.log("Tenant schema validation passed:", tenantData);
       const tenant = await storage.createTenant(tenantData);
+      console.log("Tenant created successfully:", tenant);
       res.status(201).json(tenant);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid tenant data" });
+    } catch (error: any) {
+      console.error("=== ERROR in tenant creation ===");
+      console.error("Error details:", error);
+      console.error("Error message:", error?.message);
+      res.status(400).json({ 
+        message: "Invalid tenant data", 
+        error: error?.message || String(error),
+        details: error?.issues || error
+      });
     }
   });
 
