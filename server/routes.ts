@@ -11,15 +11,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("Request body:", JSON.stringify(req.body, null, 2));
     
     try {
-      const userData = insertUserSchema.parse(req.body);
+      // Validate the input data (password will be transformed to passwordHash in storage)
+      const inputData = insertUserSchema.parse(req.body);
       
       // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
+      const existingUser = await storage.getUserByEmail(inputData.email);
       if (existingUser) {
         return res.status(409).json({ message: "User already exists with this email" });
       }
       
-      const user = await storage.createUser(userData);
+      const user = await storage.createUser(inputData);
       const session = await storage.createSession(user.id);
       
       // Remove password hash from response
