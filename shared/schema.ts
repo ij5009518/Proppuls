@@ -110,7 +110,10 @@ export const insertPropertySchema = createInsertSchema(properties).omit({ id: tr
   purchaseDate: z.coerce.date(),
 });
 export const insertUnitSchema = createInsertSchema(units).omit({ id: true });
-export const insertTenantSchema = createInsertSchema(tenants).omit({ id: true });
+export const insertTenantSchema = createInsertSchema(tenants).omit({ id: true }).extend({
+  leaseStart: z.coerce.date().optional().nullable(),
+  leaseEnd: z.coerce.date().optional().nullable(),
+});
 export const insertMortgageSchema = createInsertSchema(mortgages).omit({ id: true });
 export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true });
 export const insertVendorSchema = createInsertSchema(vendors).omit({ id: true });
