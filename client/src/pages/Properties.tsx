@@ -111,6 +111,52 @@ export default function Properties() {
     },
   });
 
+  // Mortgage payment calculator function
+  const calculateMortgagePayments = (principal: number, interestRate: number, termYears: number) => {
+    const monthlyRate = interestRate / 100 / 12;
+    const numPayments = termYears * 12;
+    
+    // Calculate monthly payment using amortization formula
+    const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+                          (Math.pow(1 + monthlyRate, numPayments) - 1);
+    
+    // Calculate first month's interest and principal
+    const firstMonthInterest = principal * monthlyRate;
+    const firstMonthPrincipal = monthlyPayment - firstMonthInterest;
+    
+    return {
+      monthlyPayment: monthlyPayment.toFixed(2),
+      principalAmount: firstMonthPrincipal.toFixed(2),
+      interestAmount: firstMonthInterest.toFixed(2)
+    };
+  };
+
+  // Auto-calculate when key fields change
+  const watchedValues = mortgageForm.watch(["originalAmount", "interestRate", "termYears"]);
+  
+  const handleAutoCalculate = () => {
+    const [originalAmount, interestRate, termYears] = watchedValues;
+    
+    if (originalAmount && interestRate && termYears) {
+      const principal = parseFloat(originalAmount);
+      const rate = parseFloat(interestRate);
+      const years = parseInt(termYears.toString());
+      
+      if (principal > 0 && rate > 0 && years > 0) {
+        const calculations = calculateMortgagePayments(principal, rate, years);
+        
+        mortgageForm.setValue("monthlyPayment", calculations.monthlyPayment);
+        mortgageForm.setValue("principalAmount", calculations.principalAmount);
+        mortgageForm.setValue("interestAmount", calculations.interestAmount);
+        
+        // Auto-set current balance to original amount if not set
+        if (!mortgageForm.getValues("currentBalance")) {
+          mortgageForm.setValue("currentBalance", originalAmount);
+        }
+      }
+    }
+  };
+
   const editForm = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
@@ -1190,7 +1236,15 @@ export default function Properties() {
                       <FormItem>
                         <FormLabel>Original Loan Amount</FormLabel>
                         <FormControl>
-                          <Input placeholder="285000" {...field} />
+                          <Input 
+                            placeholder="285000" 
+                            {...field} 
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Trigger auto-calculation after a short delay
+                              setTimeout(handleAutoCalculate, 100);
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1216,7 +1270,14 @@ export default function Properties() {
                       <FormItem>
                         <FormLabel>Interest Rate (%)</FormLabel>
                         <FormControl>
-                          <Input placeholder="4.25" {...field} />
+                          <Input 
+                            placeholder="4.25" 
+                            {...field} 
+                            onChange={(e) => {
+                              field.onChange(e);
+                              setTimeout(handleAutoCalculate, 100);
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1235,7 +1296,10 @@ export default function Properties() {
                             type="number" 
                             placeholder="30" 
                             {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                            onChange={(e) => {
+                              field.onChange(parseInt(e.target.value) || 0);
+                              setTimeout(handleAutoCalculate, 100);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -1260,6 +1324,19 @@ export default function Properties() {
                       </FormItem>
                     )}
                   />
+                </div>
+                
+                {/* Auto-Calculate Button */}
+                <div className="flex justify-center">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleAutoCalculate}
+                    className="flex items-center gap-2"
+                  >
+                    <Calculator className="h-4 w-4" />
+                    Calculate Monthly Payments
+                  </Button>
                 </div>
               </div>
 
@@ -1321,8 +1398,10 @@ export default function Properties() {
                   />
                 </div>
                 <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
-                  <strong>Tip:</strong> Principal goes toward paying down the loan balance, interest is the cost of borrowing, 
-                  and escrow covers property taxes and insurance. Make sure these amounts add up to your total monthly payment!
+                  <strong>💡 Smart Calculator:</strong> The payment amounts above are automatically calculated as you type! 
+                  Based on your loan amount, interest rate, and term, we compute the exact monthly payment breakdown.
+                  <br />
+                  <strong>Tip:</strong> Principal builds equity, interest is the cost of borrowing, and escrow covers taxes/insurance.
                 </div>
               </div>
 
