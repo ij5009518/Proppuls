@@ -21,6 +21,8 @@ export default function Units() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -363,7 +365,14 @@ export default function Units() {
                         {formatCurrency(unit.rentAmount)}
                       </p>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedUnit(unit);
+                        setIsDetailDialogOpen(true);
+                      }}
+                    >
                       View Details
                     </Button>
                   </div>
@@ -388,6 +397,51 @@ export default function Units() {
           </p>
         </div>
       )}
+
+      {/* Unit Details Modal */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Unit Details</DialogTitle>
+          </DialogHeader>
+          {selectedUnit && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Unit Number</label>
+                  <p className="text-lg font-semibold">{selectedUnit.unitNumber}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Property</label>
+                  <p className="text-lg">{properties?.find(p => p.id === selectedUnit.propertyId)?.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Bedrooms</label>
+                  <p className="text-lg">{selectedUnit.bedrooms}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Bathrooms</label>
+                  <p className="text-lg">{selectedUnit.bathrooms}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Square Footage</label>
+                  <p className="text-lg">{selectedUnit.squareFootage ? `${selectedUnit.squareFootage} sq ft` : 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Monthly Rent</label>
+                  <p className="text-lg font-semibold text-green-600">{formatCurrency(selectedUnit.rentAmount)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <p className={`text-lg font-medium ${getStatusColor(selectedUnit.status)}`}>
+                    {selectedUnit.status.charAt(0).toUpperCase() + selectedUnit.status.slice(1)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
