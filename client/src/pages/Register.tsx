@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate, Link } from "react-router-dom";
+import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { Home, Eye, EyeOff } from "lucide-react";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const registerMutation = useMutation({
@@ -36,7 +36,7 @@ export default function Register() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       toast({ title: "Registration successful! Welcome to PropertyFlow!" });
-      navigate("/");
+      setLocation("/");
     },
     onError: (error: Error) => {
       toast({ 

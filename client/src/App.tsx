@@ -1,39 +1,43 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
+import { Route, Switch } from "wouter";
 import Layout from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Properties from "@/pages/Properties";
 import Units from "@/pages/Units";
 import Tenants from "@/pages/Tenants";
-import Mortgages from "@/pages/Mortgages";
 import Maintenance from "@/pages/Maintenance";
 import Vendors from "@/pages/Vendors";
 import Financials from "@/pages/Financials";
 import Reports from "@/pages/Reports";
+import Users from "@/pages/Users";
+import Mortgages from "@/pages/Mortgages";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import NotFound from "@/pages/not-found";
+
+const queryClient = new QueryClient();
 
 function Router() {
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/properties" component={Properties} />
-        <Route path="/units" component={Units} />
-        <Route path="/tenants" component={Tenants} />
-        <Route path="/mortgages" component={Mortgages} />
-        <Route path="/maintenance" component={Maintenance} />
-        <Route path="/vendors" component={Vendors} />
-        <Route path="/financials" component={Financials} />
-        <Route path="/reports" component={Reports} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/" component={() => <Layout><Dashboard /></Layout>} />
+      <Route path="/properties" component={() => <Layout><Properties /></Layout>} />
+      <Route path="/units" component={() => <Layout><Units /></Layout>} />
+      <Route path="/tenants" component={() => <Layout><Tenants /></Layout>} />
+      <Route path="/maintenance" component={() => <Layout><Maintenance /></Layout>} />
+      <Route path="/vendors" component={() => <Layout><Vendors /></Layout>} />
+      <Route path="/financials" component={() => <Layout><Financials /></Layout>} />
+      <Route path="/reports" component={() => <Layout><Reports /></Layout>} />
+      <Route path="/users" component={() => <Layout><Users /></Layout>} />
+      <Route path="/mortgages" component={() => <Layout><Mortgages /></Layout>} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>

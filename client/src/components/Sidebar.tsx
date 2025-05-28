@@ -9,8 +9,12 @@ import {
   TrendingUp, 
   FileText,
   BarChart3,
-  DollarSign
+  DollarSign,
+  LogIn,
+  LogOut,
+  UserPlus
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -78,20 +82,53 @@ export default function Sidebar({ onClose }: SidebarProps) {
         </nav>
       </div>
 
-      <div className="flex-shrink-0 flex border-t border-slate-200 dark:border-sidebar-border p-4">
-        <div className="flex items-center">
-          <div className="w-8 h-8 bg-slate-300 dark:bg-sidebar-accent rounded-full flex items-center justify-center">
-            <Users className="text-slate-600 dark:text-sidebar-accent-foreground h-4 w-4" />
+      <div className="flex-shrink-0 border-t border-slate-200 dark:border-sidebar-border p-4">
+        {/* Check if user is logged in */}
+        {localStorage.getItem("token") ? (
+          <div className="space-y-3">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-slate-300 dark:bg-sidebar-accent rounded-full flex items-center justify-center">
+                <Users className="text-slate-600 dark:text-sidebar-accent-foreground h-4 w-4" />
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-slate-700 dark:text-sidebar-foreground">
+                  {JSON.parse(localStorage.getItem("user") || "{}").firstName || "User"}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-sidebar-foreground/70">
+                  {JSON.parse(localStorage.getItem("user") || "{}").email || "user@example.com"}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                window.location.href = "/login";
+              }}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-slate-700 dark:text-sidebar-foreground">
-              John Manager
-            </p>
-            <p className="text-xs text-slate-500 dark:text-sidebar-foreground/70">
-              john@propertyflow.com
-            </p>
+        ) : (
+          <div className="space-y-2">
+            <Link href="/login">
+              <Button variant="outline" size="sm" className="w-full">
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button variant="default" size="sm" className="w-full">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Sign Up
+              </Button>
+            </Link>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
