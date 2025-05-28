@@ -689,14 +689,14 @@ export default function Properties() {
                 </div>
               </TabsContent>
 
-              {/* Mortgage Information Tab */}
+              {/* Enhanced Mortgage Information Tab */}
               <TabsContent value="mortgage" className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Mortgage Information</h3>
+                  <h3 className="text-lg font-semibold">Mortgage Details & Payment Breakdown</h3>
                   <Button size="sm" onClick={() => {
                     toast({
-                      title: "Feature Coming Soon",
-                      description: "Mortgage management interface will be available soon.",
+                      title: "Add Mortgage",
+                      description: "Mortgage creation form will be available soon.",
                     });
                   }}>
                     <Plus className="h-4 w-4 mr-2" />
@@ -709,10 +709,13 @@ export default function Properties() {
                     <CardContent className="p-6 text-center">
                       <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground mb-4">No mortgage information found for this property.</p>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Add mortgage details to track monthly payments, principal/interest breakdown, and escrow information.
+                      </p>
                       <Button onClick={() => {
                         toast({
-                          title: "Feature Coming Soon",
-                          description: "Mortgage tracking will be available soon.",
+                          title: "Add Mortgage",
+                          description: "Mortgage creation form will be available soon.",
                         });
                       }}>
                         Add Mortgage Details
@@ -720,31 +723,147 @@ export default function Properties() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid gap-4">
+                  <div className="space-y-6">
                     {getPropertyMortgages(selectedProperty.id).map((mortgage) => (
-                      <Card key={mortgage.id}>
-                        <CardHeader>
-                          <CardTitle>Mortgage Details</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-sm font-medium">Original Amount</label>
-                            <p className="text-lg font-semibold">{formatCurrency(mortgage.originalAmount)}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">Interest Rate</label>
-                            <p className="text-lg font-semibold">{mortgage.interestRate}%</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">Term</label>
-                            <p className="text-lg font-semibold">{mortgage.termYears} years</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">Monthly Payment</label>
-                            <p className="text-lg font-semibold text-red-600">{formatCurrency(mortgage.monthlyPayment)}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <div key={mortgage.id} className="space-y-4">
+                        {/* Mortgage Overview Card */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center justify-between">
+                              <span>Mortgage Details - {mortgage.lender}</span>
+                              <Badge variant="outline">{mortgage.accountNumber || "Account Info Needed"}</Badge>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground">Original Amount</label>
+                                <p className="text-lg font-semibold">{formatCurrency(mortgage.originalAmount)}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground">Current Balance</label>
+                                <p className="text-lg font-semibold text-orange-600">{formatCurrency(mortgage.currentBalance)}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground">Interest Rate</label>
+                                <p className="text-lg font-semibold">{mortgage.interestRate}%</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-muted-foreground">Term</label>
+                                <p className="text-lg font-semibold">{mortgage.termYears} years</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Monthly Payment Breakdown Card */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Calculator className="h-5 w-5" />
+                              Monthly Payment Breakdown
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                              {/* Total Payment */}
+                              <div className="text-center p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                <label className="text-sm font-medium text-muted-foreground">Total Monthly Payment</label>
+                                <p className="text-2xl font-bold text-blue-600">{formatCurrency(mortgage.monthlyPayment)}</p>
+                              </div>
+                              
+                              {/* Principal */}
+                              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                <label className="text-sm font-medium text-muted-foreground">Principal</label>
+                                <p className="text-xl font-semibold text-green-600">{formatCurrency(mortgage.principalAmount)}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {((parseFloat(mortgage.principalAmount) / parseFloat(mortgage.monthlyPayment)) * 100).toFixed(1)}%
+                                </p>
+                              </div>
+                              
+                              {/* Interest */}
+                              <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                <label className="text-sm font-medium text-muted-foreground">Interest</label>
+                                <p className="text-xl font-semibold text-red-600">{formatCurrency(mortgage.interestAmount)}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {((parseFloat(mortgage.interestAmount) / parseFloat(mortgage.monthlyPayment)) * 100).toFixed(1)}%
+                                </p>
+                              </div>
+                              
+                              {/* Escrow */}
+                              <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                                <label className="text-sm font-medium text-muted-foreground">Escrow</label>
+                                <p className="text-xl font-semibold text-orange-600">
+                                  {formatCurrency(mortgage.escrowAmount || '0')}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {mortgage.escrowAmount ? 
+                                    ((parseFloat(mortgage.escrowAmount) / parseFloat(mortgage.monthlyPayment)) * 100).toFixed(1) + '%' : 
+                                    '0%'
+                                  }
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Payment Progress Bar */}
+                            <div className="mt-6">
+                              <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                                <span>Loan Progress</span>
+                                <span>
+                                  {formatCurrency(parseFloat(mortgage.originalAmount) - parseFloat(mortgage.currentBalance))} of {formatCurrency(mortgage.originalAmount)} paid
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                                <div 
+                                  className="bg-green-600 h-3 rounded-full transition-all duration-300" 
+                                  style={{ 
+                                    width: `${((parseFloat(mortgage.originalAmount) - parseFloat(mortgage.currentBalance)) / parseFloat(mortgage.originalAmount)) * 100}%` 
+                                  }}
+                                ></div>
+                              </div>
+                              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                <span>
+                                  {(((parseFloat(mortgage.originalAmount) - parseFloat(mortgage.currentBalance)) / parseFloat(mortgage.originalAmount)) * 100).toFixed(1)}% paid
+                                </span>
+                                <span>Started: {formatDate(mortgage.startDate)}</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Amortization Summary */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Loan Summary</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <label className="font-medium text-muted-foreground">Remaining Balance</label>
+                                <p className="text-lg font-semibold text-orange-600">{formatCurrency(mortgage.currentBalance)}</p>
+                              </div>
+                              <div>
+                                <label className="font-medium text-muted-foreground">Total Interest Paid</label>
+                                <p className="text-lg font-semibold text-red-600">
+                                  {formatCurrency((parseFloat(mortgage.originalAmount) - parseFloat(mortgage.currentBalance)) * 0.7)} {/* Rough estimate */}
+                                </p>
+                              </div>
+                              <div>
+                                <label className="font-medium text-muted-foreground">Estimated Payoff</label>
+                                <p className="text-lg font-semibold">
+                                  {new Date(new Date(mortgage.startDate).getTime() + (mortgage.termYears * 365 * 24 * 60 * 60 * 1000)).getFullYear()}
+                                </p>
+                              </div>
+                            </div>
+                            {mortgage.notes && (
+                              <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded">
+                                <label className="font-medium text-sm text-muted-foreground">Notes</label>
+                                <p className="text-sm mt-1">{mortgage.notes}</p>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
                     ))}
                   </div>
                 )}

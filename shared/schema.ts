@@ -136,6 +136,7 @@ export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true 
 export const insertVendorSchema = createInsertSchema(vendors).omit({ id: true });
 export const insertMaintenanceRequestSchema = createInsertSchema(maintenanceRequests).omit({ id: true });
 export const insertRevenueSchema = createInsertSchema(revenues).omit({ id: true });
+export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments).omit({ id: true });
 
 // Types
 export type Property = typeof properties.$inferSelect;
@@ -154,6 +155,8 @@ export type MaintenanceRequest = typeof maintenanceRequests.$inferSelect;
 export type InsertMaintenanceRequest = z.infer<typeof insertMaintenanceRequestSchema>;
 export type Revenue = typeof revenues.$inferSelect;
 export type InsertRevenue = z.infer<typeof insertRevenueSchema>;
+export type MortgagePayment = typeof mortgagePayments.$inferSelect;
+export type InsertMortgagePayment = z.infer<typeof insertMortgagePaymentSchema>;
 
 // Dashboard types
 export type DashboardKPIs = {
