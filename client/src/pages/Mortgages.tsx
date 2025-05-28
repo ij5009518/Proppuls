@@ -160,15 +160,23 @@ export default function Mortgages() {
                     <Badge variant="outline">
                       {formatPercent(parseFloat(mortgage.interestRate))}
                     </Badge>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => deleteMutation.mutate(mortgage.id)}
-                      disabled={deleteMutation.isPending}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => deleteMutation.mutate(mortgage.id)}
+                        disabled={deleteMutation.isPending}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
