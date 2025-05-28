@@ -400,8 +400,18 @@ export default function Tenants() {
                   <p className="text-sm text-gray-600">{tenant.email}</p>
                   <p className="text-sm text-gray-600">{tenant.phone}</p>
                   <p className="text-sm">
-                    <span className="font-semibold">Unit:</span> {getUnitNumber(tenant.unitId)}
-                  </p>
+                    <span className="font-semibold">Unit:</span> 
+                    {tenant.unitId ? (
+                      <button
+                        onClick={() => window.location.href = '/units'}
+                        className="ml-1 text-blue-600 hover:underline"
+                      >
+                        {getUnitNumber(tenant.unitId)}
+                      </button>
+                    ) : (
+                      <span className="ml-1">{getUnitNumber(tenant.unitId)}</span>
+                    )}
+                  </p></div>
                   {tenant.monthlyRent && (
                     <p className="text-sm">
                       <span className="font-semibold">Rent:</span> {formatCurrency(tenant.monthlyRent)}
@@ -447,7 +457,16 @@ export default function Tenants() {
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="text-right">
-                      <p className="text-sm font-semibold">{getUnitNumber(tenant.unitId)}</p>
+                      {tenant.unitId ? (
+                        <button
+                          onClick={() => window.location.href = '/units'}
+                          className="text-sm font-semibold text-blue-600 hover:underline"
+                        >
+                          {getUnitNumber(tenant.unitId)}
+                        </button>
+                      ) : (
+                        <p className="text-sm font-semibold">{getUnitNumber(tenant.unitId)}</p>
+                      )}</div>
                       {tenant.monthlyRent && (
                         <p className="text-sm text-gray-600">{formatCurrency(tenant.monthlyRent)}</p>
                       )}

@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency, getStatusColor } from "@/lib/utils";
+import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Unit, InsertUnit, Property, Tenant } from "@shared/schema";
 
@@ -405,7 +405,12 @@ export default function Units() {
                         <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
                           Current Tenant
                         </p>
-                        <p className="text-sm">{tenant.firstName} {tenant.lastName}</p>
+                        <button
+                          onClick={() => window.location.href = '/tenants'}
+                          className="text-sm hover:underline text-left w-full"
+                        >
+                          {tenant.firstName} {tenant.lastName}
+                        </button>
                         <p className="text-xs text-muted-foreground">{tenant.email}</p>
                       </div>
                     ) : (
@@ -413,7 +418,7 @@ export default function Units() {
                         <p className="text-sm text-muted-foreground">No tenant assigned</p>
                       </div>
                     );
-                  })()}
+                  })()}</div>
                 </div>
                 <div className="flex justify-end space-x-2 mt-4">
                   <Button size="sm" variant="outline" onClick={() => handleView(unit)}>
@@ -454,13 +459,16 @@ export default function Units() {
                       {(() => {
                         const tenant = getTenantForUnit(unit.id);
                         return tenant ? (
-                          <p className="text-xs text-blue-600">
+                          <button
+                            onClick={() => window.location.href = '/tenants'}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
                             {tenant.firstName} {tenant.lastName}
-                          </p>
+                          </button>
                         ) : (
                           <p className="text-xs text-muted-foreground">No tenant</p>
                         );
-                      })()}
+                      })()}</div>
                     </div>
                     <div className="flex space-x-2">
                       <Button size="sm" variant="outline" onClick={() => handleView(unit)}>
