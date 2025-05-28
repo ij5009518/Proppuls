@@ -8,7 +8,8 @@ import {
   HandHeart, 
   TrendingUp, 
   FileText,
-  BarChart3
+  BarChart3,
+  DollarSign
 } from "lucide-react";
 
 interface SidebarProps {
