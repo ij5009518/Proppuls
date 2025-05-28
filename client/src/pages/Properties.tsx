@@ -78,15 +78,24 @@ export default function Properties() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: InsertProperty) => apiRequest("/api/properties", "POST", data),
+    mutationFn: async (data: InsertProperty) => {
+      try {
+        const response = await apiRequest("/api/properties", "POST", data);
+        return response.json();
+      } catch (error) {
+        console.error("API request failed:", error);
+        throw error;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
       setIsCreateDialogOpen(false);
       createForm.reset();
       toast({ title: "Property created successfully" });
     },
-    onError: () => {
-      toast({ title: "Failed to create property", variant: "destructive" });
+    onError: (error) => {
+      console.error("Create property error:", error);
+      toast({ title: "Failed to create property", description: error.message, variant: "destructive" });
     },
   });
 
