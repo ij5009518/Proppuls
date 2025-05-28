@@ -847,7 +847,7 @@ export default function Properties() {
                               {/* Principal */}
                               <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                                 <label className="text-sm font-medium text-muted-foreground">Principal</label>
-                                <p className="text-xl font-semibold text-green-600">{formatCurrency(mortgage.principalAmount)}</div>
+                                <p className="text-xl font-semibold text-green-600">{formatCurrency(mortgage.principalAmount)}</p>
                                 <p className="text-xs text-muted-foreground">
                                   {((parseFloat(mortgage.principalAmount) / parseFloat(mortgage.monthlyPayment)) * 100).toFixed(1)}%
                                 </p>
