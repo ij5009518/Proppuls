@@ -221,12 +221,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/mortgages", async (req, res) => {
+    console.log("=== POST /api/mortgages endpoint hit ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    
     try {
       const mortgageData = insertMortgageSchema.parse(req.body);
+      console.log("Schema validation passed:", mortgageData);
       const mortgage = await storage.createMortgage(mortgageData);
+      console.log("Mortgage created successfully:", mortgage);
       res.status(201).json(mortgage);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid mortgage data" });
+    } catch (error: any) {
+      console.error("=== ERROR in mortgage creation ===");
+      console.error("Error details:", error);
+      if (error.errors) {
+        console.error("Validation errors:", error.errors);
+      }
+      res.status(400).json({ message: "Invalid mortgage data", error: error.message });
     }
   });
 
