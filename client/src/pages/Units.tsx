@@ -79,7 +79,8 @@ export default function Units() {
       createForm.reset();
       toast({ title: "Unit created successfully" });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Create unit error:", error);
       toast({ title: "Failed to create unit", variant: "destructive" });
     },
   });
@@ -110,7 +111,17 @@ export default function Units() {
   });
 
   const onCreateSubmit = (data: UnitFormData) => {
-    createMutation.mutate(data);
+    console.log("Unit form data being submitted:", data);
+    // Ensure proper data formatting for database
+    const formattedData = {
+      ...data,
+      propertyId: Number(data.propertyId),
+      bedrooms: Number(data.bedrooms),
+      rentAmount: data.rentAmount.toString(),
+      bathrooms: data.bathrooms.toString(),
+    };
+    console.log("Formatted unit data:", formattedData);
+    createMutation.mutate(formattedData);
   };
 
   const onEditSubmit = (data: UnitFormData) => {
