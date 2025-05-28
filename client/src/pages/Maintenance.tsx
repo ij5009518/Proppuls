@@ -238,14 +238,14 @@ export default function Maintenance() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tenant (Optional)</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(value ? Number(value) : null)} defaultValue={field.value?.toString()}>
+                      <Select onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))} defaultValue={field.value?.toString() || "none"}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select tenant" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No tenant</SelectItem>
+                          <SelectItem value="none">No tenant</SelectItem>
                           {tenants?.map((tenant) => (
                             <SelectItem key={tenant.id} value={tenant.id.toString()}>
                               {tenant.firstName} {tenant.lastName}
