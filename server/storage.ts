@@ -94,6 +94,53 @@ export interface IStorage {
   getMonthlyRevenueData(): Promise<{ month: string; revenue: number }[]>;
 }
 
+import { drizzle } from "drizzle-orm/node-postgres";
+import pkg from "pg";
+const { Pool } = pkg;
+import bcrypt from "bcrypt";
+import { nanoid } from "nanoid";
+import {
+  properties,
+  units,
+  tenants,
+  mortgages,
+  expenses,
+  vendors,
+  maintenanceRequests,
+  revenues,
+  mortgagePayments,
+  users,
+  sessions,
+  type Property,
+  type Unit,
+  type Tenant,
+  type Mortgage,
+  type Expense,
+  type Vendor,
+  type MaintenanceRequest,
+  type Revenue,
+  type MortgagePayment,
+  type User,
+  type Session,
+  type PropertyWithStats,
+  type ExpenseByCategory,
+  type DashboardKPIs,
+  type InsertProperty,
+  type InsertUnit,
+  type InsertTenant,
+  type InsertMortgage,
+  type InsertExpense,
+  type InsertVendor,
+  type InsertMaintenanceRequest,
+  type InsertRevenue,
+  type InsertMortgagePayment,
+  type InsertUser,
+  type InsertSession,
+  type LoginCredentials,
+} from "@shared/schema";
+
+import { eq, desc } from "drizzle-orm";
+
 export class MemStorage implements IStorage {
   private properties: Map<number, Property> = new Map();
   private units: Map<number, Unit> = new Map();
@@ -104,7 +151,7 @@ export class MemStorage implements IStorage {
   private vendors: Map<number, Vendor> = new Map();
   private maintenanceRequests: Map<number, MaintenanceRequest> = new Map();
   private revenues: Map<number, Revenue> = new Map();
-  
+
   private propertyIdCounter = 1;
   private unitIdCounter = 1;
   private tenantIdCounter = 1;
@@ -504,11 +551,82 @@ export class MemStorage implements IStorage {
     return this.revenues.delete(id);
   }
 
-  // Dashboard and Analytics
+  // Users and Authentication
+  async createUser(userData: InsertUser): Promise<User> {
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(userData.password, saltRounds);
+
+    // Simulate database insertion
+    const newUser: User = {
+      id: 1, // Mock ID
+      ...userData,
+      passwordHash,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastLoginAt: new Date(),
+      isActive: true,
+    };
+
+    return newUser;
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    // Simulate database query
+    return null;
+  }
+
+  async getUserById(id: number): Promise<User | null> {
+    // Simulate database query
+    return null;
+  }
+
+  async validateUser(credentials: LoginCredentials): Promise<User | null> {
+    // Simulate database validation
+    return null;
+  }
+
+  async createSession(userId: number): Promise<Session> {
+    const sessionId = nanoid(32);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
+
+    // Simulate session creation
+    const newSession: Session = {
+      id: sessionId,
+      userId,
+      expiresAt,
+    };
+
+    return newSession;
+  }
+
+  async getSessionById(sessionId: string): Promise<(Session & { user: User }) | null> {
+    // Simulate session retrieval
+    return null;
+  }
+
+  async deleteSession(sessionId: string): Promise<boolean> {
+    // Simulate session deletion
+    return false;
+  }
+
+  async getUsers(): Promise<User[]> {
+    return [];
+  }
+
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | null> {
+    return null;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    return false;
+  }
+
+  // Dashboard
   async getDashboardKPIs(): Promise<DashboardKPIs> {
     const revenues = await this.getRevenues();
     const totalRevenue = revenues.reduce((sum, rev) => sum + parseFloat(rev.amount), 0);
-    
+
     const properties = await this.getProperties();
     const units = await this.getUnits();
     const occupiedUnits = units.filter(unit => unit.status === "occupied").length;
@@ -537,7 +655,7 @@ export class MemStorage implements IStorage {
       const units = await this.getUnitsByProperty(property.id);
       const occupiedUnits = units.filter(unit => unit.status === "occupied").length;
       const occupancyRate = units.length > 0 ? (occupiedUnits / units.length) * 100 : 0;
-      
+
       const revenues = await this.getRevenuesByProperty(property.id);
       const monthlyRevenue = revenues
         .filter(rev => rev.date.getMonth() === new Date().getMonth())

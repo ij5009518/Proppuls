@@ -8,8 +8,7 @@ import {
   HandHeart, 
   TrendingUp, 
   FileText,
-  BarChart3,
-  DollarSign
+  BarChart3
 } from "lucide-react";
 
 interface SidebarProps {
@@ -44,12 +43,12 @@ export default function Sidebar({ onClose }: SidebarProps) {
             </h1>
           </div>
         </div>
-        
+
         <nav className="mt-8 flex-1 px-2 space-y-1">
           {navigation.map((item) => {
             const isActive = location === item.href;
             const Icon = item.icon;
-            
+
             return (
               <Link
                 key={item.name}
@@ -77,7 +76,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
           })}
         </nav>
       </div>
-      
+
       <div className="flex-shrink-0 flex border-t border-slate-200 dark:border-sidebar-border p-4">
         <div className="flex items-center">
           <div className="w-8 h-8 bg-slate-300 dark:bg-sidebar-accent rounded-full flex items-center justify-center">

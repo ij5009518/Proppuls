@@ -2,6 +2,28 @@ import { pgTable, text, serial, integer, boolean, decimal, timestamp, json } fro
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  role: text("role").notNull().default("tenant"), // admin, manager, tenant
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  lastLoginAt: timestamp("last_login_at"),
+  phone: text("phone"),
+  address: text("address"),
+});
+
+export const sessions = pgTable("sessions", {
+  id: text("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const properties = pgTable("properties", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -123,6 +145,14 @@ export const mortgagePayments = pgTable("mortgage_payments", {
 });
 
 // Insert schemas
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true, lastLoginAt: true }).extend({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+export const insertSessionSchema = createInsertSchema(sessions).omit({ createdAt: true });
+export const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
 export const insertPropertySchema = createInsertSchema(properties).omit({ id: true }).extend({
   purchaseDate: z.coerce.date(),
 });
@@ -141,6 +171,11 @@ export const insertRevenueSchema = createInsertSchema(revenues).omit({ id: true 
 export const insertMortgagePaymentSchema = createInsertSchema(mortgagePayments).omit({ id: true });
 
 // Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type LoginCredentials = z.infer<typeof loginSchema>;
+export type Session = typeof sessions.$inferSelect;
+export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type Property = typeof properties.$inferSelect;
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
 export type Unit = typeof units.$inferSelect;
