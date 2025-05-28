@@ -218,10 +218,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/maintenance-requests", async (req, res) => {
     try {
+      console.log("Maintenance request data received:", req.body);
       const requestData = insertMaintenanceRequestSchema.parse(req.body);
       const request = await storage.createMaintenanceRequest(requestData);
       res.status(201).json(request);
     } catch (error) {
+      console.log("Validation error:", error);
       res.status(400).json({ message: "Invalid maintenance request data" });
     }
   });
