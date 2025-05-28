@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Grid, List, Eye, Edit, Trash2, Upload } from "lucide-react";
+import { Plus, Grid, List, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +38,7 @@ export default function Properties() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { toast } = useToast();
 
   const { data: properties = [], isLoading } = useQuery<Property[]>({
@@ -153,73 +153,7 @@ export default function Properties() {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
 
-    if (!file.name.endsWith('.csv')) {
-      toast({ 
-        title: "Invalid file type", 
-        description: "Please upload a CSV file",
-        variant: "destructive" 
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const csv = e.target?.result as string;
-      const lines = csv.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
-      
-      // Expected headers: name,address,city,state,zipCode,totalUnits,purchasePrice,purchaseDate,propertyType,status
-      const expectedHeaders = ['name', 'address', 'city', 'state', 'zipCode', 'totalUnits', 'purchasePrice', 'purchaseDate', 'propertyType', 'status'];
-      const isValidFormat = expectedHeaders.every(header => headers.includes(header));
-      
-      if (!isValidFormat) {
-        toast({ 
-          title: "Invalid CSV format", 
-          description: "CSV must have columns: name, address, city, state, zipCode, totalUnits, purchasePrice, purchaseDate, propertyType, status",
-          variant: "destructive" 
-        });
-        return;
-      }
-
-      const properties = lines.slice(1)
-        .filter(line => line.trim())
-        .map(line => {
-          const values = line.split(',').map(v => v.trim());
-          const property: any = {};
-          headers.forEach((header, index) => {
-            property[header] = values[index];
-          });
-          
-          // Convert numeric fields
-          property.totalUnits = parseInt(property.totalUnits);
-          property.purchaseDate = new Date(property.purchaseDate);
-          
-          return property;
-        });
-
-      // Upload each property
-      let successCount = 0;
-      properties.forEach((property, index) => {
-        setTimeout(() => {
-          createMutation.mutate(property, {
-            onSuccess: () => {
-              successCount++;
-              if (successCount === properties.length) {
-                toast({ title: `Successfully uploaded ${successCount} properties` });
-              }
-            }
-          });
-        }, index * 100); // Stagger requests
-      });
-    };
-    
-    reader.readAsText(file);
-    if (event.target) event.target.value = '';
-  };
 
   const filteredProperties = properties.filter(
     (property) =>
@@ -234,31 +168,15 @@ export default function Properties() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Properties</h1>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Bulk Upload
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Property
-              </Button>
-            </DialogTrigger>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Property
+            </Button>
+          </DialogTrigger>
             <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Property</DialogTitle>
@@ -690,7 +608,6 @@ export default function Properties() {
           </Form>
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   );
 }
