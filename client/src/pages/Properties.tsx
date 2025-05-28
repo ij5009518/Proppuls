@@ -114,7 +114,7 @@ export default function Properties() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/properties/${id}`, "DELETE"),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/properties/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
       toast({ title: "Property deleted successfully" });

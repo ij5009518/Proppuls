@@ -72,7 +72,7 @@ export default function Units() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: InsertUnit) => apiRequest("/api/units", "POST", data),
+    mutationFn: (data: InsertUnit) => apiRequest("POST", "/api/units", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
       setIsCreateDialogOpen(false);
@@ -87,7 +87,7 @@ export default function Units() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertUnit> }) =>
-      apiRequest(`/api/units/${id}`, "PATCH", data),
+      apiRequest("PATCH", `/api/units/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
       setIsEditDialogOpen(false);
@@ -100,7 +100,7 @@ export default function Units() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/units/${id}`, "DELETE"),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/units/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
       toast({ title: "Unit deleted successfully" });
