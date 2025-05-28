@@ -1,13 +1,43 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { DollarSign, Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { DollarSign, Plus, Eye, Edit, Trash2, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatPercent } from "@/lib/utils";
-import type { Mortgage, Property } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Mortgage, Property, InsertMortgage } from "@shared/schema";
+
+const mortgageSchema = z.object({
+  propertyId: z.number().min(1, "Property is required"),
+  lender: z.string().min(1, "Lender is required"),
+  originalAmount: z.string().min(1, "Original amount is required"),
+  currentBalance: z.string().min(1, "Current balance is required"),
+  interestRate: z.string().min(1, "Interest rate is required"),
+  monthlyPayment: z.string().min(1, "Monthly payment is required"),
+  principalAmount: z.string().min(1, "Principal amount is required"),
+  interestAmount: z.string().min(1, "Interest amount is required"),
+  escrowAmount: z.string().optional(),
+  startDate: z.date(),
+  termYears: z.number().min(1, "Term must be at least 1 year"),
+  accountNumber: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type MortgageFormData = z.infer<typeof mortgageSchema>;
 
 export default function Mortgages() {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { toast } = useToast();
+
   const { data: mortgages = [] } = useQuery<Mortgage[]>({
     queryKey: ["/api/mortgages"],
   });
@@ -15,6 +45,53 @@ export default function Mortgages() {
   const { data: properties = [] } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
   });
+
+  const form = useForm<MortgageFormData>({
+    resolver: zodResolver(mortgageSchema),
+    defaultValues: {
+      propertyId: 0,
+      lender: "",
+      originalAmount: "",
+      currentBalance: "",
+      interestRate: "",
+      monthlyPayment: "",
+      principalAmount: "",
+      interestAmount: "",
+      escrowAmount: "",
+      startDate: new Date(),
+      termYears: 30,
+      accountNumber: "",
+      notes: "",
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: InsertMortgage) => apiRequest("POST", "/api/mortgages", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mortgages"] });
+      setIsCreateDialogOpen(false);
+      form.reset();
+      toast({
+        title: "Success",
+        description: "Mortgage created successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create mortgage.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: MortgageFormData) => {
+    const mortgageData = {
+      ...data,
+      escrowAmount: data.escrowAmount || "0",
+    };
+    createMutation.mutate(mortgageData);
+  };
 
   const getPropertyName = (propertyId: number) => {
     const property = properties.find(p => p.id === propertyId);
@@ -30,6 +107,10 @@ export default function Mortgages() {
             Manage mortgage details and payment tracking across all properties
           </p>
         </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Mortgage
+        </Button>
       </div>
 
       {mortgages.length === 0 ? (
@@ -116,6 +197,236 @@ export default function Mortgages() {
           ))}
         </div>
       )}
+
+      {/* Create Mortgage Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Mortgage</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="propertyId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Property</FormLabel>
+                      <Select value={field.value.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select property" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {properties.map((property) => (
+                            <SelectItem key={property.id} value={property.id.toString()}>
+                              {property.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lender</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Wells Fargo" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="originalAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Original Loan Amount</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="currentBalance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current Balance</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="interestRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Interest Rate (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.001" placeholder="0.000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="termYears"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Term (Years)</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="30" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-4 flex items-center">
+                  <Calculator className="h-4 w-4 mr-2" />
+                  Monthly Payment Breakdown
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="monthlyPayment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Monthly Payment</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="principalAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Principal Amount</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="interestAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Interest Amount</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="escrowAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Escrow Amount</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                          onChange={(e) => field.onChange(new Date(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="accountNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Account Number (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Account number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Additional notes" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-2 pt-4">
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Creating..." : "Create Mortgage"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
