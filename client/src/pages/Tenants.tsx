@@ -88,7 +88,8 @@ export default function Tenants() {
       createForm.reset();
       toast({ title: "Tenant created successfully" });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Create tenant error:", error);
       toast({ title: "Failed to create tenant", variant: "destructive" });
     },
   });
@@ -119,7 +120,16 @@ export default function Tenants() {
   });
 
   const onCreateSubmit = (data: TenantFormData) => {
-    createMutation.mutate(data);
+    // Clean up the data before sending
+    const cleanData = {
+      ...data,
+      unitId: data.unitId || null,
+      leaseStart: data.leaseStart || null,
+      leaseEnd: data.leaseEnd || null,
+      monthlyRent: data.monthlyRent || null,
+      securityDeposit: data.securityDeposit || null,
+    };
+    createMutation.mutate(cleanData);
   };
 
   const onEditSubmit = (data: TenantFormData) => {
