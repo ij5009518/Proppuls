@@ -85,6 +85,24 @@ export default function Mortgages() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/mortgages/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mortgages"] });
+      toast({
+        title: "Success",
+        description: "Mortgage deleted successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete mortgage.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: MortgageFormData) => {
     const mortgageData = {
       ...data,
@@ -138,9 +156,20 @@ export default function Mortgages() {
                       {getPropertyName(mortgage.propertyId)}
                     </p>
                   </div>
-                  <Badge variant="outline">
-                    {formatPercent(parseFloat(mortgage.interestRate))}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      {formatPercent(parseFloat(mortgage.interestRate))}
+                    </Badge>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => deleteMutation.mutate(mortgage.id)}
+                      disabled={deleteMutation.isPending}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-6 w-6 p-0"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
