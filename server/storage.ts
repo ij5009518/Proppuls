@@ -372,7 +372,12 @@ export class MemStorage implements IStorage {
   }
 
   async deleteMortgage(id: number): Promise<boolean> {
-    return this.mortgages.delete(id);
+    console.log("Storage: attempting to delete mortgage with ID:", id);
+    console.log("Storage: mortgages before deletion:", Array.from(this.mortgages.keys()));
+    const result = this.mortgages.delete(id);
+    console.log("Storage: deletion result:", result);
+    console.log("Storage: mortgages after deletion:", Array.from(this.mortgages.keys()));
+    return result;
   }
 
   // Expenses
