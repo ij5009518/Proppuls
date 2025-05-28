@@ -142,6 +142,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/units/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteUnit(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Unit not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete unit" });
+    }
+  });
+
   // Tenants
   app.get("/api/tenants", async (req, res) => {
     try {
@@ -171,6 +184,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: error?.message || String(error),
         details: error?.issues || error
       });
+    }
+  });
+
+  app.delete("/api/tenants/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteTenant(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete tenant" });
     }
   });
 
