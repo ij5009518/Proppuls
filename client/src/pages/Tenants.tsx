@@ -223,14 +223,14 @@ export default function Tenants() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Unit (Optional)</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(value ? Number(value) : null)} defaultValue={field.value?.toString()}>
+                      <Select onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))} defaultValue={field.value?.toString() || "none"}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select unit" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No unit assigned</SelectItem>
+                          <SelectItem value="none">No unit assigned</SelectItem>
                           {units?.filter(unit => unit.status === "vacant").map((unit) => {
                             const property = properties?.find(p => p.id === unit.propertyId);
                             return (
