@@ -271,14 +271,14 @@ export default function Tenants() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Unit (Optional)</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString() || ""}>
+                        <Select onValueChange={(value) => field.onChange(value === "0" ? undefined : parseInt(value))} value={field.value?.toString() || "0"}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select unit" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No Unit</SelectItem>
+                            <SelectItem value="0">No Unit</SelectItem>
                             {units.map((unit) => (
                               <SelectItem key={unit.id} value={unit.id.toString()}>
                                 Unit {unit.unitNumber}
