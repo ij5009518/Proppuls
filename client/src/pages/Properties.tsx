@@ -130,7 +130,7 @@ export default function Properties() {
     const formattedData = {
       ...data,
       purchasePrice: data.purchasePrice.toString(),
-      purchaseDate: new Date(data.purchaseDate).toISOString(),
+      purchaseDate: new Date(data.purchaseDate),
     };
     console.log("Formatted data:", formattedData);
     createMutation.mutate(formattedData);
