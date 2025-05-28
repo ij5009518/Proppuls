@@ -15,7 +15,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Property, InsertProperty, Unit, Mortgage, Expense } from "@shared/schema";
+import type { Property, InsertProperty, Unit, Mortgage, Expense, InsertUnit } from "@shared/schema";
 
 const propertySchema = z.object({
   name: z.string().min(1, "Property name is required"),
@@ -28,6 +28,15 @@ const propertySchema = z.object({
   purchaseDate: z.date(),
   propertyType: z.string().min(1, "Property type is required"),
   status: z.string().min(1, "Status is required"),
+});
+
+const unitSchema = z.object({
+  unitNumber: z.string().min(1, "Unit number is required"),
+  bedrooms: z.number().min(0, "Bedrooms must be 0 or more"),
+  bathrooms: z.string().min(1, "Bathrooms is required"),
+  rentAmount: z.string().min(1, "Rent amount is required"),
+  status: z.string().min(1, "Status is required"),
+  squareFootage: z.number().optional(),
 });
 
 const mortgageSchema = z.object({
@@ -47,6 +56,7 @@ const mortgageSchema = z.object({
 
 type PropertyFormData = z.infer<typeof propertySchema>;
 type MortgageFormData = z.infer<typeof mortgageSchema>;
+type UnitFormData = z.infer<typeof unitSchema>;
 
 export default function Properties() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -78,7 +88,19 @@ export default function Properties() {
     queryKey: ["/api/expenses"],
   });
 
-  const createForm = useForm<PropertyFormData>({
+  const createForm = useForm<UnitFormData>({
+    resolver: zodResolver(unitSchema),
+    defaultValues: {
+      unitNumber: "",
+      bedrooms: 1,
+      bathrooms: "1",
+      rentAmount: "",
+      status: "vacant",
+      squareFootage: undefined,
+    },
+  });
+
+  const createPropertyForm = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
       name: "",
@@ -187,7 +209,7 @@ export default function Properties() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
       setIsCreateDialogOpen(false);
-      createForm.reset();
+      createPropertyForm.reset();
       toast({ title: "Property created successfully" });
     },
     onError: (error) => {
@@ -334,11 +356,11 @@ export default function Properties() {
             <DialogHeader>
               <DialogTitle>Add New Property</DialogTitle>
             </DialogHeader>
-            <Form {...createForm}>
-              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+            <Form {...createPropertyForm}>
+              <form onSubmit={createPropertyForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
@@ -351,7 +373,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="address"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
@@ -364,7 +386,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="city"
                     render={({ field }) => (
                       <FormItem>
@@ -377,7 +399,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="state"
                     render={({ field }) => (
                       <FormItem>
@@ -390,7 +412,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="zipCode"
                     render={({ field }) => (
                       <FormItem>
@@ -403,7 +425,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="totalUnits"
                     render={({ field }) => (
                       <FormItem>
@@ -421,7 +443,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="purchasePrice"
                     render={({ field }) => (
                       <FormItem>
@@ -434,7 +456,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="propertyType"
                     render={({ field }) => (
                       <FormItem>
@@ -1434,10 +1456,154 @@ export default function Properties() {
       <Dialog open={isUnitDialogOpen} onOpenChange={setIsUnitDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Add New Unit</DialogTitle>
+            <DialogTitle>Add New Unit to {selectedProperty?.name}</DialogTitle>
           </DialogHeader>
-          {/* Add your unit creation form here */}
-          <p>Unit creation form will go here.</p>
+          {selectedProperty && (
+            <Form {...createForm}>
+              <form onSubmit={createForm.handleSubmit((data) => {
+                // Add propertyId to the unit data
+                const unitData = {
+                  ...data,
+                  propertyId: selectedProperty.id,
+                  bedrooms: Number(data.bedrooms) || 1,
+                  rentAmount: data.rentAmount.toString(),
+                  bathrooms: data.bathrooms.toString(),
+                };
+
+                // Create unit via API
+                fetch("/api/units", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(unitData),
+                })
+                .then(res => res.json())
+                .then(() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+                  setIsUnitDialogOpen(false);
+                  createForm.reset();
+                  toast({
+                    title: "Success",
+                    description: "Unit added successfully.",
+                  });
+                })
+                .catch(() => {
+                  toast({
+                    title: "Error",
+                    description: "Failed to add unit.",
+                    variant: "destructive",
+                  });
+                });
+              })} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={createForm.control}
+                    name="unitNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1A" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="bedrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bedrooms</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="bathrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bathrooms</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1.5" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="rentAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rent Amount</FormLabel>
+                        <FormControl>
+                          <Input placeholder="$1,200" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="vacant">Vacant</SelectItem>
+                            <SelectItem value="occupied">Occupied</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="squareFootage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Square Footage (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="850"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsUnitDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    Add Unit
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
