@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Home, DollarSign, Search, Filter } from "lucide-react";
+import { Plus, Home, DollarSign, Search, Filter, Grid3X3, List, Edit, Eye } from "lucide-react";
 import { insertPropertySchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,10 @@ export default function Properties() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyWithStats | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -130,13 +134,32 @@ export default function Properties() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Properties</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Property
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-lg border border-input bg-background">
+            <Button
+              variant={viewMode === "grid" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className="rounded-r-none"
+            >
+              <Grid3X3 className="h-4 w-4" />
             </Button>
-          </DialogTrigger>
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="rounded-l-none"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Property
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Property</DialogTitle>
@@ -268,6 +291,7 @@ export default function Properties() {
             </Form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Filters */}
@@ -357,9 +381,30 @@ export default function Properties() {
                       {property.monthlyRevenue.toLocaleString()}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm">
-                    View Details
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedProperty(property);
+                        setIsDetailDialogOpen(true);
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedProperty(property);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -381,6 +426,58 @@ export default function Properties() {
           </p>
         </div>
       )}
+
+      {/* Property Details Modal */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Property Details</DialogTitle>
+          </DialogHeader>
+          {selectedProperty && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Property Name</label>
+                  <p className="text-lg font-semibold">{selectedProperty.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Property Type</label>
+                  <p className="text-lg capitalize">{selectedProperty.propertyType.replace('_', ' ')}</p>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-sm font-medium text-muted-foreground">Address</label>
+                  <p className="text-lg">{selectedProperty.address}</p>
+                  <p className="text-lg">{selectedProperty.city}, {selectedProperty.state} {selectedProperty.zipCode}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Total Units</label>
+                  <p className="text-lg">{selectedProperty.totalUnits}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Occupied Units</label>
+                  <p className="text-lg">{selectedProperty.occupiedUnits}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Occupancy Rate</label>
+                  <p className="text-lg font-semibold text-green-600">{selectedProperty.occupancyRate}%</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Monthly Revenue</label>
+                  <p className="text-lg font-semibold text-green-600">${selectedProperty.monthlyRevenue.toLocaleString()}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Purchase Price</label>
+                  <p className="text-lg">{selectedProperty.purchasePrice}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Purchase Date</label>
+                  <p className="text-lg">{new Date(selectedProperty.purchaseDate).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
