@@ -81,7 +81,20 @@ export default function Tenants() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: InsertTenant) => apiRequest("/api/tenants", "POST", data),
+    mutationFn: (data: InsertTenant) => {
+      console.log("Creating tenant with data:", data);
+      return fetch("/api/tenants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      }).then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       setIsCreateDialogOpen(false);
