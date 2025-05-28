@@ -50,7 +50,7 @@ export default function Maintenance() {
       submittedDate: insertMaintenanceRequestSchema.shape.submittedDate.default(new Date()),
     })),
     defaultValues: {
-      unitId: 0,
+      unitId: 1,
       tenantId: null,
       title: "",
       description: "",
