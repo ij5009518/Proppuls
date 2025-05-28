@@ -1,167 +1,198 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Plus, Eye, Edit, Trash2, Grid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Users, Search, Filter, Phone, Mail, Calendar, DollarSign } from "lucide-react";
-import { insertTenantSchema } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import type { Tenant, Unit, Property } from "@shared/schema";
+import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Tenant, InsertTenant, Unit } from "@shared/schema";
+
+const tenantSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(1, "Phone number is required"),
+  status: z.string().min(1, "Status is required"),
+  unitId: z.number().optional(),
+  leaseStart: z.date().optional(),
+  leaseEnd: z.date().optional(),
+  monthlyRent: z.string().optional(),
+  securityDeposit: z.string().optional(),
+});
+
+type TenantFormData = z.infer<typeof tenantSchema>;
 
 export default function Tenants() {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: tenants, isLoading: tenantsLoading } = useQuery<Tenant[]>({
+  const { data: tenants = [], isLoading } = useQuery<Tenant[]>({
     queryKey: ["/api/tenants"],
   });
 
-  const { data: units, isLoading: unitsLoading } = useQuery<Unit[]>({
+  const { data: units = [] } = useQuery<Unit[]>({
     queryKey: ["/api/units"],
   });
 
-  const { data: properties } = useQuery<Property[]>({
-    queryKey: ["/api/properties"],
-  });
-
-  const form = useForm({
-    resolver: zodResolver(insertTenantSchema.extend({
-      leaseStart: insertTenantSchema.shape.leaseStart.optional(),
-      leaseEnd: insertTenantSchema.shape.leaseEnd.optional(),
-    })),
+  const createForm = useForm<TenantFormData>({
+    resolver: zodResolver(tenantSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
       email: "",
       phone: "",
+      status: "active",
       unitId: undefined,
       leaseStart: undefined,
       leaseEnd: undefined,
-      monthlyRent: undefined,
-      securityDeposit: undefined,
-      status: "active",
+      monthlyRent: "",
+      securityDeposit: "",
     },
   });
 
-  const createTenantMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return apiRequest("POST", "/api/tenants", data);
+  const editForm = useForm<TenantFormData>({
+    resolver: zodResolver(tenantSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      status: "active",
+      unitId: undefined,
+      leaseStart: undefined,
+      leaseEnd: undefined,
+      monthlyRent: "",
+      securityDeposit: "",
     },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: InsertTenant) => apiRequest("/api/tenants", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      setIsDialogOpen(false);
-      form.reset();
-      toast({
-        title: "Success",
-        description: "Tenant created successfully",
-      });
+      setIsCreateDialogOpen(false);
+      createForm.reset();
+      toast({ title: "Tenant created successfully" });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create tenant",
-        variant: "destructive",
-      });
+      toast({ title: "Failed to create tenant", variant: "destructive" });
     },
   });
 
-  const onSubmit = (data: any) => {
-    // Convert string dates to Date objects
-    if (data.leaseStart) {
-      data.leaseStart = new Date(data.leaseStart);
-    }
-    if (data.leaseEnd) {
-      data.leaseEnd = new Date(data.leaseEnd);
-    }
-    createTenantMutation.mutate(data);
-  };
-
-  const filteredTenants = tenants?.filter((tenant) => {
-    const fullName = `${tenant.firstName} ${tenant.lastName}`.toLowerCase();
-    const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
-                         tenant.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || tenant.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<InsertTenant> }) =>
+      apiRequest(`/api/tenants/${id}`, "PATCH", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      setIsEditDialogOpen(false);
+      setSelectedTenant(null);
+      toast({ title: "Tenant updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update tenant", variant: "destructive" });
+    },
   });
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "active":
-        return "default";
-      case "inactive":
-        return "secondary";
-      case "moved_out":
-        return "destructive";
-      default:
-        return "outline";
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest(`/api/tenants/${id}`, "DELETE"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      toast({ title: "Tenant deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete tenant", variant: "destructive" });
+    },
+  });
+
+  const onCreateSubmit = (data: TenantFormData) => {
+    createMutation.mutate(data);
+  };
+
+  const onEditSubmit = (data: TenantFormData) => {
+    if (selectedTenant) {
+      updateMutation.mutate({ id: selectedTenant.id, data });
     }
   };
 
-  const getUnitInfo = (unitId: number | null) => {
-    if (!unitId) return null;
-    const unit = units?.find(u => u.id === unitId);
-    const property = properties?.find(p => p.id === unit?.propertyId);
-    return unit && property ? `${property.name} - Unit ${unit.unitNumber}` : null;
+  const handleEdit = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    editForm.reset({
+      firstName: tenant.firstName,
+      lastName: tenant.lastName,
+      email: tenant.email,
+      phone: tenant.phone,
+      status: tenant.status,
+      unitId: tenant.unitId || undefined,
+      leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
+      leaseEnd: tenant.leaseEnd ? new Date(tenant.leaseEnd) : undefined,
+      monthlyRent: tenant.monthlyRent || "",
+      securityDeposit: tenant.securityDeposit || "",
+    });
+    setIsEditDialogOpen(true);
   };
 
-  if (tenantsLoading || unitsLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Tenants</h1>
-          <Button disabled>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Tenant
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded mb-4"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
+  const handleView = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Are you sure you want to delete this tenant?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const getUnitNumber = (unitId: number | null) => {
+    if (!unitId) return "No Unit Assigned";
+    const unit = units.find(u => u.id === unitId);
+    return unit ? `Unit ${unit.unitNumber}` : "Unit Not Found";
+  };
+
+  const filteredTenants = tenants.filter(
+    (tenant) =>
+      tenant.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tenant.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tenant.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-96">Loading tenants...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Tenants</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Add Tenant
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Tenant</DialogTitle>
             </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <Form {...createForm}>
+              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
-                    control={form.control}
+                    control={createForm.control}
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
@@ -173,9 +204,8 @@ export default function Tenants() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
-                    control={form.control}
+                    control={createForm.control}
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
@@ -187,10 +217,319 @@ export default function Tenants() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={createForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="john@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="(555) 123-4567" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="unitId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit (Optional)</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString() || ""}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">No Unit</SelectItem>
+                            {units.map((unit) => (
+                              <SelectItem key={unit.id} value={unit.id.toString()}>
+                                Unit {unit.unitNumber}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="monthlyRent"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Monthly Rent (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="$1,200" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="securityDeposit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Security Deposit (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="$1,200" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Creating..." : "Create Tenant"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
+      <div className="flex justify-between items-center">
+        <Input
+          placeholder="Search tenants..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={viewMode === "grid" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("grid")}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {filteredTenants.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No tenants found. Add your first tenant to get started!</p>
+        </div>
+      ) : viewMode === "grid" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTenants.map((tenant) => (
+            <Card key={tenant.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex justify-between items-start">
+                  <span>{tenant.firstName} {tenant.lastName}</span>
+                  <Badge className={getStatusColor(tenant.status)}>
+                    {tenant.status}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">{tenant.email}</p>
+                  <p className="text-sm text-gray-600">{tenant.phone}</p>
+                  <p className="text-sm">
+                    <span className="font-semibold">Unit:</span> {getUnitNumber(tenant.unitId)}
+                  </p>
+                  {tenant.monthlyRent && (
+                    <p className="text-sm">
+                      <span className="font-semibold">Rent:</span> {formatCurrency(tenant.monthlyRent)}
+                    </p>
+                  )}
+                  {tenant.leaseEnd && (
+                    <p className="text-sm">
+                      <span className="font-semibold">Lease Ends:</span> {formatDate(tenant.leaseEnd)}
+                    </p>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-2 mt-4">
+                  <Button size="sm" variant="outline" onClick={() => handleView(tenant)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(tenant)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDelete(tenant.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredTenants.map((tenant) => (
+            <Card key={tenant.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-4">
+                      <div>
+                        <h3 className="font-semibold">{tenant.firstName} {tenant.lastName}</h3>
+                        <p className="text-sm text-gray-600">{tenant.email} • {tenant.phone}</p>
+                      </div>
+                      <Badge className={getStatusColor(tenant.status)}>
+                        {tenant.status}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <p className="text-sm font-semibold">{getUnitNumber(tenant.unitId)}</p>
+                      {tenant.monthlyRent && (
+                        <p className="text-sm text-gray-600">{formatCurrency(tenant.monthlyRent)}</p>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline" onClick={() => handleView(tenant)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(tenant)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDelete(tenant.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* View Tenant Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Tenant Details</DialogTitle>
+          </DialogHeader>
+          {selectedTenant && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold">Personal Information</h3>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Name:</span> {selectedTenant.firstName} {selectedTenant.lastName}</p>
+                    <p><span className="font-medium">Email:</span> {selectedTenant.email}</p>
+                    <p><span className="font-medium">Phone:</span> {selectedTenant.phone}</p>
+                    <p><span className="font-medium">Status:</span> {selectedTenant.status}</p>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold">Lease Information</h3>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Unit:</span> {getUnitNumber(selectedTenant.unitId)}</p>
+                    {selectedTenant.monthlyRent && (
+                      <p><span className="font-medium">Monthly Rent:</span> {formatCurrency(selectedTenant.monthlyRent)}</p>
+                    )}
+                    {selectedTenant.securityDeposit && (
+                      <p><span className="font-medium">Security Deposit:</span> {formatCurrency(selectedTenant.securityDeposit)}</p>
+                    )}
+                    {selectedTenant.leaseStart && (
+                      <p><span className="font-medium">Lease Start:</span> {formatDate(selectedTenant.leaseStart)}</p>
+                    )}
+                    {selectedTenant.leaseEnd && (
+                      <p><span className="font-medium">Lease End:</span> {formatDate(selectedTenant.leaseEnd)}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Tenant Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Tenant</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
-                  control={form.control}
+                  control={editForm.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
@@ -202,9 +541,8 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
-                  control={form.control}
+                  control={editForm.control}
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
@@ -216,111 +554,13 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
-                  control={form.control}
-                  name="unitId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit (Optional)</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))} defaultValue={field.value?.toString() || "none"}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select unit" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">No unit assigned</SelectItem>
-                          {units?.filter(unit => unit.status === "vacant").map((unit) => {
-                            const property = properties?.find(p => p.id === unit.propertyId);
-                            return (
-                              <SelectItem key={unit.id} value={unit.id.toString()}>
-                                {property?.name} - Unit {unit.unitNumber}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="leaseStart"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Lease Start</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="date" 
-                            {...field} 
-                            value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="leaseEnd"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Lease End</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="date" 
-                            {...field} 
-                            value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="monthlyRent"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Monthly Rent</FormLabel>
-                        <FormControl>
-                          <Input placeholder="$1200" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="securityDeposit"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Security Deposit</FormLabel>
-                        <FormControl>
-                          <Input placeholder="$1200" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
+                  control={editForm.control}
                   name="status"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select status" />
@@ -329,141 +569,77 @@ export default function Tenants() {
                         <SelectContent>
                           <SelectItem value="active">Active</SelectItem>
                           <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="moved_out">Moved Out</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={createTenantMutation.isPending}>
-                    {createTenantMutation.isPending ? "Creating..." : "Add Tenant"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-          <Input
-            placeholder="Search tenants..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <Filter className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="moved_out">Moved Out</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Tenants Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTenants?.map((tenant) => (
-          <Card key={tenant.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-                    <Users className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">
-                      {tenant.firstName} {tenant.lastName}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {getUnitInfo(tenant.unitId) || "No unit assigned"}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant={getStatusBadgeVariant(tenant.status)}>
-                  {tenant.status}
-                </Badge>
+                <FormField
+                  control={editForm.control}
+                  name="unitId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit (Optional)</FormLabel>
+                      <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString() || ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select unit" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">No Unit</SelectItem>
+                          {units.map((unit) => (
+                            <SelectItem key={unit.id} value={unit.id.toString()}>
+                              Unit {unit.unitNumber}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="monthlyRent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Rent (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="$1,200" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="securityDeposit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Security Deposit (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="$1,200" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground truncate">{tenant.email}</span>
-                </div>
-                
-                <div className="flex items-center space-x-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{tenant.phone}</span>
-                </div>
-
-                {tenant.leaseStart && tenant.leaseEnd && (
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      {formatDate(tenant.leaseStart)} - {formatDate(tenant.leaseEnd)}
-                    </span>
-                  </div>
-                )}
-
-                {tenant.monthlyRent && (
-                  <div className="flex justify-between items-center pt-2 border-t">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Monthly Rent</p>
-                      <p className="font-bold text-lg flex items-center">
-                        <DollarSign className="h-4 w-4 mr-1" />
-                        {formatCurrency(tenant.monthlyRent)}
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                  </div>
-                )}
-
-                {!tenant.monthlyRent && (
-                  <div className="pt-2 border-t">
-                    <Button variant="outline" size="sm" className="w-full">
-                      View Details
-                    </Button>
-                  </div>
-                )}
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? "Updating..." : "Update Tenant"}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredTenants?.length === 0 && (
-        <div className="text-center py-12">
-          <Users className="mx-auto h-12 w-12 text-slate-400" />
-          <h3 className="mt-2 text-sm font-medium text-slate-900 dark:text-foreground">
-            No tenants found
-          </h3>
-          <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">
-            {searchTerm || statusFilter !== "all"
-              ? "Try adjusting your search or filter criteria."
-              : "Get started by adding your first tenant."
-            }
-          </p>
-        </div>
-      )}
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
