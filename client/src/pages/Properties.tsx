@@ -30,7 +30,23 @@ const propertySchema = z.object({
   status: z.string().min(1, "Status is required"),
 });
 
+const mortgageSchema = z.object({
+  lender: z.string().min(1, "Lender is required"),
+  originalAmount: z.string().min(1, "Original amount is required"),
+  currentBalance: z.string().min(1, "Current balance is required"),
+  interestRate: z.string().min(1, "Interest rate is required"),
+  monthlyPayment: z.string().min(1, "Monthly payment is required"),
+  principalAmount: z.string().min(1, "Principal amount is required"),
+  interestAmount: z.string().min(1, "Interest amount is required"),
+  escrowAmount: z.string().optional(),
+  startDate: z.date(),
+  termYears: z.number().min(1, "Term must be at least 1 year"),
+  accountNumber: z.string().optional(),
+  notes: z.string().optional(),
+});
+
 type PropertyFormData = z.infer<typeof propertySchema>;
+type MortgageFormData = z.infer<typeof mortgageSchema>;
 
 export default function Properties() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -40,6 +56,7 @@ export default function Properties() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [isMortgageDialogOpen, setIsMortgageDialogOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -73,6 +90,24 @@ export default function Properties() {
       purchaseDate: new Date(),
       propertyType: "",
       status: "active",
+    },
+  });
+
+  const mortgageForm = useForm<MortgageFormData>({
+    resolver: zodResolver(mortgageSchema),
+    defaultValues: {
+      lender: "",
+      originalAmount: "",
+      currentBalance: "",
+      interestRate: "",
+      monthlyPayment: "",
+      principalAmount: "",
+      interestAmount: "",
+      escrowAmount: "",
+      startDate: new Date(),
+      termYears: 30,
+      accountNumber: "",
+      notes: "",
     },
   });
 
@@ -694,10 +729,7 @@ export default function Properties() {
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Mortgage Details & Payment Breakdown</h3>
                   <Button size="sm" onClick={() => {
-                    toast({
-                      title: "Add Mortgage",
-                      description: "Mortgage creation form will be available soon.",
-                    });
+                    setIsMortgageDialogOpen(true);
                   }}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Mortgage
@@ -713,10 +745,7 @@ export default function Properties() {
                         Add mortgage details to track monthly payments, principal/interest breakdown, and escrow information.
                       </p>
                       <Button onClick={() => {
-                        toast({
-                          title: "Add Mortgage",
-                          description: "Mortgage creation form will be available soon.",
-                        });
+                        setIsMortgageDialogOpen(true);
                       }}>
                         Add Mortgage Details
                       </Button>
@@ -1067,6 +1096,257 @@ export default function Properties() {
                 </Button>
                 <Button type="submit" disabled={updateMutation.isPending}>
                   {updateMutation.isPending ? "Updating..." : "Update Property"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mortgage Creation Dialog */}
+      <Dialog open={isMortgageDialogOpen} onOpenChange={setIsMortgageDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Add Mortgage Details for {selectedProperty?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...mortgageForm}>
+            <form onSubmit={mortgageForm.handleSubmit((data) => {
+              // Add propertyId to the mortgage data
+              const mortgageData = {
+                ...data,
+                propertyId: selectedProperty?.id || 0,
+                escrowAmount: data.escrowAmount || "0",
+              };
+              
+              // Create mortgage via API
+              fetch("/api/mortgages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(mortgageData),
+              })
+              .then(res => res.json())
+              .then(() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/mortgages"] });
+                setIsMortgageDialogOpen(false);
+                mortgageForm.reset();
+                toast({
+                  title: "Success",
+                  description: "Mortgage added successfully.",
+                });
+              })
+              .catch(() => {
+                toast({
+                  title: "Error",
+                  description: "Failed to add mortgage.",
+                  variant: "destructive",
+                });
+              });
+            })} className="space-y-6">
+              
+              {/* Basic Mortgage Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Basic Mortgage Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={mortgageForm.control}
+                    name="lender"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Lender Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Wells Fargo Bank" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={mortgageForm.control}
+                    name="accountNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Account Number (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1234567890" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Loan Details */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Loan Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={mortgageForm.control}
+                    name="originalAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Original Loan Amount</FormLabel>
+                        <FormControl>
+                          <Input placeholder="285000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={mortgageForm.control}
+                    name="currentBalance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Balance</FormLabel>
+                        <FormControl>
+                          <Input placeholder="275000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={mortgageForm.control}
+                    name="interestRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Interest Rate (%)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="4.25" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={mortgageForm.control}
+                    name="termYears"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Term (Years)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="30" 
+                            {...field} 
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={mortgageForm.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Loan Start Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            {...field} 
+                            value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                            onChange={(e) => field.onChange(new Date(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Monthly Payment Breakdown */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Monthly Payment Breakdown</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <FormField
+                    control={mortgageForm.control}
+                    name="monthlyPayment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Monthly Payment</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1400.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={mortgageForm.control}
+                    name="principalAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Principal Amount</FormLabel>
+                        <FormControl>
+                          <Input placeholder="450.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={mortgageForm.control}
+                    name="interestAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Interest Amount</FormLabel>
+                        <FormControl>
+                          <Input placeholder="750.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={mortgageForm.control}
+                    name="escrowAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Escrow Amount (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="200.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
+                  <strong>Tip:</strong> Principal goes toward paying down the loan balance, interest is the cost of borrowing, 
+                  and escrow covers property taxes and insurance. Make sure these amounts add up to your total monthly payment!
+                </div>
+              </div>
+
+              {/* Notes */}
+              <FormField
+                control={mortgageForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Fixed rate mortgage with escrow for taxes and insurance" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsMortgageDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Add Mortgage
                 </Button>
               </div>
             </form>
