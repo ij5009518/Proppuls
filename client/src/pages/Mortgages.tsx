@@ -322,7 +322,8 @@ export default function Mortgages() {
       )}
 
       {/* Create Mortgage Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      {/*{isCreateDialogOpen && (*/}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Mortgage</DialogTitle>
@@ -550,6 +551,7 @@ export default function Mortgages() {
           </Form>
         </DialogContent>
       </Dialog>
+      {/* )} */}
 
       {/* View Mortgage Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
