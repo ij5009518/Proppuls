@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 11% 98%; /* #F5F7FA */
+  --foreground: 240 10% 4%; /* #0A0A0B */
+  --muted: 210 11% 96%; /* #F1F3F5 */
+  --muted-foreground: 240 5% 45%; /* #6B7280 */
+  --popover: 0 0% 100%; /* #FFFFFF */
+  --popover-foreground: 240 10% 4%; /* #0A0A0B */
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 240 10% 4%; /* #0A0A0B */
+  --border: 220 13% 91%; /* #E5E7EB */
+  --input: 220 13% 91%; /* #E5E7EB */
+  --primary: 207 90% 54%; /* #2563EB */
+  --primary-foreground: 0 0% 98%; /* #FAFAFA */
+  --secondary: 210 11% 96%; /* #F1F3F5 */
+  --secondary-foreground: 240 10% 4%; /* #0A0A0B */
+  --accent: 210 11% 96%; /* #F1F3F5 */
+  --accent-foreground: 240 10% 4%; /* #0A0A0B */
+  --destructive: 0 84% 60%; /* #EF4444 */
+  --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+  --ring: 207 90% 54%; /* #2563EB */
+  --radius: 0.5rem;
+
+  /* Sidebar variables */
+  --sidebar-background: 0 0% 100%; /* #FFFFFF */
+  --sidebar-foreground: 240 5% 45%; /* #6B7280 */
+  --sidebar-primary: 207 90% 54%; /* #2563EB */
+  --sidebar-primary-foreground: 0 0% 98%; /* #FAFAFA */
+  --sidebar-accent: 210 11% 96%; /* #F1F3F5 */
+  --sidebar-accent-foreground: 240 10% 4%; /* #0A0A0B */
+  --sidebar-border: 220 13% 91%; /* #E5E7EB */
+  --sidebar-ring: 207 90% 54%; /* #2563EB */
+}
+
+.dark {
+  --background: 240 10% 4%; /* #0A0A0B */
+  --foreground: 0 0% 98%; /* #FAFAFA */
+  --muted: 240 4% 16%; /* #262626 */
+  --muted-foreground: 240 5% 65%; /* #A1A1AA */
+  --popover: 240 10% 4%; /* #0A0A0B */
+  --popover-foreground: 0 0% 98%; /* #FAFAFA */
+  --card: 240 10% 4%; /* #0A0A0B */
+  --card-foreground: 0 0% 98%; /* #FAFAFA */
+  --border: 240 4% 16%; /* #262626 */
+  --input: 240 4% 16%; /* #262626 */
+  --primary: 207 90% 54%; /* #2563EB */
+  --primary-foreground: 0 0% 98%; /* #FAFAFA */
+  --secondary: 240 4% 16%; /* #262626 */
+  --secondary-foreground: 0 0% 98%; /* #FAFAFA */
+  --accent: 240 4% 16%; /* #262626 */
+  --accent-foreground: 0 0% 98%; /* #FAFAFA */
+  --destructive: 0 84% 60%; /* #EF4444 */
+  --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+  --ring: 207 90% 54%; /* #2563EB */
+
+  /* Sidebar variables for dark mode */
+  --sidebar-background: 240 10% 4%; /* #0A0A0B */
+  --sidebar-foreground: 240 5% 65%; /* #A1A1AA */
+  --sidebar-primary: 207 90% 54%; /* #2563EB */
+  --sidebar-primary-foreground: 0 0% 98%; /* #FAFAFA */
+  --sidebar-accent: 240 4% 16%; /* #262626 */
+  --sidebar-accent-foreground: 0 0% 98%; /* #FAFAFA */
+  --sidebar-border: 240 4% 16%; /* #262626 */
+  --sidebar-ring: 207 90% 54%; /* #2563EB */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* Custom chart styles */
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+/* Property status indicators */
+.status-active {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
+}
+
+.status-maintenance {
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300;
+}
+
+.status-inactive {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
+}
+
+/* Priority indicators */
+.priority-low {
+  @apply border-green-400 bg-green-50 dark:border-green-600 dark:bg-green-950;
+}
+
+.priority-medium {
+  @apply border-yellow-400 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-950;
+}
+
+.priority-high {
+  @apply border-orange-400 bg-orange-50 dark:border-orange-600 dark:bg-orange-950;
+}
+
+.priority-urgent {
+  @apply border-red-400 bg-red-50 dark:border-red-600 dark:bg-red-950;
+}
+
+/* Occupancy progress bars */
+.occupancy-high {
+  @apply bg-green-500;
+}
+
+.occupancy-medium {
+  @apply bg-yellow-500;
+}
+
+.occupancy-low {
+  @apply bg-red-500;
+}
