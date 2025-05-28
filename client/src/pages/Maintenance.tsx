@@ -316,14 +316,14 @@ export default function Maintenance() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Vendor (Optional)</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(value ? Number(value) : null)} defaultValue={field.value?.toString()}>
+                      <Select onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))} defaultValue={field.value?.toString() || "none"}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select vendor" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No vendor assigned</SelectItem>
+                          <SelectItem value="none">No vendor assigned</SelectItem>
                           {vendors?.map((vendor) => (
                             <SelectItem key={vendor.id} value={vendor.id.toString()}>
                               {vendor.name}
