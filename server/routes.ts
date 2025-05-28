@@ -38,11 +38,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/properties", async (req, res) => {
     try {
+      console.log("Received property data:", req.body);
       const propertyData = insertPropertySchema.parse(req.body);
+      console.log("Parsed property data:", propertyData);
       const property = await storage.createProperty(propertyData);
+      console.log("Created property:", property);
       res.status(201).json(property);
     } catch (error) {
-      res.status(400).json({ message: "Invalid property data" });
+      console.error("Error creating property:", error);
+      res.status(400).json({ message: "Invalid property data", error: error.message });
     }
   });
 

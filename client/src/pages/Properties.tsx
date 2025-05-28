@@ -116,6 +116,7 @@ export default function Properties() {
   });
 
   const onCreateSubmit = (data: PropertyFormData) => {
+    console.log("Form data being submitted:", data);
     createMutation.mutate(data);
   };
 
