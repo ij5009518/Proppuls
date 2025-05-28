@@ -46,7 +46,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(property);
     } catch (error) {
       console.error("Error creating property:", error);
-      res.status(400).json({ message: "Invalid property data", error: error.message });
+      if (error instanceof Error) {
+        res.status(400).json({ message: "Invalid property data", error: error.message });
+      } else {
+        res.status(400).json({ message: "Invalid property data", error: String(error) });
+      }
     }
   });
 
