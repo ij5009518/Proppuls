@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, DoorOpen, Search, Filter, Bed, Bath, Square, DollarSign } from "lucide-react";
+import { Plus, DoorOpen, Search, Filter, Bed, Bath, Square, DollarSign, Grid3X3, List, Eye, Edit } from "lucide-react";
 import { insertUnitSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

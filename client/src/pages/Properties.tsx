@@ -319,8 +319,11 @@ export default function Properties() {
         </Select>
       </div>
 
-      {/* Properties Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Properties Display */}
+      <div className={viewMode === "grid" 
+        ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+        : "space-y-4"
+      }>
         {filteredProperties?.map((property) => (
           <Card key={property.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
@@ -475,6 +478,161 @@ export default function Properties() {
                 </div>
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Property Edit Modal */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Property</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Edit functionality will be available soon!</p>
+            <Button onClick={() => setIsEditDialogOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="propertyType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Property Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select property type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="apartment">Apartment</SelectItem>
+                            <SelectItem value="single_family">Single Family</SelectItem>
+                            <SelectItem value="duplex">Duplex</SelectItem>
+                            <SelectItem value="commercial">Commercial</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Street address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input placeholder="City" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                          <Input placeholder="State" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="zipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ZIP Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="ZIP code" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="totalUnits"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Units</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="Number of units" 
+                            {...field}
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="purchasePrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Purchase Price</FormLabel>
+                        <FormControl>
+                          <Input placeholder="$0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="purchaseDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Purchase Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            {...field}
+                            value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
+                            onChange={(e) => field.onChange(new Date(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save Changes</Button>
+                </div>
+              </form>
+            </Form>
           )}
         </DialogContent>
       </Dialog>
