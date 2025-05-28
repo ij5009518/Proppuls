@@ -482,7 +482,6 @@ export default function Units() {
                       </Button>
                     </div>
                   </div>
-                </div>
               </CardContent>
             </Card>
           ))}
