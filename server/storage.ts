@@ -18,17 +18,7 @@ import {
   type DashboardKPIs,
   type PropertyWithStats,
   type ExpenseByCategory,
-  properties,
-  units,
-  tenants,
-  mortgages,
-  expenses,
-  vendors,
-  maintenanceRequests,
-  revenues,
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, sql, desc, and, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // Properties
@@ -99,285 +89,448 @@ export interface IStorage {
   getMonthlyRevenueData(): Promise<{ month: string; revenue: number }[]>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class MemStorage implements IStorage {
+  private properties: Map<number, Property> = new Map();
+  private units: Map<number, Unit> = new Map();
+  private tenants: Map<number, Tenant> = new Map();
+  private mortgages: Map<number, Mortgage> = new Map();
+  private expenses: Map<number, Expense> = new Map();
+  private vendors: Map<number, Vendor> = new Map();
+  private maintenanceRequests: Map<number, MaintenanceRequest> = new Map();
+  private revenues: Map<number, Revenue> = new Map();
+  
+  private propertyIdCounter = 1;
+  private unitIdCounter = 1;
+  private tenantIdCounter = 1;
+  private mortgageIdCounter = 1;
+  private expenseIdCounter = 1;
+  private vendorIdCounter = 1;
+  private maintenanceRequestIdCounter = 1;
+  private revenueIdCounter = 1;
+
+  constructor() {
+    this.initializeData();
+  }
+
+  private initializeData() {
+    // Sample properties
+    const property1: Property = {
+      id: this.propertyIdCounter++,
+      name: "Sunset Apartments",
+      address: "123 Main St",
+      city: "Downtown",
+      state: "CA",
+      zipCode: "90210",
+      totalUnits: 24,
+      purchasePrice: "850000.00",
+      purchaseDate: new Date("2022-01-15"),
+      propertyType: "apartment",
+      status: "active",
+    };
+
+    const property2: Property = {
+      id: this.propertyIdCounter++,
+      name: "Oak Valley Condos",
+      address: "456 Oak Ave",
+      city: "Uptown",
+      state: "CA",
+      zipCode: "90211",
+      totalUnits: 18,
+      purchasePrice: "1200000.00",
+      purchaseDate: new Date("2021-06-10"),
+      propertyType: "condo",
+      status: "active",
+    };
+
+    const property3: Property = {
+      id: this.propertyIdCounter++,
+      name: "Pine Ridge Townhomes",
+      address: "789 Pine St",
+      city: "Suburbs",
+      state: "CA",
+      zipCode: "90212",
+      totalUnits: 12,
+      purchasePrice: "950000.00",
+      purchaseDate: new Date("2023-03-20"),
+      propertyType: "townhome",
+      status: "maintenance",
+    };
+
+    this.properties.set(property1.id, property1);
+    this.properties.set(property2.id, property2);
+    this.properties.set(property3.id, property3);
+
+    // Sample units
+    for (let i = 1; i <= 24; i++) {
+      const unit: Unit = {
+        id: this.unitIdCounter++,
+        propertyId: property1.id,
+        unitNumber: `${Math.floor((i - 1) / 8) + 1}${String.fromCharCode(65 + ((i - 1) % 8))}`,
+        bedrooms: Math.floor(Math.random() * 3) + 1,
+        bathrooms: Math.floor(Math.random() * 2) + 1,
+        squareFootage: 800 + Math.floor(Math.random() * 400),
+        rentAmount: "1200.00",
+        status: Math.random() > 0.1 ? "occupied" : "vacant",
+      };
+      this.units.set(unit.id, unit);
+    }
+
+    // Sample vendors
+    const vendor1: Vendor = {
+      id: this.vendorIdCounter++,
+      name: "Quick Fix Plumbing",
+      contactPerson: "John Smith",
+      email: "john@quickfixplumbing.com",
+      phone: "(555) 123-4567",
+      address: "123 Service St, City, CA 90210",
+      serviceType: "plumbing",
+      rating: 5,
+      notes: "Reliable and professional service",
+    };
+
+    const vendor2: Vendor = {
+      id: this.vendorIdCounter++,
+      name: "Elite HVAC Services",
+      contactPerson: "Sarah Johnson",
+      email: "sarah@elitehvac.com",
+      phone: "(555) 987-6543",
+      address: "456 Industrial Blvd, City, CA 90211",
+      serviceType: "hvac",
+      rating: 4,
+      notes: "Good pricing for commercial units",
+    };
+
+    this.vendors.set(vendor1.id, vendor1);
+    this.vendors.set(vendor2.id, vendor2);
+
+    // Sample maintenance requests
+    const maintenance1: MaintenanceRequest = {
+      id: this.maintenanceRequestIdCounter++,
+      unitId: 1,
+      tenantId: null,
+      title: "HVAC System Failure",
+      description: "Air conditioning unit not working properly",
+      priority: "urgent",
+      status: "open",
+      submittedDate: new Date(),
+      completedDate: null,
+      vendorId: vendor2.id,
+      laborCost: null,
+      materialCost: null,
+      notes: "Urgent repair needed",
+    };
+
+    this.maintenanceRequests.set(maintenance1.id, maintenance1);
+
+    // Sample expenses
+    const expense1: Expense = {
+      id: this.expenseIdCounter++,
+      propertyId: property1.id,
+      unitId: null,
+      category: "maintenance",
+      description: "HVAC maintenance",
+      amount: "3240.00",
+      date: new Date(),
+      vendorId: vendor2.id,
+      isRecurring: false,
+      qboCategory: "Repairs & Maintenance",
+    };
+
+    this.expenses.set(expense1.id, expense1);
+
+    // Sample revenues
+    const revenue1: Revenue = {
+      id: this.revenueIdCounter++,
+      propertyId: property1.id,
+      unitId: 1,
+      tenantId: 1,
+      type: "rent",
+      amount: "1200.00",
+      date: new Date(),
+      description: "Monthly rent payment",
+    };
+
+    this.revenues.set(revenue1.id, revenue1);
+  }
+
   // Properties
   async getProperties(): Promise<Property[]> {
-    return await db.select().from(properties);
+    return Array.from(this.properties.values());
   }
 
   async getProperty(id: number): Promise<Property | undefined> {
-    const [property] = await db.select().from(properties).where(eq(properties.id, id));
-    return property || undefined;
+    return this.properties.get(id);
   }
 
   async createProperty(property: InsertProperty): Promise<Property> {
-    const [newProperty] = await db.insert(properties).values(property).returning();
+    const newProperty: Property = { ...property, id: this.propertyIdCounter++ };
+    this.properties.set(newProperty.id, newProperty);
     return newProperty;
   }
 
   async updateProperty(id: number, property: Partial<InsertProperty>): Promise<Property | undefined> {
-    const [updated] = await db.update(properties).set(property).where(eq(properties.id, id)).returning();
-    return updated || undefined;
+    const existing = this.properties.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...property };
+    this.properties.set(id, updated);
+    return updated;
   }
 
   async deleteProperty(id: number): Promise<boolean> {
-    const result = await db.delete(properties).where(eq(properties.id, id));
-    return result.rowCount > 0;
+    return this.properties.delete(id);
   }
 
   // Units
   async getUnits(): Promise<Unit[]> {
-    return await db.select().from(units);
+    return Array.from(this.units.values());
   }
 
   async getUnitsByProperty(propertyId: number): Promise<Unit[]> {
-    return await db.select().from(units).where(eq(units.propertyId, propertyId));
+    return Array.from(this.units.values()).filter(unit => unit.propertyId === propertyId);
   }
 
   async getUnit(id: number): Promise<Unit | undefined> {
-    const [unit] = await db.select().from(units).where(eq(units.id, id));
-    return unit || undefined;
+    return this.units.get(id);
   }
 
   async createUnit(unit: InsertUnit): Promise<Unit> {
-    const [newUnit] = await db.insert(units).values(unit).returning();
+    const newUnit: Unit = { ...unit, id: this.unitIdCounter++ };
+    this.units.set(newUnit.id, newUnit);
     return newUnit;
   }
 
   async updateUnit(id: number, unit: Partial<InsertUnit>): Promise<Unit | undefined> {
-    const [updated] = await db.update(units).set(unit).where(eq(units.id, id)).returning();
-    return updated || undefined;
+    const existing = this.units.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...unit };
+    this.units.set(id, updated);
+    return updated;
   }
 
   async deleteUnit(id: number): Promise<boolean> {
-    const result = await db.delete(units).where(eq(units.id, id));
-    return result.rowCount > 0;
+    return this.units.delete(id);
   }
 
   // Tenants
   async getTenants(): Promise<Tenant[]> {
-    return await db.select().from(tenants);
+    return Array.from(this.tenants.values());
   }
 
   async getTenant(id: number): Promise<Tenant | undefined> {
-    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, id));
-    return tenant || undefined;
+    return this.tenants.get(id);
   }
 
   async createTenant(tenant: InsertTenant): Promise<Tenant> {
-    const [newTenant] = await db.insert(tenants).values(tenant).returning();
+    const newTenant: Tenant = { ...tenant, id: this.tenantIdCounter++ };
+    this.tenants.set(newTenant.id, newTenant);
     return newTenant;
   }
 
   async updateTenant(id: number, tenant: Partial<InsertTenant>): Promise<Tenant | undefined> {
-    const [updated] = await db.update(tenants).set(tenant).where(eq(tenants.id, id)).returning();
-    return updated || undefined;
+    const existing = this.tenants.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...tenant };
+    this.tenants.set(id, updated);
+    return updated;
   }
 
   async deleteTenant(id: number): Promise<boolean> {
-    const result = await db.delete(tenants).where(eq(tenants.id, id));
-    return result.rowCount > 0;
+    return this.tenants.delete(id);
   }
 
   // Mortgages
   async getMortgages(): Promise<Mortgage[]> {
-    return await db.select().from(mortgages);
+    return Array.from(this.mortgages.values());
   }
 
   async getMortgagesByProperty(propertyId: number): Promise<Mortgage[]> {
-    return await db.select().from(mortgages).where(eq(mortgages.propertyId, propertyId));
+    return Array.from(this.mortgages.values()).filter(mortgage => mortgage.propertyId === propertyId);
   }
 
   async getMortgage(id: number): Promise<Mortgage | undefined> {
-    const [mortgage] = await db.select().from(mortgages).where(eq(mortgages.id, id));
-    return mortgage || undefined;
+    return this.mortgages.get(id);
   }
 
   async createMortgage(mortgage: InsertMortgage): Promise<Mortgage> {
-    const [newMortgage] = await db.insert(mortgages).values(mortgage).returning();
+    const newMortgage: Mortgage = { ...mortgage, id: this.mortgageIdCounter++ };
+    this.mortgages.set(newMortgage.id, newMortgage);
     return newMortgage;
   }
 
   async updateMortgage(id: number, mortgage: Partial<InsertMortgage>): Promise<Mortgage | undefined> {
-    const [updated] = await db.update(mortgages).set(mortgage).where(eq(mortgages.id, id)).returning();
-    return updated || undefined;
+    const existing = this.mortgages.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...mortgage };
+    this.mortgages.set(id, updated);
+    return updated;
   }
 
   async deleteMortgage(id: number): Promise<boolean> {
-    const result = await db.delete(mortgages).where(eq(mortgages.id, id));
-    return result.rowCount > 0;
+    return this.mortgages.delete(id);
   }
 
   // Expenses
   async getExpenses(): Promise<Expense[]> {
-    return await db.select().from(expenses);
+    return Array.from(this.expenses.values());
   }
 
   async getExpensesByProperty(propertyId: number): Promise<Expense[]> {
-    return await db.select().from(expenses).where(eq(expenses.propertyId, propertyId));
+    return Array.from(this.expenses.values()).filter(expense => expense.propertyId === propertyId);
   }
 
   async getExpense(id: number): Promise<Expense | undefined> {
-    const [expense] = await db.select().from(expenses).where(eq(expenses.id, id));
-    return expense || undefined;
+    return this.expenses.get(id);
   }
 
   async createExpense(expense: InsertExpense): Promise<Expense> {
-    const [newExpense] = await db.insert(expenses).values(expense).returning();
+    const newExpense: Expense = { ...expense, id: this.expenseIdCounter++ };
+    this.expenses.set(newExpense.id, newExpense);
     return newExpense;
   }
 
   async updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense | undefined> {
-    const [updated] = await db.update(expenses).set(expense).where(eq(expenses.id, id)).returning();
-    return updated || undefined;
+    const existing = this.expenses.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...expense };
+    this.expenses.set(id, updated);
+    return updated;
   }
 
   async deleteExpense(id: number): Promise<boolean> {
-    const result = await db.delete(expenses).where(eq(expenses.id, id));
-    return result.rowCount > 0;
+    return this.expenses.delete(id);
   }
 
   // Vendors
   async getVendors(): Promise<Vendor[]> {
-    return await db.select().from(vendors);
+    return Array.from(this.vendors.values());
   }
 
   async getVendor(id: number): Promise<Vendor | undefined> {
-    const [vendor] = await db.select().from(vendors).where(eq(vendors.id, id));
-    return vendor || undefined;
+    return this.vendors.get(id);
   }
 
   async createVendor(vendor: InsertVendor): Promise<Vendor> {
-    const [newVendor] = await db.insert(vendors).values(vendor).returning();
+    const newVendor: Vendor = { ...vendor, id: this.vendorIdCounter++ };
+    this.vendors.set(newVendor.id, newVendor);
     return newVendor;
   }
 
   async updateVendor(id: number, vendor: Partial<InsertVendor>): Promise<Vendor | undefined> {
-    const [updated] = await db.update(vendors).set(vendor).where(eq(vendors.id, id)).returning();
-    return updated || undefined;
+    const existing = this.vendors.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...vendor };
+    this.vendors.set(id, updated);
+    return updated;
   }
 
   async deleteVendor(id: number): Promise<boolean> {
-    const result = await db.delete(vendors).where(eq(vendors.id, id));
-    return result.rowCount > 0;
+    return this.vendors.delete(id);
   }
 
   // Maintenance Requests
   async getMaintenanceRequests(): Promise<MaintenanceRequest[]> {
-    return await db.select().from(maintenanceRequests);
+    return Array.from(this.maintenanceRequests.values());
   }
 
   async getMaintenanceRequestsByProperty(propertyId: number): Promise<MaintenanceRequest[]> {
-    return await db.select().from(maintenanceRequests)
-      .innerJoin(units, eq(maintenanceRequests.unitId, units.id))
-      .where(eq(units.propertyId, propertyId));
+    const propertyUnits = await this.getUnitsByProperty(propertyId);
+    const unitIds = propertyUnits.map(unit => unit.id);
+    return Array.from(this.maintenanceRequests.values()).filter(request => 
+      unitIds.includes(request.unitId)
+    );
   }
 
   async getMaintenanceRequest(id: number): Promise<MaintenanceRequest | undefined> {
-    const [request] = await db.select().from(maintenanceRequests).where(eq(maintenanceRequests.id, id));
-    return request || undefined;
+    return this.maintenanceRequests.get(id);
   }
 
   async createMaintenanceRequest(request: InsertMaintenanceRequest): Promise<MaintenanceRequest> {
-    const [newRequest] = await db.insert(maintenanceRequests).values(request).returning();
+    const newRequest: MaintenanceRequest = { ...request, id: this.maintenanceRequestIdCounter++ };
+    this.maintenanceRequests.set(newRequest.id, newRequest);
     return newRequest;
   }
 
   async updateMaintenanceRequest(id: number, request: Partial<InsertMaintenanceRequest>): Promise<MaintenanceRequest | undefined> {
-    const [updated] = await db.update(maintenanceRequests).set(request).where(eq(maintenanceRequests.id, id)).returning();
-    return updated || undefined;
+    const existing = this.maintenanceRequests.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...request };
+    this.maintenanceRequests.set(id, updated);
+    return updated;
   }
 
   async deleteMaintenanceRequest(id: number): Promise<boolean> {
-    const result = await db.delete(maintenanceRequests).where(eq(maintenanceRequests.id, id));
-    return result.rowCount > 0;
+    return this.maintenanceRequests.delete(id);
   }
 
   // Revenues
   async getRevenues(): Promise<Revenue[]> {
-    return await db.select().from(revenues);
+    return Array.from(this.revenues.values());
   }
 
   async getRevenuesByProperty(propertyId: number): Promise<Revenue[]> {
-    return await db.select().from(revenues).where(eq(revenues.propertyId, propertyId));
+    return Array.from(this.revenues.values()).filter(revenue => revenue.propertyId === propertyId);
   }
 
   async getRevenue(id: number): Promise<Revenue | undefined> {
-    const [revenue] = await db.select().from(revenues).where(eq(revenues.id, id));
-    return revenue || undefined;
+    return this.revenues.get(id);
   }
 
   async createRevenue(revenue: InsertRevenue): Promise<Revenue> {
-    const [newRevenue] = await db.insert(revenues).values(revenue).returning();
+    const newRevenue: Revenue = { ...revenue, id: this.revenueIdCounter++ };
+    this.revenues.set(newRevenue.id, newRevenue);
     return newRevenue;
   }
 
   async updateRevenue(id: number, revenue: Partial<InsertRevenue>): Promise<Revenue | undefined> {
-    const [updated] = await db.update(revenues).set(revenue).where(eq(revenues.id, id)).returning();
-    return updated || undefined;
+    const existing = this.revenues.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...revenue };
+    this.revenues.set(id, updated);
+    return updated;
   }
 
   async deleteRevenue(id: number): Promise<boolean> {
-    const result = await db.delete(revenues).where(eq(revenues.id, id));
-    return result.rowCount > 0;
+    return this.revenues.delete(id);
   }
 
   // Dashboard and Analytics
   async getDashboardKPIs(): Promise<DashboardKPIs> {
-    const totalRevenueResult = await db.select({ 
-      total: sql<number>`COALESCE(SUM(${revenues.amount}::numeric), 0)`
-    }).from(revenues);
+    const revenues = await this.getRevenues();
+    const totalRevenue = revenues.reduce((sum, rev) => sum + parseFloat(rev.amount), 0);
     
-    const totalPropertiesResult = await db.select({ 
-      count: sql<number>`COUNT(*)`
-    }).from(properties);
-    
-    const totalUnitsResult = await db.select({ 
-      count: sql<number>`COUNT(*)`
-    }).from(units);
-    
-    const occupiedUnitsResult = await db.select({ 
-      count: sql<number>`COUNT(*)`
-    }).from(units).where(eq(units.status, 'occupied'));
-    
-    const pendingRequestsResult = await db.select({ 
-      count: sql<number>`COUNT(*)`
-    }).from(maintenanceRequests).where(eq(maintenanceRequests.status, 'open'));
+    const properties = await this.getProperties();
+    const units = await this.getUnits();
+    const occupiedUnits = units.filter(unit => unit.status === "occupied").length;
+    const occupancyRate = units.length > 0 ? (occupiedUnits / units.length) * 100 : 0;
 
-    const totalRevenue = totalRevenueResult[0]?.total || 0;
-    const totalProperties = totalPropertiesResult[0]?.count || 0;
-    const totalUnits = totalUnitsResult[0]?.count || 0;
-    const occupiedUnits = occupiedUnitsResult[0]?.count || 0;
-    const pendingRequests = pendingRequestsResult[0]?.count || 0;
-
-    const occupancyRate = totalUnits > 0 ? ((occupiedUnits / totalUnits) * 100).toFixed(1) : "0.0";
+    const maintenanceRequests = await this.getMaintenanceRequests();
+    const pendingRequests = maintenanceRequests.filter(req => req.status === "open").length;
 
     return {
       totalRevenue: `$${totalRevenue.toLocaleString()}`,
-      revenueChange: "+12%",
-      totalProperties,
+      revenueChange: "+12.5%",
+      totalProperties: properties.length,
       newProperties: 2,
-      occupancyRate: `${occupancyRate}%`,
-      occupancyChange: "+5%",
-      maintenanceRequests: pendingRequests,
+      occupancyRate: `${occupancyRate.toFixed(1)}%`,
+      occupancyChange: "+3.1%",
+      maintenanceRequests: maintenanceRequests.length,
       pendingRequests,
     };
   }
 
   async getPropertiesWithStats(): Promise<PropertyWithStats[]> {
-    const propertiesList = await this.getProperties();
+    const properties = await this.getProperties();
     const result: PropertyWithStats[] = [];
 
-    for (const property of propertiesList) {
-      const propertyUnits = await this.getUnitsByProperty(property.id);
-      const occupiedUnits = propertyUnits.filter(unit => unit.status === 'occupied').length;
-      const occupancyRate = propertyUnits.length > 0 ? 
-        Math.round((occupiedUnits / propertyUnits.length) * 100) : 0;
+    for (const property of properties) {
+      const units = await this.getUnitsByProperty(property.id);
+      const occupiedUnits = units.filter(unit => unit.status === "occupied").length;
+      const occupancyRate = units.length > 0 ? (occupiedUnits / units.length) * 100 : 0;
       
-      const propertyRevenues = await this.getRevenuesByProperty(property.id);
-      const monthlyRevenue = propertyRevenues.reduce((sum, revenue) => {
-        return sum + parseFloat(revenue.amount);
-      }, 0);
+      const revenues = await this.getRevenuesByProperty(property.id);
+      const monthlyRevenue = revenues
+        .filter(rev => rev.date.getMonth() === new Date().getMonth())
+        .reduce((sum, rev) => sum + parseFloat(rev.amount), 0);
 
       result.push({
         ...property,
@@ -391,33 +544,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getExpensesByCategory(): Promise<ExpenseByCategory[]> {
-    const result = await db.select({
-      category: expenses.category,
-      total: sql<number>`SUM(${expenses.amount}::numeric)`
-    }).from(expenses).groupBy(expenses.category);
+    const expenses = await this.getExpenses();
+    const categoryTotals = new Map<string, number>();
+    let totalAmount = 0;
 
-    const totalExpenses = result.reduce((sum, row) => sum + row.total, 0);
+    expenses.forEach(expense => {
+      const amount = parseFloat(expense.amount);
+      categoryTotals.set(expense.category, (categoryTotals.get(expense.category) || 0) + amount);
+      totalAmount += amount;
+    });
 
-    return result.map(row => ({
-      category: row.category,
-      amount: row.total,
-      percentage: totalExpenses > 0 ? Math.round((row.total / totalExpenses) * 100) : 0,
+    return Array.from(categoryTotals.entries()).map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: totalAmount > 0 ? (amount / totalAmount) * 100 : 0,
     }));
   }
 
   async getMonthlyRevenueData(): Promise<{ month: string; revenue: number }[]> {
-    const result = await db.select({
-      month: sql<string>`TO_CHAR(${revenues.date}, 'Mon YYYY')`,
-      revenue: sql<number>`SUM(${revenues.amount}::numeric)`
-    }).from(revenues)
-    .groupBy(sql`TO_CHAR(${revenues.date}, 'Mon YYYY')`)
-    .orderBy(sql`MIN(${revenues.date})`);
-
-    return result.map(row => ({
-      month: row.month,
-      revenue: row.revenue,
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months.map((month, index) => ({
+      month,
+      revenue: 15000 + Math.random() * 5000, // Mock data for now
     }));
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();
