@@ -240,6 +240,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/mortgages/:id", async (req, res) => {
+    console.log("=== DELETE /api/mortgages/:id endpoint hit ===");
+    console.log("Mortgage ID to delete:", req.params.id);
+    
+    try {
+      const id = parseInt(req.params.id);
+      console.log("Deleting mortgage with ID:", id);
+      const deleted = await storage.deleteMortgage(id);
+      console.log("Delete result:", deleted);
+      
+      if (!deleted) {
+        console.log("Mortgage not found");
+        return res.status(404).json({ message: "Mortgage not found" });
+      }
+      
+      console.log("Mortgage deleted successfully");
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting mortgage:", error);
+      res.status(500).json({ message: "Failed to delete mortgage" });
+    }
+  });
+
   // Expenses
   app.get("/api/expenses", async (req, res) => {
     try {
