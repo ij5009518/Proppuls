@@ -6,6 +6,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Debug middleware to see what's being received
+app.use('/api/properties', (req, res, next) => {
+  console.log('=== MIDDLEWARE HIT FOR /api/properties ===');
+  console.log('Method:', req.method);
+  console.log('Body:', JSON.stringify(req.body, null, 2));
+  console.log('Headers:', req.headers);
+  next();
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
