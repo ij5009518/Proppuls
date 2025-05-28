@@ -234,12 +234,13 @@ export default function Properties() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h1 className="text-3xl font-bold">Properties</h1>
-        <div className="flex space-x-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
+            className="flex items-center"
           >
             <Upload className="mr-2 h-4 w-4" />
             Bulk Upload
@@ -253,7 +254,7 @@ export default function Properties() {
           />
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="flex items-center">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Property
               </Button>
