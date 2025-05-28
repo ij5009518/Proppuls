@@ -80,7 +80,7 @@ export default function Properties() {
   const createMutation = useMutation({
     mutationFn: async (data: InsertProperty) => {
       try {
-        const response = await apiRequest("/api/properties", "POST", data);
+        const response = await apiRequest("POST", "/api/properties", data);
         return response.json();
       } catch (error) {
         console.error("API request failed:", error);
@@ -101,7 +101,7 @@ export default function Properties() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertProperty> }) =>
-      apiRequest(`/api/properties/${id}`, "PATCH", data),
+      apiRequest("PATCH", `/api/properties/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
       setIsEditDialogOpen(false);
