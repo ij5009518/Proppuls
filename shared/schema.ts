@@ -49,8 +49,13 @@ export const mortgages = pgTable("mortgages", {
   currentBalance: decimal("current_balance", { precision: 12, scale: 2 }).notNull(),
   interestRate: decimal("interest_rate", { precision: 5, scale: 3 }).notNull(),
   monthlyPayment: decimal("monthly_payment", { precision: 8, scale: 2 }).notNull(),
+  principalAmount: decimal("principal_amount", { precision: 8, scale: 2 }).notNull(),
+  interestAmount: decimal("interest_amount", { precision: 8, scale: 2 }).notNull(),
+  escrowAmount: decimal("escrow_amount", { precision: 8, scale: 2 }).default('0'),
   startDate: timestamp("start_date").notNull(),
   termYears: integer("term_years").notNull(),
+  accountNumber: text("account_number"),
+  notes: text("notes"),
 });
 
 export const expenses = pgTable("expenses", {
@@ -103,6 +108,18 @@ export const revenues = pgTable("revenues", {
   amount: decimal("amount", { precision: 8, scale: 2 }).notNull(),
   date: timestamp("date").notNull(),
   description: text("description"),
+});
+
+export const mortgagePayments = pgTable("mortgage_payments", {
+  id: serial("id").primaryKey(),
+  mortgageId: integer("mortgage_id").notNull(),
+  paymentDate: timestamp("payment_date").notNull(),
+  totalPayment: decimal("total_payment", { precision: 8, scale: 2 }).notNull(),
+  principalPaid: decimal("principal_paid", { precision: 8, scale: 2 }).notNull(),
+  interestPaid: decimal("interest_paid", { precision: 8, scale: 2 }).notNull(),
+  escrowPaid: decimal("escrow_paid", { precision: 8, scale: 2 }).default('0'),
+  remainingBalance: decimal("remaining_balance", { precision: 12, scale: 2 }).notNull(),
+  paymentNumber: integer("payment_number").notNull(),
 });
 
 // Insert schemas
