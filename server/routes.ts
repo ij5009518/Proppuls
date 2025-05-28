@@ -37,20 +37,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/properties", async (req, res) => {
+    console.log("=== POST /api/properties endpoint hit ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    
     try {
-      console.log("Received property data:", req.body);
       const propertyData = insertPropertySchema.parse(req.body);
-      console.log("Parsed property data:", propertyData);
+      console.log("Schema validation passed:", propertyData);
       const property = await storage.createProperty(propertyData);
-      console.log("Created property:", property);
+      console.log("Property created successfully:", property);
       res.status(201).json(property);
-    } catch (error) {
-      console.error("Error creating property:", error);
-      if (error instanceof Error) {
-        res.status(400).json({ message: "Invalid property data", error: error.message });
-      } else {
-        res.status(400).json({ message: "Invalid property data", error: String(error) });
-      }
+    } catch (error: any) {
+      console.error("=== ERROR in property creation ===");
+      console.error("Error details:", error);
+      console.error("Error message:", error?.message);
+      console.error("Error stack:", error?.stack);
+      res.status(400).json({ 
+        message: "Invalid property data", 
+        error: error?.message || String(error),
+        details: error?.issues || error
+      });
     }
   });
 
