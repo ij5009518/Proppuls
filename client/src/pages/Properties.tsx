@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Grid, List, Eye, Edit, Trash2 } from "lucide-react";
+import { Plus, Grid, List, Eye, Edit, Trash2, Home, DollarSign, Calculator, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -672,7 +672,7 @@ export default function Properties() {
                             <div className="space-y-1">
                               <h4 className="font-semibold">Unit {unit.unitNumber}</h4>
                               <p className="text-sm text-muted-foreground">
-                                {unit.bedrooms} bed, {unit.bathrooms} bath • {unit.squareFeet} sq ft
+                                {unit.bedrooms} bed, {unit.bathrooms} bath • {unit.squareFootage || 'N/A'} sq ft
                               </p>
                               <p className="text-lg font-semibold text-green-600">
                                 {formatCurrency(unit.rentAmount)}/month
@@ -728,8 +728,8 @@ export default function Properties() {
                         </CardHeader>
                         <CardContent className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium">Loan Amount</label>
-                            <p className="text-lg font-semibold">{formatCurrency(mortgage.loanAmount)}</p>
+                            <label className="text-sm font-medium">Original Amount</label>
+                            <p className="text-lg font-semibold">{formatCurrency(mortgage.originalAmount)}</p>
                           </div>
                           <div>
                             <label className="text-sm font-medium">Interest Rate</label>
