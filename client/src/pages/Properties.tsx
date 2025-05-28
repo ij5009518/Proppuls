@@ -126,7 +126,12 @@ export default function Properties() {
 
   const onCreateSubmit = (data: PropertyFormData) => {
     console.log("Form data being submitted:", data);
-    createMutation.mutate(data);
+    // Ensure purchasePrice is a string for decimal field
+    const formattedData = {
+      ...data,
+      purchasePrice: data.purchasePrice.toString(),
+    };
+    createMutation.mutate(formattedData);
   };
 
   const onEditSubmit = (data: PropertyFormData) => {
