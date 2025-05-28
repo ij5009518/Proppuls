@@ -7,8 +7,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Debug middleware to see what's being received
-app.use(['/api/properties', '/api/units', '/api/tenants'], (req, res, next) => {
-  console.log(`=== MIDDLEWARE HIT FOR ${req.path} ===`);
+app.use('/api/*', (req, res, next) => {
+  console.log(`=== API MIDDLEWARE HIT FOR ${req.path} ===`);
   console.log('Method:', req.method);
   console.log('Body:', JSON.stringify(req.body, null, 2));
   next();

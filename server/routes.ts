@@ -143,14 +143,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.delete("/api/units/:id", async (req, res) => {
+    console.log("=== DELETE /api/units/:id endpoint hit ===");
+    console.log("Unit ID to delete:", req.params.id);
+    
     try {
       const id = parseInt(req.params.id);
+      console.log("Deleting unit with ID:", id);
       const deleted = await storage.deleteUnit(id);
+      console.log("Delete result:", deleted);
+      
       if (!deleted) {
+        console.log("Unit not found for deletion");
         return res.status(404).json({ message: "Unit not found" });
       }
+      
+      console.log("Unit deleted successfully");
       res.status(204).send();
     } catch (error) {
+      console.error("Error deleting unit:", error);
       res.status(500).json({ message: "Failed to delete unit" });
     }
   });
