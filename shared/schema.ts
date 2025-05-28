@@ -145,7 +145,7 @@ export const mortgagePayments = pgTable("mortgage_payments", {
 });
 
 // Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true, lastLoginAt: true }).extend({
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true, lastLoginAt: true, passwordHash: true }).extend({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 export const insertSessionSchema = createInsertSchema(sessions).omit({ createdAt: true });
