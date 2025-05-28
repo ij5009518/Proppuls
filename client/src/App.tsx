@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import Properties from "@/pages/Properties";
 import Units from "@/pages/Units";
 import Tenants from "@/pages/Tenants";
+import Mortgages from "@/pages/Mortgages";
 import Maintenance from "@/pages/Maintenance";
 import Vendors from "@/pages/Vendors";
 import Financials from "@/pages/Financials";
@@ -22,6 +23,7 @@ function Router() {
         <Route path="/properties" component={Properties} />
         <Route path="/units" component={Units} />
         <Route path="/tenants" component={Tenants} />
+        <Route path="/mortgages" component={Mortgages} />
         <Route path="/maintenance" component={Maintenance} />
         <Route path="/vendors" component={Vendors} />
         <Route path="/financials" component={Financials} />
