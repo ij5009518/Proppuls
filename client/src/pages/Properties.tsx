@@ -57,6 +57,7 @@ export default function Properties() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [isMortgageDialogOpen, setIsMortgageDialogOpen] = useState(false);
+  const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false); // Add state for Unit Dialog
 
   const { toast } = useToast();
 
@@ -115,15 +116,15 @@ export default function Properties() {
   const calculateMortgagePayments = (principal: number, interestRate: number, termYears: number) => {
     const monthlyRate = interestRate / 100 / 12;
     const numPayments = termYears * 12;
-    
+
     // Calculate monthly payment using amortization formula
     const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
                           (Math.pow(1 + monthlyRate, numPayments) - 1);
-    
+
     // Calculate first month's interest and principal
     const firstMonthInterest = principal * monthlyRate;
     const firstMonthPrincipal = monthlyPayment - firstMonthInterest;
-    
+
     return {
       monthlyPayment: monthlyPayment.toFixed(2),
       principalAmount: firstMonthPrincipal.toFixed(2),
@@ -133,22 +134,22 @@ export default function Properties() {
 
   // Auto-calculate when key fields change
   const watchedValues = mortgageForm.watch(["originalAmount", "interestRate", "termYears"]);
-  
+
   const handleAutoCalculate = () => {
     const [originalAmount, interestRate, termYears] = watchedValues;
-    
+
     if (originalAmount && interestRate && termYears) {
       const principal = parseFloat(originalAmount);
       const rate = parseFloat(interestRate);
       const years = parseInt(termYears.toString());
-      
+
       if (principal > 0 && rate > 0 && years > 0) {
         const calculations = calculateMortgagePayments(principal, rate, years);
-        
+
         mortgageForm.setValue("monthlyPayment", calculations.monthlyPayment);
         mortgageForm.setValue("principalAmount", calculations.principalAmount);
         mortgageForm.setValue("interestAmount", calculations.interestAmount);
-        
+
         // Auto-set current balance to original amount if not set
         if (!mortgageForm.getValues("currentBalance")) {
           mortgageForm.setValue("currentBalance", originalAmount);
@@ -282,11 +283,11 @@ export default function Properties() {
   const calculatePropertyStats = (propertyId: number) => {
     const propertyUnits = getPropertyUnits(propertyId);
     const propertyExpenses = getPropertyExpenses(propertyId);
-    
+
     const totalUnits = propertyUnits.length;
     const occupiedUnits = propertyUnits.filter(unit => unit.status === "occupied").length;
     const occupancyRate = totalUnits > 0 ? ((occupiedUnits / totalUnits) * 100).toFixed(1) : "0";
-    
+
     const monthlyRent = propertyUnits.reduce((sum, unit) => {
       return sum + (unit.status === "occupied" ? parseFloat(unit.rentAmount) : 0);
     }, 0);
@@ -725,22 +726,18 @@ export default function Properties() {
               <TabsContent value="units" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Property Units</h3>
-                  <Button size="sm" onClick={() => {
-                    window.location.href = '/units';
-                  }}>
+                  <Button size="sm" onClick={() => setIsUnitDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Unit
                   </Button>
                 </div>
-                
+
                 <div className="grid gap-4">
                   {getPropertyUnits(selectedProperty.id).length === 0 ? (
                     <Card>
                       <CardContent className="p-6 text-center">
                         <p className="text-muted-foreground">No units found for this property.</p>
-                        <Button className="mt-4" onClick={() => {
-                          window.location.href = '/units';
-                        }}>
+                        <Button className="mt-4" onClick={() => setIsUnitDialogOpen(true)}>
                           Add First Unit
                         </Button>
                       </CardContent>
@@ -846,16 +843,16 @@ export default function Properties() {
                                 <label className="text-sm font-medium text-muted-foreground">Total Monthly Payment</label>
                                 <p className="text-2xl font-bold text-blue-600">{formatCurrency(mortgage.monthlyPayment)}</p>
                               </div>
-                              
+
                               {/* Principal */}
                               <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                                 <label className="text-sm font-medium text-muted-foreground">Principal</label>
-                                <p className="text-xl font-semibold text-green-600">{formatCurrency(mortgage.principalAmount)}</p>
+                                <p className="text-xl font-semibold text-green-600">{formatCurrency(mortgage.principalAmount)}</div>
                                 <p className="text-xs text-muted-foreground">
                                   {((parseFloat(mortgage.principalAmount) / parseFloat(mortgage.monthlyPayment)) * 100).toFixed(1)}%
                                 </p>
                               </div>
-                              
+
                               {/* Interest */}
                               <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                                 <label className="text-sm font-medium text-muted-foreground">Interest</label>
@@ -864,7 +861,7 @@ export default function Properties() {
                                   {((parseFloat(mortgage.interestAmount) / parseFloat(mortgage.monthlyPayment)) * 100).toFixed(1)}%
                                 </p>
                               </div>
-                              
+
                               {/* Escrow */}
                               <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                                 <label className="text-sm font-medium text-muted-foreground">Escrow</label>
@@ -1166,7 +1163,7 @@ export default function Properties() {
                 propertyId: selectedProperty?.id || 0,
                 escrowAmount: data.escrowAmount || "0",
               };
-              
+
               // Create mortgage via API
               fetch("/api/mortgages", {
                 method: "POST",
@@ -1191,7 +1188,7 @@ export default function Properties() {
                 });
               });
             })} className="space-y-6">
-              
+
               {/* Basic Mortgage Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Basic Mortgage Information</h3>
@@ -1325,7 +1322,7 @@ export default function Properties() {
                     )}
                   />
                 </div>
-                
+
                 {/* Auto-Calculate Button */}
                 <div className="flex justify-center">
                   <Button 
@@ -1430,6 +1427,17 @@ export default function Properties() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unit Creation Dialog */}
+      <Dialog open={isUnitDialogOpen} onOpenChange={setIsUnitDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New Unit</DialogTitle>
+          </DialogHeader>
+          {/* Add your unit creation form here */}
+          <p>Unit creation form will go here.</p>
         </DialogContent>
       </Dialog>
     </div>
