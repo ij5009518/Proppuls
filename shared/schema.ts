@@ -106,7 +106,9 @@ export const revenues = pgTable("revenues", {
 });
 
 // Insert schemas
-export const insertPropertySchema = createInsertSchema(properties).omit({ id: true });
+export const insertPropertySchema = createInsertSchema(properties).omit({ id: true }).extend({
+  purchaseDate: z.coerce.date(),
+});
 export const insertUnitSchema = createInsertSchema(units).omit({ id: true });
 export const insertTenantSchema = createInsertSchema(tenants).omit({ id: true });
 export const insertMortgageSchema = createInsertSchema(mortgages).omit({ id: true });
