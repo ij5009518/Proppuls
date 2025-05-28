@@ -109,7 +109,7 @@ export default function Tenants() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertTenant> }) =>
-      apiRequest(`/api/tenants/${id}`, "PATCH", data),
+      apiRequest("PATCH", `/api/tenants/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       setIsEditDialogOpen(false);
@@ -122,7 +122,7 @@ export default function Tenants() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/tenants/${id}`, "DELETE"),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/tenants/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       toast({ title: "Tenant deleted successfully" });
