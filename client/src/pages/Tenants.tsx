@@ -466,7 +466,7 @@ export default function Tenants() {
                         </button>
                       ) : (
                         <p className="text-sm font-semibold">{getUnitNumber(tenant.unitId)}</p>
-                      )}</div>
+                      )}
                       {tenant.monthlyRent && (
                         <p className="text-sm text-gray-600">{formatCurrency(tenant.monthlyRent)}</p>
                       )}
