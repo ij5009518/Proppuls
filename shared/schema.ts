@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, decimal, timestamp, json } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -104,6 +105,92 @@ export const revenues = pgTable("revenues", {
   date: timestamp("date").notNull(),
   description: text("description"),
 });
+
+// Relations
+export const propertiesRelations = relations(properties, ({ many }) => ({
+  units: many(units),
+  mortgages: many(mortgages),
+  expenses: many(expenses),
+  revenues: many(revenues),
+  maintenanceRequests: many(maintenanceRequests),
+}));
+
+export const unitsRelations = relations(units, ({ one, many }) => ({
+  property: one(properties, {
+    fields: [units.propertyId],
+    references: [properties.id],
+  }),
+  tenants: many(tenants),
+  expenses: many(expenses),
+  revenues: many(revenues),
+  maintenanceRequests: many(maintenanceRequests),
+}));
+
+export const tenantsRelations = relations(tenants, ({ one, many }) => ({
+  unit: one(units, {
+    fields: [tenants.unitId],
+    references: [units.id],
+  }),
+  revenues: many(revenues),
+  maintenanceRequests: many(maintenanceRequests),
+}));
+
+export const mortgagesRelations = relations(mortgages, ({ one }) => ({
+  property: one(properties, {
+    fields: [mortgages.propertyId],
+    references: [properties.id],
+  }),
+}));
+
+export const expensesRelations = relations(expenses, ({ one }) => ({
+  property: one(properties, {
+    fields: [expenses.propertyId],
+    references: [properties.id],
+  }),
+  unit: one(units, {
+    fields: [expenses.unitId],
+    references: [units.id],
+  }),
+  vendor: one(vendors, {
+    fields: [expenses.vendorId],
+    references: [vendors.id],
+  }),
+}));
+
+export const vendorsRelations = relations(vendors, ({ many }) => ({
+  expenses: many(expenses),
+  maintenanceRequests: many(maintenanceRequests),
+}));
+
+export const maintenanceRequestsRelations = relations(maintenanceRequests, ({ one }) => ({
+  unit: one(units, {
+    fields: [maintenanceRequests.unitId],
+    references: [units.id],
+  }),
+  tenant: one(tenants, {
+    fields: [maintenanceRequests.tenantId],
+    references: [tenants.id],
+  }),
+  vendor: one(vendors, {
+    fields: [maintenanceRequests.vendorId],
+    references: [vendors.id],
+  }),
+}));
+
+export const revenuesRelations = relations(revenues, ({ one }) => ({
+  property: one(properties, {
+    fields: [revenues.propertyId],
+    references: [properties.id],
+  }),
+  unit: one(units, {
+    fields: [revenues.unitId],
+    references: [units.id],
+  }),
+  tenant: one(tenants, {
+    fields: [revenues.tenantId],
+    references: [tenants.id],
+  }),
+}));
 
 // Insert schemas
 export const insertPropertySchema = createInsertSchema(properties).omit({ id: true });
