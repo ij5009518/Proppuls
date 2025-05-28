@@ -8,7 +8,8 @@ import {
   HandHeart, 
   TrendingUp, 
   FileText,
-  BarChart3
+  BarChart3,
+  DollarSign
 } from "lucide-react";
 
 interface SidebarProps {
@@ -20,6 +21,7 @@ const navigation = [
   { name: "Properties", href: "/properties", icon: Home },
   { name: "Units", href: "/units", icon: DoorOpen },
   { name: "Tenants", href: "/tenants", icon: Users },
+  { name: "Mortgages", href: "/mortgages", icon: DollarSign },
   { name: "Maintenance", href: "/maintenance", icon: Wrench },
   { name: "Vendors", href: "/vendors", icon: HandHeart },
   { name: "Financials", href: "/financials", icon: TrendingUp },
