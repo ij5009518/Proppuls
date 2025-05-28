@@ -51,6 +51,11 @@ export interface IStorage {
   updateMortgage(id: number, mortgage: Partial<InsertMortgage>): Promise<Mortgage | undefined>;
   deleteMortgage(id: number): Promise<boolean>;
 
+  // Mortgage Payments
+  getMortgagePayments(mortgageId: number): Promise<MortgagePayment[]>;
+  createMortgagePayment(payment: InsertMortgagePayment): Promise<MortgagePayment>;
+  calculateAmortization(mortgageId: number): Promise<{ monthlyPrincipal: number; monthlyInterest: number; remainingBalance: number }>;
+
   // Expenses
   getExpenses(): Promise<Expense[]>;
   getExpensesByProperty(propertyId: number): Promise<Expense[]>;
@@ -94,6 +99,7 @@ export class MemStorage implements IStorage {
   private units: Map<number, Unit> = new Map();
   private tenants: Map<number, Tenant> = new Map();
   private mortgages: Map<number, Mortgage> = new Map();
+  private mortgagePayments: Map<number, MortgagePayment> = new Map();
   private expenses: Map<number, Expense> = new Map();
   private vendors: Map<number, Vendor> = new Map();
   private maintenanceRequests: Map<number, MaintenanceRequest> = new Map();
