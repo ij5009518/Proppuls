@@ -8,13 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Property, InsertProperty } from "@shared/schema";
+import type { Property, InsertProperty, Unit, Mortgage, Expense } from "@shared/schema";
 
 const propertySchema = z.object({
   name: z.string().min(1, "Property name is required"),
@@ -38,11 +39,25 @@ export default function Properties() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
 
   const { toast } = useToast();
 
   const { data: properties = [], isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
+  });
+
+  // Additional data for property details
+  const { data: units = [] } = useQuery<Unit[]>({
+    queryKey: ["/api/units"],
+  });
+
+  const { data: mortgages = [] } = useQuery<Mortgage[]>({
+    queryKey: ["/api/mortgages"],
+  });
+
+  const { data: expenses = [] } = useQuery<Expense[]>({
+    queryKey: ["/api/expenses"],
   });
 
   const createForm = useForm<PropertyFormData>({
@@ -168,6 +183,45 @@ export default function Properties() {
     if (confirm("Are you sure you want to delete this property?")) {
       deleteMutation.mutate(id);
     }
+  };
+
+  // Helper functions for property details
+  const getPropertyUnits = (propertyId: number) => {
+    return units.filter(unit => unit.propertyId === propertyId);
+  };
+
+  const getPropertyMortgages = (propertyId: number) => {
+    return mortgages.filter(mortgage => mortgage.propertyId === propertyId);
+  };
+
+  const getPropertyExpenses = (propertyId: number) => {
+    return expenses.filter(expense => expense.propertyId === propertyId);
+  };
+
+  const calculatePropertyStats = (propertyId: number) => {
+    const propertyUnits = getPropertyUnits(propertyId);
+    const propertyExpenses = getPropertyExpenses(propertyId);
+    
+    const totalUnits = propertyUnits.length;
+    const occupiedUnits = propertyUnits.filter(unit => unit.status === "occupied").length;
+    const occupancyRate = totalUnits > 0 ? ((occupiedUnits / totalUnits) * 100).toFixed(1) : "0";
+    
+    const monthlyRent = propertyUnits.reduce((sum, unit) => {
+      return sum + (unit.status === "occupied" ? parseFloat(unit.rentAmount) : 0);
+    }, 0);
+
+    const monthlyExpenses = propertyExpenses
+      .filter(expense => expense.isRecurring)
+      .reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+
+    return {
+      totalUnits,
+      occupiedUnits,
+      occupancyRate,
+      monthlyRent,
+      monthlyExpenses,
+      netIncome: monthlyRent - monthlyExpenses
+    };
   };
 
 
@@ -446,40 +500,315 @@ export default function Properties() {
         </div>
       )}
 
-      {/* View Property Dialog */}
+      {/* Enhanced Property Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Property Details</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Home className="h-5 w-5" />
+              {selectedProperty?.name} - Property Details
+            </DialogTitle>
           </DialogHeader>
           {selectedProperty && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-semibold">Property Information</h3>
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Name:</span> {selectedProperty.name}</p>
-                    <p><span className="font-medium">Address:</span> {selectedProperty.address}</p>
-                    <p><span className="font-medium">City:</span> {selectedProperty.city}</p>
-                    <p><span className="font-medium">State:</span> {selectedProperty.state}</p>
-                    <p><span className="font-medium">ZIP:</span> {selectedProperty.zipCode}</p>
-                  </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="units" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Units
+                </TabsTrigger>
+                <TabsTrigger value="mortgage" className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Mortgage
+                </TabsTrigger>
+                <TabsTrigger value="taxes" className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
+                  Taxes & Expenses
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Property Overview Tab */}
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Basic Property Info */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Property Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium">Address</label>
+                        <p className="text-sm text-muted-foreground">{selectedProperty.address}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">City, State ZIP</label>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedProperty.city}, {selectedProperty.state} {selectedProperty.zipCode}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Property Type</label>
+                        <p className="text-sm text-muted-foreground capitalize">{selectedProperty.propertyType}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Status</label>
+                        <Badge className={getStatusColor(selectedProperty.status)}>
+                          {selectedProperty.status}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Financial Summary */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Financial Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {(() => {
+                        const stats = calculatePropertyStats(selectedProperty.id);
+                        return (
+                          <>
+                            <div>
+                              <label className="text-sm font-medium">Purchase Price</label>
+                              <p className="text-lg font-semibold text-green-600">
+                                {formatCurrency(selectedProperty.purchasePrice)}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Monthly Rent Income</label>
+                              <p className="text-lg font-semibold text-green-600">
+                                {formatCurrency(stats.monthlyRent)}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Monthly Expenses</label>
+                              <p className="text-lg font-semibold text-red-600">
+                                {formatCurrency(stats.monthlyExpenses)}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Net Monthly Income</label>
+                              <p className={`text-lg font-semibold ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {formatCurrency(stats.netIncome)}
+                              </p>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+
+                  {/* Occupancy Statistics */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Occupancy Statistics</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {(() => {
+                        const stats = calculatePropertyStats(selectedProperty.id);
+                        return (
+                          <>
+                            <div>
+                              <label className="text-sm font-medium">Total Units</label>
+                              <p className="text-lg font-semibold">{stats.totalUnits}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Occupied Units</label>
+                              <p className="text-lg font-semibold text-green-600">{stats.occupiedUnits}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Vacant Units</label>
+                              <p className="text-lg font-semibold text-orange-600">{stats.totalUnits - stats.occupiedUnits}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Occupancy Rate</label>
+                              <p className="text-lg font-semibold">{stats.occupancyRate}%</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Purchase Date</label>
+                              <p className="text-sm text-muted-foreground">{formatDate(selectedProperty.purchaseDate)}</p>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
                 </div>
-                <div>
-                  <h3 className="font-semibold">Property Details</h3>
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Type:</span> {selectedProperty.propertyType}</p>
-                    <p><span className="font-medium">Total Units:</span> {selectedProperty.totalUnits}</p>
-                    <p><span className="font-medium">Purchase Price:</span> {formatCurrency(selectedProperty.purchasePrice)}</p>
-                    <p><span className="font-medium">Purchase Date:</span> {formatDate(selectedProperty.purchaseDate)}</p>
-                    <p><span className="font-medium">Status:</span> {selectedProperty.status}</p>
-                  </div>
+              </TabsContent>
+
+              {/* Units Management Tab */}
+              <TabsContent value="units" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Property Units</h3>
+                  <Button size="sm" onClick={() => {
+                    window.location.href = '/units';
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Unit
+                  </Button>
                 </div>
-              </div>
-              <div className="flex justify-end">
-                <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
-              </div>
-            </div>
+                
+                <div className="grid gap-4">
+                  {getPropertyUnits(selectedProperty.id).length === 0 ? (
+                    <Card>
+                      <CardContent className="p-6 text-center">
+                        <p className="text-muted-foreground">No units found for this property.</p>
+                        <Button className="mt-4" onClick={() => {
+                          window.location.href = '/units';
+                        }}>
+                          Add First Unit
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    getPropertyUnits(selectedProperty.id).map((unit) => (
+                      <Card key={unit.id}>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <h4 className="font-semibold">Unit {unit.unitNumber}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {unit.bedrooms} bed, {unit.bathrooms} bath • {unit.squareFeet} sq ft
+                              </p>
+                              <p className="text-lg font-semibold text-green-600">
+                                {formatCurrency(unit.rentAmount)}/month
+                              </p>
+                            </div>
+                            <Badge className={getStatusColor(unit.status)}>
+                              {unit.status}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Mortgage Information Tab */}
+              <TabsContent value="mortgage" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Mortgage Information</h3>
+                  <Button size="sm" onClick={() => {
+                    toast({
+                      title: "Feature Coming Soon",
+                      description: "Mortgage management interface will be available soon.",
+                    });
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Mortgage
+                  </Button>
+                </div>
+
+                {getPropertyMortgages(selectedProperty.id).length === 0 ? (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground mb-4">No mortgage information found for this property.</p>
+                      <Button onClick={() => {
+                        toast({
+                          title: "Feature Coming Soon",
+                          description: "Mortgage tracking will be available soon.",
+                        });
+                      }}>
+                        Add Mortgage Details
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4">
+                    {getPropertyMortgages(selectedProperty.id).map((mortgage) => (
+                      <Card key={mortgage.id}>
+                        <CardHeader>
+                          <CardTitle>Mortgage Details</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium">Loan Amount</label>
+                            <p className="text-lg font-semibold">{formatCurrency(mortgage.loanAmount)}</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Interest Rate</label>
+                            <p className="text-lg font-semibold">{mortgage.interestRate}%</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Term</label>
+                            <p className="text-lg font-semibold">{mortgage.termYears} years</p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Monthly Payment</label>
+                            <p className="text-lg font-semibold text-red-600">{formatCurrency(mortgage.monthlyPayment)}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Taxes & Expenses Tab */}
+              <TabsContent value="taxes" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Property Expenses & Taxes</h3>
+                  <Button size="sm" onClick={() => {
+                    toast({
+                      title: "Feature Coming Soon",
+                      description: "Expense management interface will be available soon.",
+                    });
+                  }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Expense
+                  </Button>
+                </div>
+
+                {getPropertyExpenses(selectedProperty.id).length === 0 ? (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <Calculator className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground mb-4">No expenses recorded for this property.</p>
+                      <Button onClick={() => {
+                        toast({
+                          title: "Feature Coming Soon",
+                          description: "Expense tracking will be available soon.",
+                        });
+                      }}>
+                        Add First Expense
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4">
+                    {getPropertyExpenses(selectedProperty.id).map((expense) => (
+                      <Card key={expense.id}>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <h4 className="font-semibold capitalize">{expense.category}</h4>
+                              <p className="text-sm text-muted-foreground">{expense.description}</p>
+                              <p className="text-lg font-semibold text-red-600">
+                                {formatCurrency(expense.amount)}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <Badge variant={expense.isRecurring ? "default" : "secondary"}>
+                                {expense.isRecurring ? "Recurring" : "One-time"}
+                              </Badge>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {formatDate(expense.date)}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           )}
         </DialogContent>
       </Dialog>
