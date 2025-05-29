@@ -15,7 +15,26 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Property, InsertProperty, Unit, Mortgage, Expense, InsertUnit } from "@shared/schema";
+// Define local types that match the database structure
+type Property = {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  totalUnits: number;
+  purchasePrice: string;
+  purchaseDate: Date;
+  propertyType: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type InsertProperty = Omit<Property, 'id' | 'createdAt' | 'updatedAt'>;
+
+import type { Unit, Mortgage, Expense, InsertUnit } from "@shared/schema";
 
 const propertySchema = z.object({
   name: z.string().min(1, "Property name is required"),
@@ -219,7 +238,7 @@ export default function Properties() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<InsertProperty> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<InsertProperty> }) =>
       apiRequest("PATCH", `/api/properties/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
@@ -233,7 +252,7 @@ export default function Properties() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/properties/${id}`),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/properties/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
       toast({ title: "Property deleted successfully" });
