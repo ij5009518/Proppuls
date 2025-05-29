@@ -1,5 +1,4 @@
-
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from "@neondatabase/serverless";
 import * as schema from "../shared/schema";
 import { pgTable, text, integer, timestamp, boolean, decimal } from "drizzle-orm/pg-core";
