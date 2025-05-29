@@ -25,29 +25,22 @@ const tenantSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Valid email is required"),
   phone: z.string().min(1, "Phone number is required"),
-  status: z.string().min(1, "Status is required"),
-  unitId: z.number().optional(),
+  status: z.enum(["active", "inactive", "pending"]),
+  unitId: z.string().optional(),
   leaseStart: z.date().optional(),
   leaseEnd: z.date().optional(),
   monthlyRent: z.string().optional(),
-  securityDeposit: z.string().optional(),
-  emergencyContactName: z.string().optional(),
-  emergencyContactPhone: z.string().optional(),
-  dateOfBirth: z.date().optional(),
-  moveInDate: z.date().optional(),
-  notes: z.string().optional(),
+  deposit: z.string().optional(),
 });
 
 const rentPaymentSchema = z.object({
-  tenantId: z.number().min(1, "Tenant is required"),
-  unitId: z.number().min(1, "Unit is required"),
-  propertyId: z.number().min(1, "Property is required"),
+  tenantId: z.string().min(1, "Tenant is required"),
+  unitId: z.string().min(1, "Unit is required"),
   amount: z.string().min(1, "Amount is required"),
   dueDate: z.date(),
   paidDate: z.date().optional(),
   paymentMethod: z.string().optional(),
-  paymentReference: z.string().optional(),
-  status: z.string().min(1, "Status is required"),
+  status: z.enum(["pending", "paid", "late", "cancelled"]),
   lateFeeAmount: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -61,24 +54,21 @@ export default function Tenants() {
   const { toast } = useToast();
 
   const { data: tenants, isLoading: tenantsLoading } = useQuery({
-    queryKey: ["tenants"],
-    queryFn: () => apiRequest<Tenant[]>("/api/tenants"),
+    queryKey: ["/api/tenants"],
   });
 
   const { data: units } = useQuery({
-    queryKey: ["units"],
-    queryFn: () => apiRequest<Unit[]>("/api/units"),
+    queryKey: ["/api/units"],
   });
 
   const { data: rentPayments } = useQuery({
-    queryKey: ["rent-payments"],
-    queryFn: () => apiRequest<RentPayment[]>("/api/rent-payments"),
+    queryKey: ["/api/rent-payments"],
   });
 
   const createTenantMutation = useMutation({
-    mutationFn: (data: InsertTenant) => apiRequest<Tenant>("/api/tenants", "POST", data),
+    mutationFn: (data: any) => apiRequest("POST", "/api/tenants", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       setIsAddDialogOpen(false);
       form.reset();
       toast({ title: "Success", description: "Tenant created successfully" });
@@ -89,9 +79,9 @@ export default function Tenants() {
   });
 
   const createPaymentMutation = useMutation({
-    mutationFn: (data: InsertRentPayment) => apiRequest<RentPayment>("/api/rent-payments", "POST", data),
+    mutationFn: (data: any) => apiRequest("POST", "/api/rent-payments", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rent-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
       setIsPaymentDialogOpen(false);
       paymentForm.reset();
       toast({ title: "Success", description: "Payment recorded successfully" });
@@ -131,33 +121,42 @@ export default function Tenants() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof tenantSchema>) => {
-    createTenantMutation.mutate(values);
+  const onSubmit = (values: any) => {
+    // Convert undefined to null for backend compatibility
+    const formattedData = {
+      ...values,
+      unitId: values.unitId || null,
+      leaseStart: values.leaseStart || null,
+      leaseEnd: values.leaseEnd || null,
+      monthlyRent: values.monthlyRent || null,
+      deposit: values.deposit || null,
+    };
+    createTenantMutation.mutate(formattedData);
   };
 
-  const onPaymentSubmit = (values: z.infer<typeof rentPaymentSchema>) => {
+  const onPaymentSubmit = (values: any) => {
     createPaymentMutation.mutate(values);
   };
 
-  const filteredTenants = tenants?.filter(tenant =>
+  const filteredTenants = (tenants as any[])?.filter((tenant: any) =>
     `${tenant.firstName} ${tenant.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tenant.email.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  const getUnitNumber = (unitId: number | null) => {
+  const getUnitNumber = (unitId: string | null) => {
     if (!unitId) return "No unit assigned";
-    const unit = units?.find(u => u.id === unitId);
+    const unit = (units as any[])?.find((u: any) => u.id === unitId);
     return unit ? `Unit ${unit.unitNumber}` : "Unknown unit";
   };
 
-  const getPropertyId = (unitId: number | null) => {
+  const getPropertyId = (unitId: string | null) => {
     if (!unitId) return null;
-    const unit = units?.find(u => u.id === unitId);
+    const unit = (units as any[])?.find((u: any) => u.id === unitId);
     return unit?.propertyId || null;
   };
 
-  const getTenantPayments = (tenantId: number) => {
-    return rentPayments?.filter(payment => payment.tenantId === tenantId) || [];
+  const getTenantPayments = (tenantId: string) => {
+    return (rentPayments as any[])?.filter((payment: any) => payment.tenantId === tenantId) || [];
   };
 
   const getOverduePayments = (tenantId: number) => {
