@@ -36,6 +36,9 @@ type MortgageFormData = z.infer<typeof mortgageSchema>;
 
 export default function Mortgages() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedMortgage, setSelectedMortgage] = useState<Mortgage | null>(null);
   const { toast } = useToast();
 
   const { data: mortgages = [] } = useQuery<Mortgage[]>({
@@ -47,6 +50,25 @@ export default function Mortgages() {
   });
 
   const form = useForm<MortgageFormData>({
+    resolver: zodResolver(mortgageSchema),
+    defaultValues: {
+      propertyId: 0,
+      lender: "",
+      originalAmount: "",
+      currentBalance: "",
+      interestRate: "",
+      monthlyPayment: "",
+      principalAmount: "",
+      interestAmount: "",
+      escrowAmount: "",
+      startDate: new Date(),
+      termYears: 30,
+      accountNumber: "",
+      notes: "",
+    },
+  });
+
+  const editForm = useForm<MortgageFormData>({
     resolver: zodResolver(mortgageSchema),
     defaultValues: {
       propertyId: 0,
@@ -85,6 +107,27 @@ export default function Mortgages() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<InsertMortgage> }) =>
+      apiRequest("PATCH", `/api/mortgages/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/mortgages"] });
+      setIsEditDialogOpen(false);
+      setSelectedMortgage(null);
+      toast({
+        title: "Success",
+        description: "Mortgage updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update mortgage.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiRequest("DELETE", `/api/mortgages/${id}`),
     onSuccess: () => {
@@ -109,6 +152,47 @@ export default function Mortgages() {
       escrowAmount: data.escrowAmount || "0",
     };
     createMutation.mutate(mortgageData);
+  };
+
+  const onEditSubmit = (data: MortgageFormData) => {
+    if (selectedMortgage) {
+      const mortgageData = {
+        ...data,
+        escrowAmount: data.escrowAmount || "0",
+      };
+      updateMutation.mutate({ id: selectedMortgage.id, data: mortgageData });
+    }
+  };
+
+  const handleView = (mortgage: Mortgage) => {
+    setSelectedMortgage(mortgage);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleEdit = (mortgage: Mortgage) => {
+    setSelectedMortgage(mortgage);
+    editForm.reset({
+      propertyId: mortgage.propertyId,
+      lender: mortgage.lender,
+      originalAmount: mortgage.originalAmount,
+      currentBalance: mortgage.currentBalance,
+      interestRate: mortgage.interestRate,
+      monthlyPayment: mortgage.monthlyPayment,
+      principalAmount: mortgage.principalAmount,
+      interestAmount: mortgage.interestAmount,
+      escrowAmount: mortgage.escrowAmount || "",
+      startDate: new Date(mortgage.startDate),
+      termYears: mortgage.termYears,
+      accountNumber: mortgage.accountNumber || "",
+      notes: mortgage.notes || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Are you sure you want to delete this mortgage?")) {
+      deleteMutation.mutate(id);
+    }
   };
 
   const getPropertyName = (propertyId: number) => {
@@ -212,18 +296,18 @@ export default function Mortgages() {
                 )}
 
                 <div className="flex gap-2 pt-4 border-t">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => handleView(mortgage)}>
                     <Eye className="h-4 w-4 mr-2" />
                     View
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(mortgage)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => deleteMutation.mutate(mortgage.id)}
+                    onClick={() => handleDelete(mortgage.id)}
                     disabled={deleteMutation.isPending}
                     className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
                   >
@@ -238,7 +322,8 @@ export default function Mortgages() {
       )}
 
       {/* Create Mortgage Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      {/*{isCreateDialogOpen && (*/}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Mortgage</DialogTitle>
@@ -459,6 +544,302 @@ export default function Mortgages() {
                   {createMutation.isPending ? "Creating..." : "Create Mortgage"}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      {/* )} */}
+
+      {/* View Mortgage Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Mortgage Details</DialogTitle>
+          </DialogHeader>
+          {selectedMortgage && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-3">Basic Information</h3>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Property:</span> {getPropertyName(selectedMortgage.propertyId)}</p>
+                    <p><span className="font-medium">Lender:</span> {selectedMortgage.lender}</p>
+                    <p><span className="font-medium">Account Number:</span> {selectedMortgage.accountNumber || "N/A"}</p>
+                    <p><span className="font-medium">Start Date:</span> {new Date(selectedMortgage.startDate).toLocaleDateString()}</p>
+                    <p><span className="font-medium">Term:</span> {selectedMortgage.termYears} years</p>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-3">Loan Details</h3>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Original Amount:</span> {formatCurrency(selectedMortgage.originalAmount)}</p>
+                    <p><span className="font-medium">Current Balance:</span> {formatCurrency(selectedMortgage.currentBalance)}</p>
+                    <p><span className="font-medium">Interest Rate:</span> {formatPercent(parseFloat(selectedMortgage.interestRate))}</p>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-3">Monthly Payment Breakdown</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
+                    <p className="text-sm font-medium text-blue-600">Total Payment</p>
+                    <p className="text-lg font-semibold">{formatCurrency(selectedMortgage.monthlyPayment)}</p>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded">
+                    <p className="text-sm font-medium text-green-600">Principal</p>
+                    <p className="text-lg font-semibold">{formatCurrency(selectedMortgage.principalAmount)}</p>
+                  </div>
+                  <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded">
+                    <p className="text-sm font-medium text-red-600">Interest</p>
+                    <p className="text-lg font-semibold">{formatCurrency(selectedMortgage.interestAmount)}</p>
+                  </div>
+                  {selectedMortgage.escrowAmount && parseFloat(selectedMortgage.escrowAmount) > 0 && (
+                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded">
+                      <p className="text-sm font-medium text-orange-600">Escrow</p>
+                      <p className="text-lg font-semibold">{formatCurrency(selectedMortgage.escrowAmount)}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {selectedMortgage.notes && (
+                <div>
+                  <h3 className="font-semibold mb-3">Notes</h3>
+                  <p className="text-sm text-muted-foreground">{selectedMortgage.notes}</p>
+                </div>
+              )}
+              <div className="flex justify-end">
+                <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Mortgage Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Mortgage</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="propertyId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Property</FormLabel>
+                      <Select value={field.value.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select property" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {properties.map((property) => (
+                            <SelectItem key={property.id} value={property.id.toString()}>
+                              {property.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="lender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lender</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Wells Fargo" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="originalAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Original Loan Amount</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="currentBalance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current Balance</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="interestRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Interest Rate (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.001" placeholder="0.000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="termYears"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Term (Years)</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="30" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-4 flex items-center">
+                  <Calculator className="h-4 w-4 mr-2" />
+                  Monthly Payment Breakdown
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="monthlyPayment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Monthly Payment</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="principalAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Principal Amount</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="interestAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Interest Amount</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="escrowAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Escrow Amount</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                          onChange={(e) => field.onChange(new Date(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="accountNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Account Number (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Account number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={editForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Additional notes" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-2 pt-4">
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? "Updating..." : "Update Mortgage"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancel
                 </Button>
               </div>

@@ -12,9 +12,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency, getStatusColor } from "@/lib/utils";
+import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Unit, InsertUnit, Property } from "@shared/schema";
+import type { Unit, InsertUnit, Property, Tenant } from "@shared/schema";
 
 const unitSchema = z.object({
   propertyId: z.number().min(1, "Property is required"),
@@ -43,6 +43,10 @@ export default function Units() {
 
   const { data: properties = [] } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
+  });
+
+  const { data: tenants = [] } = useQuery<Tenant[]>({
+    queryKey: ["/api/tenants"],
   });
 
   const createForm = useForm<UnitFormData>({
@@ -160,10 +164,24 @@ export default function Units() {
     return property?.name || "Unknown Property";
   };
 
+  const getTenantForUnit = (unitId: number) => {
+    return tenants.find(tenant => tenant.unitId === unitId);
+  };
+
+  const getAvailableTenants = () => {
+    // Get tenants that are not assigned to any unit or are inactive
+    return tenants.filter(tenant => !tenant.unitId || tenant.status === "inactive");
+  };
+
   const filteredUnits = units.filter(
-    (unit) =>
-      unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getPropertyName(unit.propertyId).toLowerCase().includes(searchTerm.toLowerCase())
+    (unit) => {
+      const tenant = getTenantForUnit(unit.id);
+      const tenantName = tenant ? `${tenant.firstName} ${tenant.lastName}` : "";
+      
+      return unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             getPropertyName(unit.propertyId).toLowerCase().includes(searchTerm.toLowerCase()) ||
+             tenantName.toLowerCase().includes(searchTerm.toLowerCase());
+    }
   );
 
   if (isLoading) {
@@ -326,7 +344,7 @@ export default function Units() {
 
       <div className="flex justify-between items-center">
         <Input
-          placeholder="Search units..."
+          placeholder="Search units, properties, or tenants..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
@@ -380,6 +398,27 @@ export default function Units() {
                       <span className="font-semibold">Size:</span> {unit.squareFootage} sq ft
                     </p>
                   )}
+                  {(() => {
+                    const tenant = getTenantForUnit(unit.id);
+                    return tenant ? (
+                      <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                          Current Tenant
+                        </p>
+                        <button
+                          onClick={() => window.location.href = '/tenants'}
+                          className="text-sm hover:underline text-left w-full"
+                        >
+                          {tenant.firstName} {tenant.lastName}
+                        </button>
+                        <p className="text-xs text-muted-foreground">{tenant.email}</p>
+                      </div>
+                    ) : (
+                      <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                        <p className="text-sm text-muted-foreground">No tenant assigned</p>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="flex justify-end space-x-2 mt-4">
                   <Button size="sm" variant="outline" onClick={() => handleView(unit)}>
@@ -417,6 +456,19 @@ export default function Units() {
                     <div className="text-right">
                       <p className="text-sm font-semibold">{unit.bedrooms} bed, {unit.bathrooms} bath</p>
                       <p className="text-sm text-gray-600">{formatCurrency(unit.rentAmount)}</p>
+                      {(() => {
+                        const tenant = getTenantForUnit(unit.id);
+                        return tenant ? (
+                          <button
+                            onClick={() => window.location.href = '/tenants'}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            {tenant.firstName} {tenant.lastName}
+                          </button>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">No tenant</p>
+                        );
+                      })()}</div>
                     </div>
                     <div className="flex space-x-2">
                       <Button size="sm" variant="outline" onClick={() => handleView(unit)}>
@@ -430,7 +482,6 @@ export default function Units() {
                       </Button>
                     </div>
                   </div>
-                </div>
               </CardContent>
             </Card>
           ))}
@@ -464,6 +515,56 @@ export default function Units() {
                       <p><span className="font-medium">Square Footage:</span> {selectedUnit.squareFootage} sq ft</p>
                     )}
                   </div>
+                </div>
+                
+                {/* Tenant Information Section */}
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold mb-2">Tenant Information</h3>
+                  {(() => {
+                    const tenant = getTenantForUnit(selectedUnit.id);
+                    return tenant ? (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p><span className="font-medium">Name:</span> {tenant.firstName} {tenant.lastName}</p>
+                            <p><span className="font-medium">Email:</span> {tenant.email}</p>
+                            <p><span className="font-medium">Phone:</span> {tenant.phone}</p>
+                          </div>
+                          <div>
+                            <p><span className="font-medium">Status:</span> 
+                              <Badge className={`ml-2 ${getStatusColor(tenant.status)}`}>
+                                {tenant.status}
+                              </Badge>
+                            </p>
+                            {tenant.leaseStart && (
+                              <p><span className="font-medium">Lease Start:</span> {formatDate(tenant.leaseStart)}</p>
+                            )}
+                            {tenant.leaseEnd && (
+                              <p><span className="font-medium">Lease End:</span> {formatDate(tenant.leaseEnd)}</p>
+                            )}
+                            {tenant.monthlyRent && (
+                              <p><span className="font-medium">Monthly Rent:</span> {formatCurrency(tenant.monthlyRent)}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-center">
+                        <p className="text-muted-foreground mb-2">No tenant currently assigned to this unit</p>
+                        <Button 
+                          size="sm" 
+                          onClick={() => {
+                            toast({
+                              title: "Feature Coming Soon",
+                              description: "Tenant assignment interface will be available soon.",
+                            });
+                          }}
+                        >
+                          Assign Tenant
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               <div className="flex justify-end">

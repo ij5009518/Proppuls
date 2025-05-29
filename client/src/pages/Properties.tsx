@@ -15,7 +15,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Property, InsertProperty, Unit, Mortgage, Expense } from "@shared/schema";
+import type { Property, InsertProperty, Unit, Mortgage, Expense, InsertUnit } from "@shared/schema";
 
 const propertySchema = z.object({
   name: z.string().min(1, "Property name is required"),
@@ -28,6 +28,15 @@ const propertySchema = z.object({
   purchaseDate: z.date(),
   propertyType: z.string().min(1, "Property type is required"),
   status: z.string().min(1, "Status is required"),
+});
+
+const unitSchema = z.object({
+  unitNumber: z.string().min(1, "Unit number is required"),
+  bedrooms: z.number().min(0, "Bedrooms must be 0 or more"),
+  bathrooms: z.string().min(1, "Bathrooms is required"),
+  rentAmount: z.string().min(1, "Rent amount is required"),
+  status: z.string().min(1, "Status is required"),
+  squareFootage: z.number().optional(),
 });
 
 const mortgageSchema = z.object({
@@ -47,6 +56,7 @@ const mortgageSchema = z.object({
 
 type PropertyFormData = z.infer<typeof propertySchema>;
 type MortgageFormData = z.infer<typeof mortgageSchema>;
+type UnitFormData = z.infer<typeof unitSchema>;
 
 export default function Properties() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -57,6 +67,7 @@ export default function Properties() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [isMortgageDialogOpen, setIsMortgageDialogOpen] = useState(false);
+  const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false); // Add state for Unit Dialog
 
   const { toast } = useToast();
 
@@ -77,7 +88,19 @@ export default function Properties() {
     queryKey: ["/api/expenses"],
   });
 
-  const createForm = useForm<PropertyFormData>({
+  const createForm = useForm<UnitFormData>({
+    resolver: zodResolver(unitSchema),
+    defaultValues: {
+      unitNumber: "",
+      bedrooms: 1,
+      bathrooms: "1",
+      rentAmount: "",
+      status: "vacant",
+      squareFootage: undefined,
+    },
+  });
+
+  const createPropertyForm = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
       name: "",
@@ -115,15 +138,15 @@ export default function Properties() {
   const calculateMortgagePayments = (principal: number, interestRate: number, termYears: number) => {
     const monthlyRate = interestRate / 100 / 12;
     const numPayments = termYears * 12;
-    
+
     // Calculate monthly payment using amortization formula
     const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
                           (Math.pow(1 + monthlyRate, numPayments) - 1);
-    
+
     // Calculate first month's interest and principal
     const firstMonthInterest = principal * monthlyRate;
     const firstMonthPrincipal = monthlyPayment - firstMonthInterest;
-    
+
     return {
       monthlyPayment: monthlyPayment.toFixed(2),
       principalAmount: firstMonthPrincipal.toFixed(2),
@@ -133,22 +156,22 @@ export default function Properties() {
 
   // Auto-calculate when key fields change
   const watchedValues = mortgageForm.watch(["originalAmount", "interestRate", "termYears"]);
-  
+
   const handleAutoCalculate = () => {
     const [originalAmount, interestRate, termYears] = watchedValues;
-    
+
     if (originalAmount && interestRate && termYears) {
       const principal = parseFloat(originalAmount);
       const rate = parseFloat(interestRate);
       const years = parseInt(termYears.toString());
-      
+
       if (principal > 0 && rate > 0 && years > 0) {
         const calculations = calculateMortgagePayments(principal, rate, years);
-        
+
         mortgageForm.setValue("monthlyPayment", calculations.monthlyPayment);
         mortgageForm.setValue("principalAmount", calculations.principalAmount);
         mortgageForm.setValue("interestAmount", calculations.interestAmount);
-        
+
         // Auto-set current balance to original amount if not set
         if (!mortgageForm.getValues("currentBalance")) {
           mortgageForm.setValue("currentBalance", originalAmount);
@@ -186,7 +209,7 @@ export default function Properties() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
       setIsCreateDialogOpen(false);
-      createForm.reset();
+      createPropertyForm.reset();
       toast({ title: "Property created successfully" });
     },
     onError: (error) => {
@@ -282,11 +305,11 @@ export default function Properties() {
   const calculatePropertyStats = (propertyId: number) => {
     const propertyUnits = getPropertyUnits(propertyId);
     const propertyExpenses = getPropertyExpenses(propertyId);
-    
+
     const totalUnits = propertyUnits.length;
     const occupiedUnits = propertyUnits.filter(unit => unit.status === "occupied").length;
     const occupancyRate = totalUnits > 0 ? ((occupiedUnits / totalUnits) * 100).toFixed(1) : "0";
-    
+
     const monthlyRent = propertyUnits.reduce((sum, unit) => {
       return sum + (unit.status === "occupied" ? parseFloat(unit.rentAmount) : 0);
     }, 0);
@@ -333,11 +356,11 @@ export default function Properties() {
             <DialogHeader>
               <DialogTitle>Add New Property</DialogTitle>
             </DialogHeader>
-            <Form {...createForm}>
-              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+            <Form {...createPropertyForm}>
+              <form onSubmit={createPropertyForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
@@ -350,7 +373,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="address"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
@@ -363,7 +386,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="city"
                     render={({ field }) => (
                       <FormItem>
@@ -376,7 +399,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="state"
                     render={({ field }) => (
                       <FormItem>
@@ -389,7 +412,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="zipCode"
                     render={({ field }) => (
                       <FormItem>
@@ -402,7 +425,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="totalUnits"
                     render={({ field }) => (
                       <FormItem>
@@ -420,7 +443,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="purchasePrice"
                     render={({ field }) => (
                       <FormItem>
@@ -433,7 +456,7 @@ export default function Properties() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={createPropertyForm.control}
                     name="propertyType"
                     render={({ field }) => (
                       <FormItem>
@@ -725,22 +748,18 @@ export default function Properties() {
               <TabsContent value="units" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Property Units</h3>
-                  <Button size="sm" onClick={() => {
-                    window.location.href = '/units';
-                  }}>
+                  <Button size="sm" onClick={() => setIsUnitDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Unit
                   </Button>
                 </div>
-                
+
                 <div className="grid gap-4">
                   {getPropertyUnits(selectedProperty.id).length === 0 ? (
                     <Card>
                       <CardContent className="p-6 text-center">
                         <p className="text-muted-foreground">No units found for this property.</p>
-                        <Button className="mt-4" onClick={() => {
-                          window.location.href = '/units';
-                        }}>
+                        <Button className="mt-4" onClick={() => setIsUnitDialogOpen(true)}>
                           Add First Unit
                         </Button>
                       </CardContent>
@@ -846,7 +865,7 @@ export default function Properties() {
                                 <label className="text-sm font-medium text-muted-foreground">Total Monthly Payment</label>
                                 <p className="text-2xl font-bold text-blue-600">{formatCurrency(mortgage.monthlyPayment)}</p>
                               </div>
-                              
+
                               {/* Principal */}
                               <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                                 <label className="text-sm font-medium text-muted-foreground">Principal</label>
@@ -855,7 +874,7 @@ export default function Properties() {
                                   {((parseFloat(mortgage.principalAmount) / parseFloat(mortgage.monthlyPayment)) * 100).toFixed(1)}%
                                 </p>
                               </div>
-                              
+
                               {/* Interest */}
                               <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                                 <label className="text-sm font-medium text-muted-foreground">Interest</label>
@@ -864,7 +883,7 @@ export default function Properties() {
                                   {((parseFloat(mortgage.interestAmount) / parseFloat(mortgage.monthlyPayment)) * 100).toFixed(1)}%
                                 </p>
                               </div>
-                              
+
                               {/* Escrow */}
                               <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                                 <label className="text-sm font-medium text-muted-foreground">Escrow</label>
@@ -1166,7 +1185,7 @@ export default function Properties() {
                 propertyId: selectedProperty?.id || 0,
                 escrowAmount: data.escrowAmount || "0",
               };
-              
+
               // Create mortgage via API
               fetch("/api/mortgages", {
                 method: "POST",
@@ -1191,7 +1210,7 @@ export default function Properties() {
                 });
               });
             })} className="space-y-6">
-              
+
               {/* Basic Mortgage Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Basic Mortgage Information</h3>
@@ -1325,7 +1344,7 @@ export default function Properties() {
                     )}
                   />
                 </div>
-                
+
                 {/* Auto-Calculate Button */}
                 <div className="flex justify-center">
                   <Button 
@@ -1430,6 +1449,161 @@ export default function Properties() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unit Creation Dialog */}
+      <Dialog open={isUnitDialogOpen} onOpenChange={setIsUnitDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New Unit to {selectedProperty?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedProperty && (
+            <Form {...createForm}>
+              <form onSubmit={createForm.handleSubmit((data) => {
+                // Add propertyId to the unit data
+                const unitData = {
+                  ...data,
+                  propertyId: selectedProperty.id,
+                  bedrooms: Number(data.bedrooms) || 1,
+                  rentAmount: data.rentAmount.toString(),
+                  bathrooms: data.bathrooms.toString(),
+                };
+
+                // Create unit via API
+                fetch("/api/units", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(unitData),
+                })
+                .then(res => res.json())
+                .then(() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+                  setIsUnitDialogOpen(false);
+                  createForm.reset();
+                  toast({
+                    title: "Success",
+                    description: "Unit added successfully.",
+                  });
+                })
+                .catch(() => {
+                  toast({
+                    title: "Error",
+                    description: "Failed to add unit.",
+                    variant: "destructive",
+                  });
+                });
+              })} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={createForm.control}
+                    name="unitNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1A" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="bedrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bedrooms</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="bathrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bathrooms</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1.5" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="rentAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rent Amount</FormLabel>
+                        <FormControl>
+                          <Input placeholder="$1,200" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="vacant">Vacant</SelectItem>
+                            <SelectItem value="occupied">Occupied</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="squareFootage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Square Footage (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="850"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsUnitDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    Add Unit
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
