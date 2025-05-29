@@ -176,7 +176,7 @@ export default function Units() {
     (unit) => {
       const tenant = getTenantForUnit(unit.id);
       const tenantName = tenant ? `${tenant.firstName} ${tenant.lastName}` : "";
-      
+
       return unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
              getPropertyName(unit.propertyId).toLowerCase().includes(searchTerm.toLowerCase()) ||
              tenantName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -537,7 +537,7 @@ export default function Units() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Tenant Information Section */}
                 <div className="border-t pt-4">
                   <h3 className="font-semibold mb-2">Tenant Information</h3>

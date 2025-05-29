@@ -320,18 +320,18 @@ export default function Dashboard() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="text-sm text-slate-900 dark:text-foreground">
-                              {property.occupancyRate.toFixed(1)}%
+                              {property.occupancyRate ? property.occupancyRate.toFixed(1) : '0'}%
                             </div>
                             <div className="ml-2 w-16 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
                               <div
-                                className={`h-2 rounded-full ${getOccupancyColor(property.occupancyRate)}`}
-                                style={{ width: `${property.occupancyRate}%` }}
+                                className={`h-2 rounded-full ${getOccupancyColor(property.occupancyRate || 0)}`}
+                                style={{ width: `${property.occupancyRate || 0}%` }}
                               ></div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-foreground">
-                          ${property.monthlyRevenue.toLocaleString()}
+                          ${property.monthlyRevenue ? property.monthlyRevenue.toLocaleString() : '0'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Badge variant={getStatusBadgeVariant(property.status)}>
