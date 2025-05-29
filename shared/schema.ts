@@ -135,6 +135,25 @@ export const expenseSchema = z.object({
   updatedAt: z.date(),
 });
 
+export const taskSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  description: z.string(),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
+  dueDate: z.date().nullable(),
+  assignedTo: z.string().nullable(),
+  propertyId: z.number().nullable(),
+  unitId: z.number().nullable(),
+  tenantId: z.number().nullable(),
+  vendorId: z.number().nullable(),
+  rentPaymentId: z.number().nullable(),
+  category: z.string(),
+  notes: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
 // Insert schemas (for creating new records)
 export const insertUserSchema = userSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPropertySchema = propertySchema.omit({ id: true, createdAt: true, updatedAt: true });
@@ -145,6 +164,7 @@ export const insertVendorSchema = vendorSchema.omit({ id: true, createdAt: true,
 export const insertRentPaymentSchema = rentPaymentSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMortgageSchema = mortgageSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertExpenseSchema = expenseSchema.omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTaskSchema = taskSchema.omit({ id: true, createdAt: true, updatedAt: true });
 
 // TypeScript types
 export type User = z.infer<typeof userSchema>;
@@ -156,6 +176,7 @@ export type Vendor = z.infer<typeof vendorSchema>;
 export type RentPayment = z.infer<typeof rentPaymentSchema>;
 export type Mortgage = z.infer<typeof mortgageSchema>;
 export type Expense = z.infer<typeof expenseSchema>;
+export type Task = z.infer<typeof taskSchema>;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
@@ -166,3 +187,4 @@ export type InsertVendor = z.infer<typeof insertVendorSchema>;
 export type InsertRentPayment = z.infer<typeof insertRentPaymentSchema>;
 export type InsertMortgage = z.infer<typeof insertMortgageSchema>;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
+export type InsertTask = z.infer<typeof insertTaskSchema>;

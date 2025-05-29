@@ -11,8 +11,9 @@ import Dashboard from '@/pages/Dashboard';
 import Users from '@/pages/Users';
 import Properties from '@/pages/Properties';
 import Units from '@/pages/Units';
-import Tenants from '@/pages/Tenants';
-import RentPayments from '@/pages/RentPayments';
+import Tenants from "./pages/Tenants";
+import Tasks from "./pages/Tasks";
+import RentPayments from "./pages/RentPayments";
 import Maintenance from '@/pages/Maintenance';
 import Vendors from '@/pages/Vendors';
 import Financials from '@/pages/Financials';
@@ -62,6 +63,7 @@ function AuthenticatedApp() {
         <Route path="/properties" component={Properties} />
         <Route path="/units" component={Units} />
         <Route path="/tenants" component={Tenants} />
+        <Route path="/tasks" component={Tasks} />
         <Route path="/rent-payments" component={RentPayments} />
         <Route path="/maintenance" component={Maintenance} />
         <Route path="/vendors" component={Vendors} />

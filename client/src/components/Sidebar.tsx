@@ -13,6 +13,7 @@ import {
   DollarSign,
   FileText,
   Building2,
+  CheckSquare,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -50,6 +51,11 @@ const menuItems = [
     title: 'Tenants',
     url: '/tenants',
     icon: UserCheck,
+  },
+  {
+    title: 'Tasks',
+    url: '/tasks',
+    icon: CheckSquare,
   },
   {
     title: 'Rent Payments',

@@ -1,4 +1,3 @@
-
 import express, { type Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
@@ -126,7 +125,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Rent payments routes
+  // Rent Payments routes
   app.get("/api/rent-payments", async (req, res) => {
     try {
       const rentPayments = await storage.getRentPayments();
@@ -166,6 +165,49 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Error deleting rent payment:", error);
       res.status(500).json({ message: "Failed to delete rent payment" });
+    }
+  });
+
+  // Tasks routes
+  app.get("/api/tasks", async (req, res) => {
+    try {
+      const tasks = await storage.getTasks();
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      res.status(500).json({ message: "Failed to fetch tasks" });
+    }
+  });
+
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      const task = await storage.createTask(req.body);
+      res.json(task);
+    } catch (error) {
+      console.error("Error creating task:", error);
+      res.status(500).json({ message: "Failed to create task" });
+    }
+  });
+
+  app.put("/api/tasks/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const task = await storage.updateTask(id, req.body);
+      res.json(task);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      res.status(500).json({ message: "Failed to update task" });
+    }
+  });
+
+  app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteTask(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      res.status(500).json({ message: "Failed to delete task" });
     }
   });
 

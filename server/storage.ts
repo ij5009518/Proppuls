@@ -16,6 +16,7 @@ class Storage {
   private expenses: any[] = [];
   private tenants: any[] = [];
   private rentPayments: any[] = [];
+  private tasks: any[] = [];
   private nextUserId = 1;
   private nextPropertyId = 1;
   private nextUnitId = 1;
@@ -23,6 +24,7 @@ class Storage {
   private nextExpenseId = 1;
   private nextTenantId = 1;
   private nextRentPaymentId = 1;
+  private nextTaskId = 1;
 
   async createUser(userData: Omit<User, 'id' | 'createdAt'>): Promise<User> {
     const user: User = {
@@ -187,6 +189,41 @@ class Storage {
     if (index === -1) throw new Error('Rent payment not found');
     
     this.rentPayments.splice(index, 1);
+  }
+
+  // Tasks
+  async getTasks(): Promise<any[]> {
+    return this.tasks;
+  }
+
+  async createTask(taskData: any): Promise<any> {
+    const task = {
+      ...taskData,
+      id: this.nextTaskId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tasks.push(task);
+    return task;
+  }
+
+  async updateTask(id: number, updateData: any): Promise<any> {
+    const index = this.tasks.findIndex(t => t.id === id);
+    if (index === -1) throw new Error('Task not found');
+    
+    this.tasks[index] = { 
+      ...this.tasks[index], 
+      ...updateData, 
+      updatedAt: new Date() 
+    };
+    return this.tasks[index];
+  }
+
+  async deleteTask(id: number): Promise<void> {
+    const index = this.tasks.findIndex(t => t.id === id);
+    if (index === -1) throw new Error('Task not found');
+    
+    this.tasks.splice(index, 1);
   }
 }
 
