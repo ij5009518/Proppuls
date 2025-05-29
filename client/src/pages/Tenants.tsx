@@ -623,6 +623,17 @@ export default function Tenants() {
                         size="sm"
                         variant="outline"
                         onClick={() => {
+                          const url = `/tasks?tenantId=${tenant.id}&tenantName=${encodeURIComponent(tenant.firstName + ' ' + tenant.lastName)}&unitId=${tenant.unitId || ''}&propertyId=${getPropertyId(tenant.unitId) || ''}`;
+                          window.location.href = url;
+                        }}
+                        title="Create Task"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
                           setSelectedTenant(tenant);
                           paymentForm.setValue("tenantId", tenant.id);
                           paymentForm.setValue("unitId", tenant.unitId || 0);
@@ -710,6 +721,17 @@ export default function Tenants() {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const url = `/tasks?tenantId=${tenant.id}&tenantName=${encodeURIComponent(tenant.firstName + ' ' + tenant.lastName)}&unitId=${tenant.unitId || ''}&propertyId=${getPropertyId(tenant.unitId) || ''}`;
+                            window.location.href = url;
+                          }}
+                          title="Create Task"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Grid, List, Eye, Edit, Trash2, Home, DollarSign, Calculator, Users } from "lucide-react";
+import { Plus, Grid, List, Eye, Edit, Trash2, Home, DollarSign, Calculator, Users, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -546,7 +546,30 @@ export default function Properties() {
                     <span className="font-semibold">Purchase Price:</span> {formatCurrency(property.purchasePrice)}
                   </p>
                 </div>
-                <div className="flex justify-end space-x-2 mt-4">
+                <div className="flex space-x-2 mt-4">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      // Create task for this property
+                      const url = `/tasks?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
+                      window.location.href = url;
+                    }}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      // Add expense for this property
+                      const url = `/expenses?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
+                      window.location.href = url;
+                    }}
+                    title="Add Expense"
+                  >
+                    <DollarSign className="h-4 w-4" />
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => handleView(property)}>
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -586,6 +609,29 @@ export default function Properties() {
                       <p className="text-sm text-gray-600">{formatCurrency(property.purchasePrice)}</p>
                     </div>
                     <div className="flex space-x-2">
+                      <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      // Create task for this property
+                      const url = `/tasks?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
+                      window.location.href = url;
+                    }}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                  </Button>
+                      <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      // Add expense for this property
+                      const url = `/expenses?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
+                      window.location.href = url;
+                    }}
+                    title="Add Expense"
+                  >
+                    <DollarSign className="h-4 w-4" />
+                  </Button>
                       <Button size="sm" variant="outline" onClick={() => handleView(property)}>
                         <Eye className="h-4 w-4" />
                       </Button>
