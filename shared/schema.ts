@@ -3,11 +3,13 @@ import { z } from "zod";
 // Base schemas
 export const userSchema = z.object({
   id: z.number(),
-  username: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
   email: z.string().email(),
+  password: z.string(),
   role: z.enum(["admin", "manager", "tenant"]),
+  phone: z.string().nullable(),
   createdAt: z.date(),
-  updatedAt: z.date(),
 });
 
 export const propertySchema = z.object({

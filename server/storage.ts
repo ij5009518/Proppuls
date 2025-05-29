@@ -52,6 +52,10 @@ class Storage {
     return this.sessions.get(token) || null;
   }
 
+  async getSessionById(token: string): Promise<Session | null> {
+    return this.sessions.get(token) || null;
+  }
+
   async deleteSession(sessionId: string): Promise<void> {
     this.sessions.delete(sessionId);
   }
@@ -224,6 +228,68 @@ class Storage {
     if (index === -1) throw new Error('Task not found');
     
     this.tasks.splice(index, 1);
+  }
+
+  // Users
+  async getUsers(): Promise<User[]> {
+    return this.users;
+  }
+
+  // Vendors
+  private vendors: any[] = [];
+  private nextVendorId = 1;
+
+  async getVendors(): Promise<any[]> {
+    return this.vendors;
+  }
+
+  async createVendor(vendorData: any): Promise<any> {
+    const vendor = {
+      ...vendorData,
+      id: this.nextVendorId++,
+      createdAt: new Date(),
+    };
+    this.vendors.push(vendor);
+    return vendor;
+  }
+
+  // Maintenance Requests
+  private maintenanceRequests: any[] = [];
+  private nextMaintenanceRequestId = 1;
+
+  async getMaintenanceRequests(): Promise<any[]> {
+    return this.maintenanceRequests;
+  }
+
+  async createMaintenanceRequest(requestData: any): Promise<any> {
+    const request = {
+      ...requestData,
+      id: this.nextMaintenanceRequestId++,
+      createdAt: new Date(),
+    };
+    this.maintenanceRequests.push(request);
+    return request;
+  }
+
+  // Revenues
+  async getRevenues(): Promise<any[]> {
+    return [];
+  }
+
+  // Update Expense method
+  async updateExpense(id: number, updateData: any): Promise<any> {
+    const index = this.expenses.findIndex(e => e.id === id);
+    if (index === -1) throw new Error('Expense not found');
+    
+    this.expenses[index] = { ...this.expenses[index], ...updateData };
+    return this.expenses[index];
+  }
+
+  async deleteExpense(id: number): Promise<void> {
+    const index = this.expenses.findIndex(e => e.id === id);
+    if (index === -1) throw new Error('Expense not found');
+    
+    this.expenses.splice(index, 1);
   }
 }
 

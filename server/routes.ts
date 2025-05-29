@@ -200,6 +200,60 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Users routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Vendors routes
+  app.get("/api/vendors", async (req, res) => {
+    try {
+      const vendors = await storage.getVendors();
+      res.json(vendors);
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      res.status(500).json({ message: "Failed to fetch vendors" });
+    }
+  });
+
+  // Maintenance requests routes
+  app.get("/api/maintenance-requests", async (req, res) => {
+    try {
+      const requests = await storage.getMaintenanceRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching maintenance requests:", error);
+      res.status(500).json({ message: "Failed to fetch maintenance requests" });
+    }
+  });
+
+  app.post("/api/maintenance-requests", async (req, res) => {
+    try {
+      const request = await storage.createMaintenanceRequest(req.body);
+      res.json(request);
+    } catch (error) {
+      console.error("Error creating maintenance request:", error);
+      res.status(500).json({ message: "Failed to create maintenance request" });
+    }
+  });
+
+  // Revenues route
+  app.get("/api/revenues", async (req, res) => {
+    try {
+      const revenues = await storage.getRevenues();
+      res.json(revenues);
+    } catch (error) {
+      console.error("Error fetching revenues:", error);
+      res.status(500).json({ message: "Failed to fetch revenues" });
+    }
+  });
+
   // Tasks routes
   app.get("/api/tasks", async (req, res) => {
     try {

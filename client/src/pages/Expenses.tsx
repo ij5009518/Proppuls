@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -73,7 +72,7 @@ export default function Expenses() {
     const urlParams = new URLSearchParams(window.location.search);
     const propertyId = urlParams.get('propertyId');
     const propertyName = urlParams.get('propertyName');
-    
+
     if (propertyId && propertyName) {
       // Auto-open the create dialog when coming from a property
       setIsCreateDialogOpen(true);
@@ -185,7 +184,7 @@ export default function Expenses() {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          expense.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesProperty = selectedProperty === "all" || expense.propertyId.toString() === selectedProperty;
-    
+
     return matchesCategory && matchesSearch && matchesProperty;
   });
 
@@ -219,7 +218,7 @@ export default function Expenses() {
               const urlParams = new URLSearchParams(window.location.search);
               const propertyName = urlParams.get('propertyName');
               const propertyId = urlParams.get('propertyId');
-              
+
               if (propertyName && propertyId) {
                 const property = properties.find(p => p.id.toString() === propertyId);
                 return (
