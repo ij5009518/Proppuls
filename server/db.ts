@@ -166,4 +166,18 @@ export const tasks = pgTable('tasks', {
 });
 
 const sql = neon(process.env.DATABASE_URL);
-export const db = drizzle(sql);
+
+const schema = {
+  users,
+  properties,
+  units,
+  tenants,
+  expenses,
+  maintenanceRequests,
+  vendors,
+  rentPayments,
+  mortgages,
+  tasks,
+};
+
+export const db = drizzle(sql, { schema });
