@@ -372,6 +372,39 @@ class Storage {
     const result = await db.delete(tasks).where(eq(tasks.id, id));
     return result.rowCount > 0;
   }
+
+  // Tenant methods
+  async createTenant(tenantData: any): Promise<any> {
+    const [tenant] = await db.insert(tenants).values({
+      id: tenantData.id || crypto.randomUUID(),
+      ...tenantData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return tenant;
+  }
+
+  async getAllTenants(): Promise<any[]> {
+    return await db.select().from(tenants);
+  }
+
+  async getTenantById(id: string): Promise<any | null> {
+    const result = await db.select().from(tenants).where(eq(tenants.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async updateTenant(id: string, tenantData: any): Promise<any | null> {
+    const [tenant] = await db.update(tenants)
+      .set({ ...tenantData, updatedAt: new Date() })
+      .where(eq(tenants.id, id))
+      .returning();
+    return tenant || null;
+  }
+
+  async deleteTenant(id: string): Promise<boolean> {
+    const result = await db.delete(tenants).where(eq(tenants.id, id));
+    return result.rowCount > 0;
+  }
 }
 
 export const storage = new Storage();

@@ -157,6 +157,38 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/tenants", async (req, res) => {
+    try {
+      const tenant = await storage.createTenant(req.body);
+      res.json(tenant);
+    } catch (error) {
+      console.error("Error creating tenant:", error);
+      res.status(500).json({ message: "Failed to create tenant" });
+    }
+  });
+
+  app.put("/api/tenants/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const tenant = await storage.updateTenant(id, req.body);
+      res.json(tenant);
+    } catch (error) {
+      console.error("Error updating tenant:", error);
+      res.status(500).json({ message: "Failed to update tenant" });
+    }
+  });
+
+  app.delete("/api/tenants/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.deleteTenant(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting tenant:", error);
+      res.status(500).json({ message: "Failed to delete tenant" });
+    }
+  });
+
   // Rent Payments routes
   app.get("/api/rent-payments", async (req, res) => {
     try {
