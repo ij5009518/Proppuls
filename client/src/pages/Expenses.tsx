@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Edit, Trash2, Calendar, DollarSign, Receipt, RotateCcw, Filter } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, DollarSign, Receipt, RotateCcw, Filter, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
