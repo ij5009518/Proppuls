@@ -1,3 +1,6 @@
+The code is modified to include a query for fetching properties and ensures the Property type is imported for unit creation.
+```
+```replit_final_file
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Eye, Edit, Trash2, Grid, List } from "lucide-react";
@@ -176,7 +179,7 @@ export default function Units() {
     (unit) => {
       const tenant = getTenantForUnit(unit.id);
       const tenantName = tenant ? `${tenant.firstName} ${tenant.lastName}` : "";
-      
+
       return unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
              getPropertyName(unit.propertyId).toLowerCase().includes(searchTerm.toLowerCase()) ||
              tenantName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -537,7 +540,7 @@ export default function Units() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Tenant Information Section */}
                 <div className="border-t pt-4">
                   <h3 className="font-semibold mb-2">Tenant Information</h3>

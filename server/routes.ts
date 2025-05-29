@@ -188,11 +188,18 @@ export function registerRoutes(app: Express) {
 
   app.post("/api/tenants", async (req, res) => {
     try {
+      console.log("Routes: Received tenant creation request:", req.body);
       const tenant = await storage.createTenant(req.body);
+      console.log("Routes: Tenant created successfully:", tenant);
       res.json(tenant);
     } catch (error) {
-      console.error("Error creating tenant:", error);
-      res.status(500).json({ message: "Failed to create tenant" });
+      console.error("Routes: Error creating tenant:", error);
+      console.error("Routes: Error details:", error.message);
+      console.error("Routes: Error stack:", error.stack);
+      res.status(500).json({ 
+        message: "Failed to create tenant",
+        error: error.message 
+      });
     }
   });
 

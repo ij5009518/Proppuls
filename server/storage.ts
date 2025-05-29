@@ -200,13 +200,35 @@ class Storage {
 
   // Tenant methods
   async createTenant(tenantData: any): Promise<Tenant> {
-    const [tenant] = await db.insert(tenants).values({
-      id: tenantData.id || crypto.randomUUID(),
-      ...tenantData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
-    return tenant;
+    try {
+      console.log("Storage: Creating tenant with data:", tenantData);
+      const tenantId = crypto.randomUUID();
+      
+      const insertData = {
+        id: tenantId,
+        firstName: tenantData.firstName,
+        lastName: tenantData.lastName,
+        email: tenantData.email,
+        phone: tenantData.phone,
+        unitId: tenantData.unitId || null,
+        leaseStart: tenantData.leaseStart ? new Date(tenantData.leaseStart) : null,
+        leaseEnd: tenantData.leaseEnd ? new Date(tenantData.leaseEnd) : null,
+        monthlyRent: tenantData.monthlyRent?.toString() || null,
+        deposit: tenantData.deposit?.toString() || null,
+        status: tenantData.status || 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      console.log("Storage: Insert data:", insertData);
+      
+      const [tenant] = await db.insert(tenants).values(insertData).returning();
+      console.log("Storage: Tenant created successfully:", tenant);
+      return tenant;
+    } catch (error) {
+      console.error("Storage: Error creating tenant:", error);
+      throw error;
+    }
   }
 
   async getAllTenants(): Promise<Tenant[]> {
