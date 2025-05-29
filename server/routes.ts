@@ -41,7 +41,7 @@ export function registerRoutes(app: Express) {
 
   app.patch("/api/properties/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const property = await storage.updateProperty(id, req.body);
       res.json(property);
     } catch (error) {
@@ -52,7 +52,7 @@ export function registerRoutes(app: Express) {
 
   app.delete("/api/properties/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       await storage.deleteProperty(id);
       res.json({ success: true });
     } catch (error) {
@@ -126,7 +126,7 @@ export function registerRoutes(app: Express) {
 
   app.patch("/api/expenses/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const expense = await storage.updateExpense(id, req.body);
       res.json(expense);
     } catch (error) {
@@ -137,7 +137,7 @@ export function registerRoutes(app: Express) {
 
   app.delete("/api/expenses/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       await storage.deleteExpense(id);
       res.json({ success: true });
     } catch (error) {
@@ -180,7 +180,7 @@ export function registerRoutes(app: Express) {
 
   app.put("/api/rent-payments/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const payment = await storage.updateRentPayment(id, req.body);
       res.json(payment);
     } catch (error) {
@@ -191,7 +191,7 @@ export function registerRoutes(app: Express) {
 
   app.delete("/api/rent-payments/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       await storage.deleteRentPayment(id);
       res.json({ success: true });
     } catch (error) {
@@ -319,7 +319,7 @@ export function registerRoutes(app: Express) {
 
   app.put("/api/tasks/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const task = await storage.updateTask(id, req.body);
       res.json(task);
     } catch (error) {
@@ -330,7 +330,7 @@ export function registerRoutes(app: Express) {
 
   app.delete("/api/tasks/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       await storage.deleteTask(id);
       res.json({ success: true });
     } catch (error) {
