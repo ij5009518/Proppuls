@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Grid, List, Search, Filter, Calendar, CheckSquare, Clock, AlertTriangle, User, Building, MapPin, CreditCard, Store } from "lucide-react";
@@ -243,31 +242,31 @@ export default function Tasks() {
 
   const getRelatedEntityName = (task: Task) => {
     const relations = [];
-    
+
     if (task.propertyId) {
       const property = properties.find(p => p.id === task.propertyId);
       if (property) relations.push(`Property: ${property.name}`);
     }
-    
+
     if (task.unitId) {
       const unit = units.find(u => u.id === task.unitId);
       if (unit) relations.push(`Unit: ${unit.unitNumber}`);
     }
-    
+
     if (task.tenantId) {
       const tenant = tenants.find(t => t.id === task.tenantId);
       if (tenant) relations.push(`Tenant: ${tenant.firstName} ${tenant.lastName}`);
     }
-    
+
     if (task.vendorId) {
       const vendor = vendors.find(v => v.id === task.vendorId);
       if (vendor) relations.push(`Vendor: ${vendor.name}`);
     }
-    
+
     if (task.rentPaymentId) {
       relations.push(`Rent Payment: #${task.rentPaymentId}`);
     }
-    
+
     return relations.join(", ") || "No relations";
   };
 
@@ -435,14 +434,14 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Related Property</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
+                        <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : parseInt(value))}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select property" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {properties.map((property) => (
                               <SelectItem key={property.id} value={property.id.toString()}>
                                 {property.name}
@@ -460,14 +459,14 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Related Unit</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
+                        <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : parseInt(value))}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select unit" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {getFilteredUnits(form.watch("propertyId")).map((unit) => (
                               <SelectItem key={unit.id} value={unit.id.toString()}>
                                 Unit {unit.unitNumber}
@@ -488,14 +487,14 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Related Tenant</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
+                        <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : parseInt(value))}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select tenant" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {tenants.map((tenant) => (
                               <SelectItem key={tenant.id} value={tenant.id.toString()}>
                                 {tenant.firstName} {tenant.lastName}
@@ -513,14 +512,14 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Related Vendor</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
+                        <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : parseInt(value))}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select vendor" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {vendors.map((vendor) => (
                               <SelectItem key={vendor.id} value={vendor.id.toString()}>
                                 {vendor.name}
@@ -713,20 +712,20 @@ export default function Tasks() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">{task.description}</p>
-                
+
                 <div className="space-y-2">
                   <div className="flex items-center text-sm">
                     <CheckSquare className="h-4 w-4 mr-2" />
                     <span className="capitalize">{task.category}</span>
                   </div>
-                  
+
                   {task.assignedTo && (
                     <div className="flex items-center text-sm">
                       <User className="h-4 w-4 mr-2" />
                       <span>{task.assignedTo}</span>
                     </div>
                   )}
-                  
+
                   {task.dueDate && (
                     <div className="flex items-center text-sm">
                       <Calendar className="h-4 w-4 mr-2" />
