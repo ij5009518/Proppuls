@@ -18,8 +18,11 @@ export const propertySchema = z.object({
   city: z.string(),
   state: z.string(),
   zipCode: z.string(),
-  type: z.enum(["residential", "commercial", "mixed"]),
-  units: z.number(),
+  totalUnits: z.number(),
+  purchasePrice: z.string(),
+  purchaseDate: z.date(),
+  propertyType: z.string(),
+  status: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -29,11 +32,10 @@ export const unitSchema = z.object({
   propertyId: z.number(),
   unitNumber: z.string(),
   bedrooms: z.number(),
-  bathrooms: z.number(),
-  squareFeet: z.number().nullable(),
-  rent: z.number(),
-  deposit: z.number(),
+  bathrooms: z.string(),
+  rentAmount: z.string(),
   status: z.enum(["vacant", "occupied", "maintenance"]),
+  squareFootage: z.number().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -92,12 +94,12 @@ export const rentPaymentSchema = z.object({
   id: z.number(),
   tenantId: z.number(),
   unitId: z.number(),
-  amount: z.number(),
+  amount: z.string(),
   dueDate: z.date(),
   paidDate: z.date().nullable(),
   status: z.enum(["pending", "paid", "overdue", "partial"]),
-  paymentMethod: z.enum(["cash", "check", "bank_transfer", "credit_card"]),
-  notes: z.string(),
+  paymentMethod: z.string().nullable(),
+  notes: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -106,14 +108,29 @@ export const mortgageSchema = z.object({
   id: z.number(),
   propertyId: z.number(),
   lender: z.string(),
-  loanAmount: z.number(),
-  interestRate: z.number(),
-  termYears: z.number(),
-  monthlyPayment: z.number(),
+  originalAmount: z.string(),
+  currentBalance: z.string(),
+  interestRate: z.string(),
+  monthlyPayment: z.string(),
+  principalAmount: z.string(),
+  interestAmount: z.string(),
+  escrowAmount: z.string().nullable(),
   startDate: z.date(),
-  endDate: z.date(),
-  remainingBalance: z.number(),
-  status: z.enum(["active", "paid_off", "refinanced"]),
+  termYears: z.number(),
+  accountNumber: z.string().nullable(),
+  notes: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const expenseSchema = z.object({
+  id: z.number(),
+  propertyId: z.number(),
+  category: z.string(),
+  description: z.string(),
+  amount: z.string(),
+  date: z.date(),
+  isRecurring: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -127,6 +144,7 @@ export const insertMaintenanceRequestSchema = maintenanceRequestSchema.omit({ id
 export const insertVendorSchema = vendorSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertRentPaymentSchema = rentPaymentSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMortgageSchema = mortgageSchema.omit({ id: true, createdAt: true, updatedAt: true });
+export const insertExpenseSchema = expenseSchema.omit({ id: true, createdAt: true, updatedAt: true });
 
 // TypeScript types
 export type User = z.infer<typeof userSchema>;
@@ -137,6 +155,7 @@ export type MaintenanceRequest = z.infer<typeof maintenanceRequestSchema>;
 export type Vendor = z.infer<typeof vendorSchema>;
 export type RentPayment = z.infer<typeof rentPaymentSchema>;
 export type Mortgage = z.infer<typeof mortgageSchema>;
+export type Expense = z.infer<typeof expenseSchema>;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
@@ -146,3 +165,4 @@ export type InsertMaintenanceRequest = z.infer<typeof insertMaintenanceRequestSc
 export type InsertVendor = z.infer<typeof insertVendorSchema>;
 export type InsertRentPayment = z.infer<typeof insertRentPaymentSchema>;
 export type InsertMortgage = z.infer<typeof insertMortgageSchema>;
+export type InsertExpense = z.infer<typeof insertExpenseSchema>;
