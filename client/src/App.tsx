@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Properties from "@/pages/Properties";
@@ -17,8 +18,34 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
 import NotFound from "@/pages/not-found";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      setLocation("/login");
+    }
+  }, [isAuthenticated, isLoading, setLocation]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
 
 function Router() {
   return (
@@ -26,16 +53,16 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
-      <Route path="/" component={() => <Layout><Dashboard /></Layout>} />
-      <Route path="/properties" component={() => <Layout><Properties /></Layout>} />
-      <Route path="/units" component={() => <Layout><Units /></Layout>} />
-      <Route path="/tenants" component={() => <Layout><Tenants /></Layout>} />
-      <Route path="/maintenance" component={() => <Layout><Maintenance /></Layout>} />
-      <Route path="/vendors" component={() => <Layout><Vendors /></Layout>} />
-      <Route path="/financials" component={() => <Layout><Financials /></Layout>} />
-      <Route path="/reports" component={() => <Layout><Reports /></Layout>} />
-      <Route path="/users" component={() => <Layout><Users /></Layout>} />
-      <Route path="/mortgages" component={() => <Layout><Mortgages /></Layout>} />
+      <Route path="/" component={() => <ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+      <Route path="/properties" component={() => <ProtectedRoute><Layout><Properties /></Layout></ProtectedRoute>} />
+      <Route path="/units" component={() => <ProtectedRoute><Layout><Units /></Layout></ProtectedRoute>} />
+      <Route path="/tenants" component={() => <ProtectedRoute><Layout><Tenants /></Layout></ProtectedRoute>} />
+      <Route path="/maintenance" component={() => <ProtectedRoute><Layout><Maintenance /></Layout></ProtectedRoute>} />
+      <Route path="/vendors" component={() => <ProtectedRoute><Layout><Vendors /></Layout></ProtectedRoute>} />
+      <Route path="/financials" component={() => <ProtectedRoute><Layout><Financials /></Layout></ProtectedRoute>} />
+      <Route path="/reports" component={() => <ProtectedRoute><Layout><Reports /></Layout></ProtectedRoute>} />
+      <Route path="/users" component={() => <ProtectedRoute><Layout><Users /></Layout></ProtectedRoute>} />
+      <Route path="/mortgages" component={() => <ProtectedRoute><Layout><Mortgages /></Layout></ProtectedRoute>} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -43,10 +70,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
