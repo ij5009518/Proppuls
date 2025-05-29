@@ -31,11 +31,18 @@ export function registerRoutes(app: Express) {
 
   app.post("/api/properties", async (req, res) => {
     try {
+      console.log("Routes: Received property creation request:", req.body);
       const property = await storage.createProperty(req.body);
+      console.log("Routes: Property created successfully:", property);
       res.json(property);
     } catch (error) {
-      console.error("Error creating property:", error);
-      res.status(500).json({ message: "Failed to create property" });
+      console.error("Routes: Error creating property:", error);
+      console.error("Routes: Error details:", error.message);
+      console.error("Routes: Error stack:", error.stack);
+      res.status(500).json({ 
+        message: "Failed to create property",
+        error: error.message 
+      });
     }
   });
 

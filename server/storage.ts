@@ -79,23 +79,35 @@ class Storage {
 
   // Property methods
   async createProperty(propertyData: any): Promise<Property> {
-    const propertyId = crypto.randomUUID();
-    const [property] = await db.insert(properties).values({
-      id: propertyId,
-      name: propertyData.name,
-      address: propertyData.address,
-      city: propertyData.city,
-      state: propertyData.state,
-      zipCode: propertyData.zipCode,
-      totalUnits: propertyData.totalUnits,
-      purchasePrice: propertyData.purchasePrice?.toString() || null,
-      purchaseDate: propertyData.purchaseDate ? new Date(propertyData.purchaseDate) : null,
-      propertyType: propertyData.propertyType,
-      status: propertyData.status,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
-    return property;
+    try {
+      console.log("Storage: Creating property with data:", propertyData);
+      const propertyId = crypto.randomUUID();
+      
+      const insertData = {
+        id: propertyId,
+        name: propertyData.name,
+        address: propertyData.address,
+        city: propertyData.city,
+        state: propertyData.state,
+        zipCode: propertyData.zipCode,
+        totalUnits: propertyData.totalUnits,
+        purchasePrice: propertyData.purchasePrice?.toString() || null,
+        purchaseDate: propertyData.purchaseDate ? new Date(propertyData.purchaseDate) : null,
+        propertyType: propertyData.propertyType,
+        status: propertyData.status,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      console.log("Storage: Insert data:", insertData);
+      
+      const [property] = await db.insert(properties).values(insertData).returning();
+      console.log("Storage: Property created successfully:", property);
+      return property;
+    } catch (error) {
+      console.error("Storage: Error creating property:", error);
+      throw error;
+    }
   }
 
   async getAllProperties(): Promise<Property[]> {

@@ -20,20 +20,20 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const properties = pgTable('properties', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  address: text('address').notNull(),
-  city: text('city').notNull(),
-  state: text('state').notNull(),
-  zipCode: text('zip_code').notNull(),
-  totalUnits: integer('total_units').notNull(),
-  purchasePrice: decimal('purchase_price'),
-  purchaseDate: timestamp('purchase_date'),
-  propertyType: text('property_type').notNull(),
-  status: text('status').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+export const properties = pgTable("properties", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  address: text("address").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  zipCode: text("zip_code").notNull(),
+  totalUnits: integer("total_units").notNull(),
+  purchasePrice: text("purchase_price"),
+  purchaseDate: timestamp("purchase_date"),
+  propertyType: text("property_type").notNull(),
+  status: text("status").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
 export const units = pgTable('units', {
