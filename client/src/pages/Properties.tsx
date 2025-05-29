@@ -861,7 +861,7 @@ export default function Properties() {
                                 <p className="text-lg font-semibold text-orange-600">{formatCurrency(mortgage.currentBalance)}</p>
                               </div>
                               <div>
-                                <label className`text-sm font-medium text-muted-foreground">Interest Rate</label>
+                                <label className="text-sm font-medium text-muted-foreground">Interest Rate</label>
                                 <p className="text-lg font-semibold">{mortgage.interestRate}%</p>
                               </div>
                               <div>
