@@ -21,6 +21,7 @@ import Mortgages from '@/pages/Mortgages';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
+import NotFound from '@/pages/not-found';
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
