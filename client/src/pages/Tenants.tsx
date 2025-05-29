@@ -968,6 +968,206 @@ export default function Tenants() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Tenant Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Tenant</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="john.doe@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="unitId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select unit" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {(units as any[])?.map((unit: any) => (
+                            <SelectItem key={unit.id} value={unit.id}>
+                              Unit {unit.unitNumber}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="monthlyRent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Rent</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1200.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="deposit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Security Deposit</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1200.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateTenantMutation.isPending}>
+                  {updateTenantMutation.isPending ? "Updating..." : "Update Tenant"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Tenant Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tenant Details</DialogTitle>
+          </DialogHeader>
+          {selectedTenant && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold">{selectedTenant.firstName} {selectedTenant.lastName}</h3>
+                <p className="text-sm text-muted-foreground">{selectedTenant.email}</p>
+                <p className="text-sm text-muted-foreground">{selectedTenant.phone}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Status:</span>
+                  <Badge className={getStatusColor(selectedTenant.status)} size="sm">
+                    {selectedTenant.status}
+                  </Badge>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Unit:</span>
+                  <span className="font-medium">{getUnitNumber(selectedTenant.unitId)}</span>
+                </div>
+                {selectedTenant.monthlyRent && (
+                  <div>
+                    <span className="text-muted-foreground">Monthly Rent:</span>
+                    <span className="font-medium">{formatCurrency(selectedTenant.monthlyRent)}</span>
+                  </div>
+                )}
+                {selectedTenant.deposit && (
+                  <div>
+                    <span className="text-muted-foreground">Deposit:</span>
+                    <span className="font-medium">{formatCurrency(selectedTenant.deposit)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end">
+            <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
