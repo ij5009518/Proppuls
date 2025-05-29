@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Grid, List, Eye, Edit, Trash2, Home, DollarSign, Calculator, Users } from "lucide-react";
+import { Plus, Grid, List, Eye, Edit, Trash2, Home, DollarSign, Calculator, Users, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -556,7 +556,7 @@ export default function Properties() {
                       window.location.href = url;
                     }}
                   >
-                    <Plus className="h-4 w-4" />
+                    <CheckSquare className="h-4 w-4" />
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => handleView(property)}>
                     <Eye className="h-4 w-4" />
@@ -606,7 +606,7 @@ export default function Properties() {
                       window.location.href = url;
                     }}
                   >
-                    <Plus className="h-4 w-4" />
+                    <CheckSquare className="h-4 w-4" />
                   </Button>
                       <Button size="sm" variant="outline" onClick={() => handleView(property)}>
                         <Eye className="h-4 w-4" />
@@ -858,8 +858,7 @@ export default function Properties() {
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-muted-foreground">Current Balance</label>
-                                <p className="text-lg font-semibold text-orange-600">{formatCurrency(mortgage.currentBalance)}</p>
-                              </div>
+                                <p className="text-lg font-semibold text-orange-600">{formatCurrency(mortgage.currentBalance)}</p</div>
                               <div>
                                 <label className="text-sm font-medium text-muted-foreground">Interest Rate</label>
                                 <p className="text-lg font-semibold">{mortgage.interestRate}%</p>
