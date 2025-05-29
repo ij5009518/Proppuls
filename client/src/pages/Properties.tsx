@@ -15,26 +15,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-// Define local types that match the database structure
-type Property = {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  totalUnits: number;
-  purchasePrice: string;
-  purchaseDate: Date;
-  propertyType: string;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type InsertProperty = Omit<Property, 'id' | 'createdAt' | 'updatedAt'>;
-
-import type { Unit, Mortgage, Expense, InsertUnit } from "@shared/schema";
+import type { Property, InsertProperty, Unit, Mortgage, Expense, InsertUnit } from "@shared/schema";
 
 const propertySchema = z.object({
   name: z.string().min(1, "Property name is required"),
