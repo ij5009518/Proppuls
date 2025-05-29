@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
@@ -26,18 +25,18 @@ export default function Register() {
         },
         body: JSON.stringify(userData),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Registration failed");
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
       login(data.token, data.user);
       toast({ title: "Registration successful! Welcome to PropertyFlow!" });
-      setLocation("/");
+      setLocation("/app");
     },
     onError: (error: Error) => {
       toast({ 

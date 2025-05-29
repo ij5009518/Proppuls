@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Layout from '@/components/Layout';
 
 // Pages
+import Landing from "@/pages/Landing";
 import Dashboard from '@/pages/Dashboard';
 import Users from '@/pages/Users';
 import Properties from '@/pages/Properties';
@@ -42,6 +43,7 @@ function AuthenticatedApp() {
   if (!isAuthenticated) {
     return (
       <Switch>
+        <Route path="/" component={Landing} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />
@@ -59,6 +61,7 @@ function AuthenticatedApp() {
   return (
     <Layout>
       <Switch>
+        <Route path="/app" component={Dashboard} />
         <Route path="/" component={Dashboard} />
         <Route path="/users" component={Users} />
         <Route path="/properties" component={Properties} />

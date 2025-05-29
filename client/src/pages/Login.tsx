@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
@@ -25,18 +24,18 @@ export default function Login() {
         },
         body: JSON.stringify(credentials),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Login failed");
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
       login(data.token, data.user);
       toast({ title: "Login successful!" });
-      setLocation("/");
+      setLocation("/app");
     },
     onError: (error: Error) => {
       toast({ 
