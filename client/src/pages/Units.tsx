@@ -17,7 +17,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Unit, InsertUnit, Property, Tenant } from "@shared/schema";
 
 const unitSchema = z.object({
-  propertyId: z.number().min(1, "Property is required"),
+  propertyId: z.string().min(1, "Property is required"),
   unitNumber: z.string().min(1, "Unit number is required"),
   bedrooms: z.number().min(0, "Bedrooms must be 0 or more"),
   bathrooms: z.string().min(1, "Bathrooms is required"),
@@ -52,7 +52,7 @@ export default function Units() {
   const createForm = useForm<UnitFormData>({
     resolver: zodResolver(unitSchema),
     defaultValues: {
-      propertyId: 0,
+      propertyId: "",
       unitNumber: "",
       bedrooms: 1,
       bathrooms: "1",
@@ -65,7 +65,7 @@ export default function Units() {
   const editForm = useForm<UnitFormData>({
     resolver: zodResolver(unitSchema),
     defaultValues: {
-      propertyId: 0,
+      propertyId: "",
       unitNumber: "",
       bedrooms: 1,
       bathrooms: "1",
@@ -90,7 +90,7 @@ export default function Units() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<InsertUnit> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<InsertUnit> }) =>
       apiRequest("PATCH", `/api/units/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
@@ -104,7 +104,7 @@ export default function Units() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/units/${id}`),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/units/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
       toast({ title: "Unit deleted successfully" });
@@ -119,7 +119,6 @@ export default function Units() {
     // Ensure proper data formatting for database
     const formattedData = {
       ...data,
-      propertyId: Number(data.propertyId),
       bedrooms: Number(data.bedrooms),
       rentAmount: data.rentAmount.toString(),
       bathrooms: data.bathrooms.toString(),
@@ -153,18 +152,18 @@ export default function Units() {
     setIsViewDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this unit?")) {
       deleteMutation.mutate(id);
     }
   };
 
-  const getPropertyName = (propertyId: number) => {
+  const getPropertyName = (propertyId: string) => {
     const property = properties.find(p => p.id === propertyId);
     return property?.name || "Unknown Property";
   };
 
-  const getTenantForUnit = (unitId: number) => {
+  const getTenantForUnit = (unitId: string) => {
     return tenants.find(tenant => tenant.unitId === unitId);
   };
 
@@ -212,7 +211,7 @@ export default function Units() {
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>Property</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select property" />
@@ -220,7 +219,7 @@ export default function Units() {
                           </FormControl>
                           <SelectContent>
                             {properties.map((property) => (
-                              <SelectItem key={property.id} value={property.id.toString()}>
+                              <SelectItem key={property.id} value={property.id}>
                                 {property.name}
                               </SelectItem>
                             ))}
@@ -612,7 +611,7 @@ export default function Units() {
                   render={({ field }) => (
                     <FormItem className="col-span-2">
                       <FormLabel>Property</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select property" />
@@ -620,7 +619,7 @@ export default function Units() {
                         </FormControl>
                         <SelectContent>
                           {properties.map((property) => (
-                            <SelectItem key={property.id} value={property.id.toString()}>
+                            <SelectItem key={property.id} value={property.id}>
                               {property.name}
                             </SelectItem>
                           ))}

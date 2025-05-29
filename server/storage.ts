@@ -1,6 +1,7 @@
 import { User } from '../shared/schema';
 import { db, users, properties, expenses, units, tenants, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
 import { eq } from 'drizzle-orm';
+import crypto from "crypto";
 import { Property, Expense, Unit, Tenant, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
 
 interface Session {
@@ -78,20 +79,23 @@ class Storage {
 
   // Property methods
   async createProperty(propertyData: any): Promise<Property> {
-    try {
-      console.log("Creating property with data:", propertyData);
-      const [property] = await db.insert(properties).values({
-        id: propertyData.id || crypto.randomUUID(),
-        ...propertyData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }).returning();
-      console.log("Property created successfully:", property);
-      return property;
-    } catch (error) {
-      console.error("Error in createProperty:", error);
-      throw error;
-    }
+    const propertyId = crypto.randomUUID();
+    const [property] = await db.insert(properties).values({
+      id: propertyId,
+      name: propertyData.name,
+      address: propertyData.address,
+      city: propertyData.city,
+      state: propertyData.state,
+      zipCode: propertyData.zipCode,
+      totalUnits: propertyData.totalUnits,
+      purchasePrice: propertyData.purchasePrice?.toString() || null,
+      purchaseDate: propertyData.purchaseDate ? new Date(propertyData.purchaseDate) : null,
+      propertyType: propertyData.propertyType,
+      status: propertyData.status,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return property;
   }
 
   async getAllProperties(): Promise<Property[]> {
@@ -115,7 +119,7 @@ class Storage {
     const result = await db.delete(properties).where(eq(properties.id, id));
     return result.rowCount > 0;
   }
-  
+
   // Expense methods
   async createExpense(expenseData: any): Promise<Expense> {
     const [expense] = await db.insert(expenses).values({
