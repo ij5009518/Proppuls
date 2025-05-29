@@ -82,6 +82,28 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.patch("/api/units/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const unit = await storage.updateUnit(id, req.body);
+      res.json(unit);
+    } catch (error) {
+      console.error("Error updating unit:", error);
+      res.status(500).json({ message: "Failed to update unit" });
+    }
+  });
+
+  app.delete("/api/units/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.deleteUnit(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting unit:", error);
+      res.status(500).json({ message: "Failed to delete unit" });
+    }
+  });
+
   // Mortgages routes
   app.get("/api/mortgages", async (req, res) => {
     try {
