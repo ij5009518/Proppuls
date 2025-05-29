@@ -41,22 +41,34 @@ export default function RentPayments() {
 
   const { data: rentPayments, isLoading: paymentsLoading } = useQuery({
     queryKey: ["rent-payments"],
-    queryFn: () => apiRequest<RentPayment[]>("/api/rent-payments"),
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/rent-payments");
+      return response.json();
+    },
   });
 
   const { data: tenants } = useQuery({
     queryKey: ["tenants"],
-    queryFn: () => apiRequest<Tenant[]>("/api/tenants"),
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/tenants");
+      return response.json();
+    },
   });
 
   const { data: units } = useQuery({
     queryKey: ["units"],
-    queryFn: () => apiRequest<Unit[]>("/api/units"),
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/units");
+      return response.json();
+    },
   });
 
   const { data: properties } = useQuery({
     queryKey: ["properties"],
-    queryFn: () => apiRequest<Property[]>("/api/properties"),
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/properties");
+      return response.json();
+    },
   });
 
   const form = useForm<z.infer<typeof rentPaymentSchema>>({
@@ -68,7 +80,10 @@ export default function RentPayments() {
   });
 
   const createPaymentMutation = useMutation({
-    mutationFn: (data: InsertRentPayment) => apiRequest<RentPayment>("/api/rent-payments", "POST", data),
+    mutationFn: async (data: InsertRentPayment) => {
+      const response = await apiRequest("POST", "/api/rent-payments", data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rent-payments"] });
       setIsAddDialogOpen(false);
@@ -81,8 +96,10 @@ export default function RentPayments() {
   });
 
   const updatePaymentMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<InsertRentPayment> }) =>
-      apiRequest<RentPayment>(`/api/rent-payments/${id}`, "PUT", data),
+    mutationFn: async ({ id, data }: { id: number; data: Partial<InsertRentPayment> }) => {
+      const response = await apiRequest("PUT", `/api/rent-payments/${id}`, data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rent-payments"] });
       toast({ title: "Success", description: "Payment updated successfully" });
@@ -93,7 +110,7 @@ export default function RentPayments() {
   });
 
   const deletePaymentMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/rent-payments/${id}`, "DELETE"),
+    mutationFn: (id: number) => apiRequest("DELETE", `/api/rent-payments/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rent-payments"] });
       toast({ title: "Success", description: "Payment deleted successfully" });
