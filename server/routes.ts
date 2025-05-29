@@ -114,6 +114,38 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/expenses", async (req, res) => {
+    try {
+      const expense = await storage.createExpense(req.body);
+      res.json(expense);
+    } catch (error) {
+      console.error("Error creating expense:", error);
+      res.status(500).json({ message: "Failed to create expense" });
+    }
+  });
+
+  app.patch("/api/expenses/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const expense = await storage.updateExpense(id, req.body);
+      res.json(expense);
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      res.status(500).json({ message: "Failed to update expense" });
+    }
+  });
+
+  app.delete("/api/expenses/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteExpense(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      res.status(500).json({ message: "Failed to delete expense" });
+    }
+  });
+
   // Tenants routes
   app.get("/api/tenants", async (req, res) => {
     try {

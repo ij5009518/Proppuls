@@ -19,6 +19,7 @@ import Vendors from '@/pages/Vendors';
 import Financials from '@/pages/Financials';
 import Reports from '@/pages/Reports';
 import Mortgages from '@/pages/Mortgages';
+import Expenses from "@/pages/Expenses";
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -70,6 +71,7 @@ function AuthenticatedApp() {
         <Route path="/financials" component={Financials} />
         <Route path="/reports" component={Reports} />
         <Route path="/mortgages" component={Mortgages} />
+        <Route path="/expenses/:category?" component={Expenses} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

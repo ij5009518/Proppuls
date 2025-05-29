@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import {
   Home,
@@ -14,6 +14,8 @@ import {
   FileText,
   Building2,
   CheckSquare,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -26,7 +28,14 @@ import {
   SidebarHeader,
 } from '@/components/ui/sidebar';
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: any;
+  subItems?: { title: string; url: string }[];
+}
+
+const menuItems: MenuItem[] = [
   {
     title: 'Dashboard',
     url: '/',
@@ -73,9 +82,40 @@ const menuItems = [
     icon: Store,
   },
   {
+    title: 'Expenses',
+    url: '/expenses',
+    icon: DollarSign,
+    subItems: [
+      {
+        title: 'Taxes',
+        url: '/expenses/taxes',
+      },
+      {
+        title: 'Insurance',
+        url: '/expenses/insurance',
+      },
+      {
+        title: 'Utilities',
+        url: '/expenses/utilities',
+      },
+      {
+        title: 'Maintenance',
+        url: '/expenses/maintenance',
+      },
+      {
+        title: 'Legal',
+        url: '/expenses/legal',
+      },
+      {
+        title: 'Other',
+        url: '/expenses/other',
+      },
+    ],
+  },
+  {
     title: 'Financials',
     url: '/financials',
-    icon: DollarSign,
+    icon: FileText,
   },
   {
     title: 'Reports',
@@ -91,6 +131,14 @@ const menuItems = [
 
 export default function AppSidebar() {
   const [location] = useLocation();
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+
+  const toggleExpanded = (title: string) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [title]: !prev[title]
+    }));
+  };
 
   return (
     <Sidebar>
@@ -106,15 +154,49 @@ export default function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location === item.url}
-                  >
-                    <Link href={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
+                  {item.subItems ? (
+                    <div>
+                      <SidebarMenuButton
+                        onClick={() => toggleExpanded(item.title)}
+                        isActive={location.startsWith(item.url)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                        {expandedItems[item.title] ? (
+                          <ChevronDown className="h-4 w-4 ml-auto" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 ml-auto" />
+                        )}
+                      </SidebarMenuButton>
+                      {expandedItems[item.title] && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {item.subItems.map((subItem) => (
+                            <SidebarMenuItem key={subItem.title}>
+                              <SidebarMenuButton
+                                asChild
+                                isActive={location === subItem.url}
+                                size="sm"
+                              >
+                                <Link href={subItem.url} className="text-sm">
+                                  {subItem.title}
+                                </Link>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location === item.url}
+                    >
+                      <Link href={item.url}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
