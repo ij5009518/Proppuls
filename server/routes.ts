@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, optionalAuth, type AuthenticatedRequest } from "./auth";
-import { insertPropertySchema, insertUnitSchema, insertTenantSchema, insertMortgageSchema, insertExpenseSchema, insertVendorSchema, insertMaintenanceRequestSchema, insertRevenueSchema, insertUserSchema, loginSchema } from "@shared/schema";
+import { insertPropertySchema, insertUnitSchema, insertTenantSchema, insertMortgageSchema, insertExpenseSchema, insertVendorSchema, insertMaintenanceRequestSchema, insertRevenueSchema, insertUserSchema, loginSchema, insertRentPaymentSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -353,6 +353,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete tenant" });
+    }
+  });
+
+  // Rent Payments
+  app.get("/api/rent-payments", async (req, res) => {
+    try {
+      const payments = await storage.getRentPayments();
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch rent payments" });
+    }
+  });
+
+  app.get("/api/rent-payments/tenant/:tenantId", async (req, res) => {
+    try {
+      const tenantId = parseInt(req.params.tenantId);
+      const payments = await storage.getRentPaymentsByTenant(tenantId);
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch tenant payments" });
+    }
+  });
+
+  app.get("/api/rent-payments/overdue", async (req, res) => {
+    try {
+      const overduePayments = await storage.getOverdueRentPayments();
+      res.json(overduePayments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch overdue payments" });
+    }
+  });
+
+  app.post("/api/rent-payments", async (req, res) => {
+    console.log("=== POST /api/rent-payments endpoint hit ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    
+    try {
+      const paymentData = insertRentPaymentSchema.parse(req.body);
+      console.log("Payment schema validation passed:", paymentData);
+      const payment = await storage.createRentPayment(paymentData);
+      console.log("Payment created successfully:", payment);
+      res.status(201).json(payment);
+    } catch (error: any) {
+      console.error("=== ERROR in payment creation ===");
+      console.error("Error details:", error);
+      res.status(400).json({ 
+        message: "Invalid payment data", 
+        error: error?.message || String(error),
+        details: error?.issues || error
+      });
+    }
+  });
+
+  app.put("/api/rent-payments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const paymentData = insertRentPaymentSchema.partial().parse(req.body);
+      const payment = await storage.updateRentPayment(id, paymentData);
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      res.json(payment);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid payment data" });
+    }
+  });
+
+  app.delete("/api/rent-payments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteRentPayment(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete payment" });
     }
   });
 

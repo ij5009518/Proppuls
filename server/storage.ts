@@ -15,6 +15,8 @@ import {
   type InsertMaintenanceRequest,
   type Revenue,
   type InsertRevenue,
+  type RentPayment,
+  type InsertRentPayment,
   type DashboardKPIs,
   type PropertyWithStats,
   type ExpenseByCategory,
@@ -87,6 +89,16 @@ export interface IStorage {
   updateRevenue(id: number, revenue: Partial<InsertRevenue>): Promise<Revenue | undefined>;
   deleteRevenue(id: number): Promise<boolean>;
 
+  // Rent Payments
+  getRentPayments(): Promise<RentPayment[]>;
+  getRentPaymentsByTenant(tenantId: number): Promise<RentPayment[]>;
+  getRentPaymentsByProperty(propertyId: number): Promise<RentPayment[]>;
+  getOverdueRentPayments(): Promise<RentPayment[]>;
+  getRentPayment(id: number): Promise<RentPayment | undefined>;
+  createRentPayment(payment: InsertRentPayment): Promise<RentPayment>;
+  updateRentPayment(id: number, payment: Partial<InsertRentPayment>): Promise<RentPayment | undefined>;
+  deleteRentPayment(id: number): Promise<boolean>;
+
   // Dashboard and Analytics
   getDashboardKPIs(): Promise<DashboardKPIs>;
   getPropertiesWithStats(): Promise<PropertyWithStats[]>;
@@ -109,6 +121,7 @@ import {
   maintenanceRequests,
   revenues,
   mortgagePayments,
+  rentPayments,
   users,
   sessions,
   type Property,
@@ -120,6 +133,7 @@ import {
   type MaintenanceRequest,
   type Revenue,
   type MortgagePayment,
+  type RentPayment,
   type User,
   type Session,
   type PropertyWithStats,
@@ -134,6 +148,7 @@ import {
   type InsertMaintenanceRequest,
   type InsertRevenue,
   type InsertMortgagePayment,
+  type InsertRentPayment,
   type InsertUser,
   type InsertSession,
   type LoginCredentials,
@@ -151,6 +166,7 @@ export class MemStorage implements IStorage {
   private vendors: Map<number, Vendor> = new Map();
   private maintenanceRequests: Map<number, MaintenanceRequest> = new Map();
   private revenues: Map<number, Revenue> = new Map();
+  private rentPayments: Map<number, RentPayment> = new Map();
 
   private propertyIdCounter = 1;
   private unitIdCounter = 1;
@@ -160,6 +176,7 @@ export class MemStorage implements IStorage {
   private vendorIdCounter = 1;
   private maintenanceRequestIdCounter = 1;
   private revenueIdCounter = 1;
+  private rentPaymentIdCounter = 1;
 
   constructor() {
     this.initializeData();
@@ -549,6 +566,53 @@ export class MemStorage implements IStorage {
 
   async deleteRevenue(id: number): Promise<boolean> {
     return this.revenues.delete(id);
+  }
+
+  // Rent Payments
+  async getRentPayments(): Promise<RentPayment[]> {
+    return Array.from(this.rentPayments.values());
+  }
+
+  async getRentPaymentsByTenant(tenantId: number): Promise<RentPayment[]> {
+    return Array.from(this.rentPayments.values()).filter(payment => payment.tenantId === tenantId);
+  }
+
+  async getRentPaymentsByProperty(propertyId: number): Promise<RentPayment[]> {
+    return Array.from(this.rentPayments.values()).filter(payment => payment.propertyId === propertyId);
+  }
+
+  async getOverdueRentPayments(): Promise<RentPayment[]> {
+    const now = new Date();
+    return Array.from(this.rentPayments.values()).filter(payment => 
+      payment.status === "pending" && new Date(payment.dueDate) < now
+    );
+  }
+
+  async getRentPayment(id: number): Promise<RentPayment | undefined> {
+    return this.rentPayments.get(id);
+  }
+
+  async createRentPayment(payment: InsertRentPayment): Promise<RentPayment> {
+    const newPayment: RentPayment = { 
+      ...payment, 
+      id: this.rentPaymentIdCounter++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.rentPayments.set(newPayment.id, newPayment);
+    return newPayment;
+  }
+
+  async updateRentPayment(id: number, payment: Partial<InsertRentPayment>): Promise<RentPayment | undefined> {
+    const existing = this.rentPayments.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...payment, updatedAt: new Date() };
+    this.rentPayments.set(id, updated);
+    return updated;
+  }
+
+  async deleteRentPayment(id: number): Promise<boolean> {
+    return this.rentPayments.delete(id);
   }
 
   // Users and Authentication

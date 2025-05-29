@@ -61,6 +61,30 @@ export const tenants = pgTable("tenants", {
   monthlyRent: decimal("monthly_rent", { precision: 8, scale: 2 }),
   securityDeposit: decimal("security_deposit", { precision: 8, scale: 2 }),
   status: text("status").notNull().default("active"), // active, inactive, moved_out
+  photoIdUrl: text("photo_id_url"),
+  leaseDocumentUrl: text("lease_document_url"),
+  emergencyContactName: text("emergency_contact_name"),
+  emergencyContactPhone: text("emergency_contact_phone"),
+  dateOfBirth: timestamp("date_of_birth"),
+  moveInDate: timestamp("move_in_date"),
+  notes: text("notes"),
+});
+
+export const rentPayments = pgTable("rent_payments", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenant_id").notNull(),
+  unitId: integer("unit_id").notNull(),
+  propertyId: integer("property_id").notNull(),
+  amount: decimal("amount", { precision: 8, scale: 2 }).notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  paidDate: timestamp("paid_date"),
+  paymentMethod: text("payment_method"), // cash, check, online, bank_transfer
+  paymentReference: text("payment_reference"), // check number, transaction ID, etc.
+  status: text("status").notNull().default("pending"), // pending, paid, overdue, partial
+  lateFeeAmount: decimal("late_fee_amount", { precision: 8, scale: 2 }).default('0'),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const mortgages = pgTable("mortgages", {
@@ -160,6 +184,13 @@ export const insertUnitSchema = createInsertSchema(units).omit({ id: true });
 export const insertTenantSchema = createInsertSchema(tenants).omit({ id: true }).extend({
   leaseStart: z.coerce.date().optional().nullable(),
   leaseEnd: z.coerce.date().optional().nullable(),
+  dateOfBirth: z.coerce.date().optional().nullable(),
+  moveInDate: z.coerce.date().optional().nullable(),
+});
+
+export const insertRentPaymentSchema = createInsertSchema(rentPayments).omit({ id: true, createdAt: true, updatedAt: true }).extend({
+  dueDate: z.coerce.date(),
+  paidDate: z.coerce.date().optional().nullable(),
 });
 export const insertMortgageSchema = createInsertSchema(mortgages).omit({ id: true }).extend({
   startDate: z.coerce.date(),
@@ -182,6 +213,8 @@ export type Unit = typeof units.$inferSelect;
 export type InsertUnit = z.infer<typeof insertUnitSchema>;
 export type Tenant = typeof tenants.$inferSelect;
 export type InsertTenant = z.infer<typeof insertTenantSchema>;
+export type RentPayment = typeof rentPayments.$inferSelect;
+export type InsertRentPayment = z.infer<typeof insertRentPaymentSchema>;
 export type Mortgage = typeof mortgages.$inferSelect;
 export type InsertMortgage = z.infer<typeof insertMortgageSchema>;
 export type Expense = typeof expenses.$inferSelect;
