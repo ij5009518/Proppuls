@@ -118,10 +118,13 @@ export default function Units() {
     console.log("Unit form data being submitted:", data);
     // Ensure proper data formatting for database
     const formattedData = {
-      ...data,
+      propertyId: data.propertyId,
+      unitNumber: data.unitNumber,
       bedrooms: Number(data.bedrooms),
-      rentAmount: data.rentAmount.toString(),
       bathrooms: data.bathrooms.toString(),
+      rentAmount: data.rentAmount || null,
+      status: data.status as "vacant" | "occupied" | "maintenance",
+      squareFootage: data.squareFootage ? Number(data.squareFootage) : null,
     };
     console.log("Formatted unit data:", formattedData);
     createMutation.mutate(formattedData);
