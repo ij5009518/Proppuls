@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 interface User {
   id: number;
@@ -26,22 +26,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing authentication on mount
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
+    // Optimize localStorage access with try-catch and faster checks
+    const initAuth = () => {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setToken(storedToken);
-        setUser(parsedUser);
+        const storedToken = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+        
+        if (storedToken && storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setToken(storedToken);
+          setUser(parsedUser);
+        }
       } catch (error) {
         // Clear invalid stored data
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    // Use setTimeout to prevent blocking the main thread
+    setTimeout(initAuth, 0);
   }, []);
 
   const login = (newToken: string, newUser: User) => {
@@ -58,17 +64,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
-  const isAuthenticated = !!(token && user);
+  // Memoize computed values to prevent unnecessary re-renders
+  const isAuthenticated = useMemo(() => !!(token && user), [token, user]);
+
+  const contextValue = useMemo(() => ({
+    user,
+    token,
+    isLoading,
+    login,
+    logout,
+    isAuthenticated
+  }), [user, token, isLoading, isAuthenticated]);
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      isLoading,
-      login,
-      logout,
-      isAuthenticated
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
