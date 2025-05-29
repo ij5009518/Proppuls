@@ -16,6 +16,7 @@ import Mortgages from "@/pages/Mortgages";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/not-found";
+import { lazy } from 'react';
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={lazy(() => import("./pages/ForgotPassword"))} />
       <Route path="/" component={() => <Layout><Dashboard /></Layout>} />
       <Route path="/properties" component={() => <Layout><Properties /></Layout>} />
       <Route path="/units" component={() => <Layout><Units /></Layout>} />

@@ -119,16 +119,33 @@ export default function Login() {
                 className="w-full"
                 disabled={loginMutation.isPending}
               >
-                {loginMutation.isPending ? "Signing in..." : "Sign in"}
+                {loginMutation.isPending ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Signing in...
+                  </div>
+                ) : (
+                  "Sign in"
+                )}
               </Button>
 
-              <div className="text-center">
-                <Link
-                  to="/register"
-                  className="text-sm text-primary hover:text-primary/80"
-                >
-                  Don't have an account? Sign up
-                </Link>
+              <div className="text-center space-y-2">
+                <div>
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+                <div>
+                  <Link
+                    to="/register"
+                    className="text-sm text-primary hover:text-primary/80"
+                  >
+                    Don't have an account? Sign up
+                  </Link>
+                </div>
               </div>
             </form>
           </CardContent>
