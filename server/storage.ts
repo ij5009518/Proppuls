@@ -1,5 +1,7 @@
-
 import { User } from '../shared/schema';
+import { db, users, properties, expenses, units, tenants, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
+import { eq } from 'drizzle-orm';
+import { Property, Expense, Unit, Tenant, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
 
 interface Session {
   token: string;
@@ -8,36 +10,50 @@ interface Session {
 }
 
 class Storage {
-  private users: User[] = [];
   private sessions: Map<string, Session> = new Map();
-  private properties: any[] = [];
-  private units: any[] = [];
-  private mortgages: any[] = [];
-  private expenses: any[] = [];
-  private tenants: any[] = [];
-  private rentPayments: any[] = [];
-  private tasks: any[] = [];
-  private nextUserId = 1;
-  private nextPropertyId = 1;
-  private nextUnitId = 1;
-  private nextMortgageId = 1;
-  private nextExpenseId = 1;
-  private nextTenantId = 1;
-  private nextRentPaymentId = 1;
-  private nextTaskId = 1;
 
-  async createUser(userData: Omit<User, 'id' | 'createdAt'>): Promise<User> {
-    const user: User = {
-      ...userData,
-      id: this.nextUserId++,
+  // User methods
+  async createUser(userData: any): Promise<User> {
+    const [user] = await db.insert(users).values({
+      id: userData.id || crypto.randomUUID(),
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      password: userData.password,
+      phone: userData.phone || null,
+      role: userData.role || 'tenant',
+      isActive: userData.isActive !== undefined ? userData.isActive : true,
       createdAt: new Date(),
-    };
-    this.users.push(user);
+      updatedAt: new Date()
+    }).returning();
     return user;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    return this.users.find(user => user.email === email) || null;
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0] || null;
+  }
+
+  async getUserById(id: string): Promise<User | null> {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async updateUser(id: string, userData: Partial<User>): Promise<User | null> {
+    const [user] = await db.update(users)
+      .set({ ...userData, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user || null;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return result.rowCount > 0;
   }
 
   async createSession(token: string, user: User): Promise<void> {
@@ -60,236 +76,301 @@ class Storage {
     this.sessions.delete(sessionId);
   }
 
-  // Properties
-  async getProperties(): Promise<any[]> {
-    return this.properties;
-  }
-
-  async createProperty(propertyData: any): Promise<any> {
-    const property = {
+  // Property methods
+  async createProperty(propertyData: any): Promise<Property> {
+    const [property] = await db.insert(properties).values({
+      id: propertyData.id || crypto.randomUUID(),
       ...propertyData,
-      id: this.nextPropertyId++,
       createdAt: new Date(),
-    };
-    this.properties.push(property);
+      updatedAt: new Date()
+    }).returning();
     return property;
   }
 
-  async updateProperty(id: number, updateData: any): Promise<any> {
-    const index = this.properties.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Property not found');
-    
-    this.properties[index] = { ...this.properties[index], ...updateData };
-    return this.properties[index];
+  async getAllProperties(): Promise<Property[]> {
+    return await db.select().from(properties);
   }
 
-  async deleteProperty(id: number): Promise<void> {
-    const index = this.properties.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Property not found');
-    
-    this.properties.splice(index, 1);
+  async getPropertyById(id: string): Promise<Property | null> {
+    const result = await db.select().from(properties).where(eq(properties.id, id)).limit(1);
+    return result[0] || null;
   }
 
-  // Units
-  async getUnits(): Promise<any[]> {
-    return this.units;
+  async updateProperty(id: string, propertyData: any): Promise<Property | null> {
+    const [property] = await db.update(properties)
+      .set({ ...propertyData, updatedAt: new Date() })
+      .where(eq(properties.id, id))
+      .returning();
+    return property || null;
   }
 
-  async createUnit(unitData: any): Promise<any> {
-    const unit = {
-      ...unitData,
-      id: this.nextUnitId++,
-      createdAt: new Date(),
-    };
-    this.units.push(unit);
-    return unit;
+  async deleteProperty(id: string): Promise<boolean> {
+    const result = await db.delete(properties).where(eq(properties.id, id));
+    return result.rowCount > 0;
   }
-
-  async updateUnit(id: number, updateData: any): Promise<any> {
-    const index = this.units.findIndex(u => u.id === id);
-    if (index === -1) throw new Error('Unit not found');
-    
-    this.units[index] = { ...this.units[index], ...updateData };
-    return this.units[index];
-  }
-
-  async deleteUnit(id: number): Promise<void> {
-    const index = this.units.findIndex(u => u.id === id);
-    if (index === -1) throw new Error('Unit not found');
-    
-    this.units.splice(index, 1);
-  }
-
-  // Mortgages
-  async getMortgages(): Promise<any[]> {
-    return this.mortgages;
-  }
-
-  async createMortgage(mortgageData: any): Promise<any> {
-    const mortgage = {
-      ...mortgageData,
-      id: this.nextMortgageId++,
-      createdAt: new Date(),
-    };
-    this.mortgages.push(mortgage);
-    return mortgage;
-  }
-
-  // Expenses
-  async getExpenses(): Promise<any[]> {
-    return this.expenses;
-  }
-
-  async createExpense(expenseData: any): Promise<any> {
-    const expense = {
+  
+  // Expense methods
+  async createExpense(expenseData: any): Promise<Expense> {
+    const [expense] = await db.insert(expenses).values({
+      id: expenseData.id || crypto.randomUUID(),
       ...expenseData,
-      id: this.nextExpenseId++,
       createdAt: new Date(),
-    };
-    this.expenses.push(expense);
+      updatedAt: new Date()
+    }).returning();
     return expense;
   }
 
-  // Tenants
-  async getTenants(): Promise<any[]> {
-    return this.tenants;
+  async getAllExpenses(): Promise<Expense[]> {
+    return await db.select().from(expenses);
   }
 
-  async createTenant(tenantData: any): Promise<any> {
-    const tenant = {
-      ...tenantData,
-      id: this.nextTenantId++,
+  async getExpenseById(id: string): Promise<Expense | null> {
+    const result = await db.select().from(expenses).where(eq(expenses.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async updateExpense(id: string, expenseData: any): Promise<Expense | null> {
+    const [expense] = await db.update(expenses)
+      .set({ ...expenseData, updatedAt: new Date() })
+      .where(eq(expenses.id, id))
+      .returning();
+    return expense || null;
+  }
+
+  async deleteExpense(id: string): Promise<boolean> {
+    const result = await db.delete(expenses).where(eq(expenses.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Unit methods
+  async createUnit(unitData: any): Promise<Unit> {
+    const [unit] = await db.insert(units).values({
+      id: unitData.id || crypto.randomUUID(),
+      ...unitData,
       createdAt: new Date(),
-    };
-    this.tenants.push(tenant);
+      updatedAt: new Date()
+    }).returning();
+    return unit;
+  }
+
+  async getAllUnits(): Promise<Unit[]> {
+    return await db.select().from(units);
+  }
+
+  async getUnitById(id: string): Promise<Unit | null> {
+    const result = await db.select().from(units).where(eq(units.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async updateUnit(id: string, unitData: any): Promise<Unit | null> {
+    const [unit] = await db.update(units)
+      .set({ ...unitData, updatedAt: new Date() })
+      .where(eq(units.id, id))
+      .returning();
+    return unit || null;
+  }
+
+  async deleteUnit(id: string): Promise<boolean> {
+    const result = await db.delete(units).where(eq(units.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Tenant methods
+  async createTenant(tenantData: any): Promise<Tenant> {
+    const [tenant] = await db.insert(tenants).values({
+      id: tenantData.id || crypto.randomUUID(),
+      ...tenantData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
     return tenant;
   }
 
-  // Rent Payments
-  async getRentPayments(): Promise<any[]> {
-    return this.rentPayments;
+  async getAllTenants(): Promise<Tenant[]> {
+    return await db.select().from(tenants);
   }
 
-  async createRentPayment(paymentData: any): Promise<any> {
-    const payment = {
-      ...paymentData,
-      id: this.nextRentPaymentId++,
-      createdAt: new Date(),
-    };
-    this.rentPayments.push(payment);
-    return payment;
+  async getTenantById(id: string): Promise<Tenant | null> {
+    const result = await db.select().from(tenants).where(eq(tenants.id, id)).limit(1);
+    return result[0] || null;
   }
 
-  async updateRentPayment(id: number, updateData: any): Promise<any> {
-    const index = this.rentPayments.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Rent payment not found');
-    
-    this.rentPayments[index] = { ...this.rentPayments[index], ...updateData };
-    return this.rentPayments[index];
+  async updateTenant(id: string, tenantData: any): Promise<Tenant | null> {
+    const [tenant] = await db.update(tenants)
+      .set({ ...tenantData, updatedAt: new Date() })
+      .where(eq(tenants.id, id))
+      .returning();
+    return tenant || null;
   }
 
-  async deleteRentPayment(id: number): Promise<void> {
-    const index = this.rentPayments.findIndex(p => p.id === id);
-    if (index === -1) throw new Error('Rent payment not found');
-    
-    this.rentPayments.splice(index, 1);
+  async deleteTenant(id: string): Promise<boolean> {
+    const result = await db.delete(tenants).where(eq(tenants.id, id));
+    return result.rowCount > 0;
   }
 
-  // Tasks
-  async getTasks(): Promise<any[]> {
-    return this.tasks;
-  }
-
-  async createTask(taskData: any): Promise<any> {
-    const task = {
-      ...taskData,
-      id: this.nextTaskId++,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.tasks.push(task);
-    return task;
-  }
-
-  async updateTask(id: number, updateData: any): Promise<any> {
-    const index = this.tasks.findIndex(t => t.id === id);
-    if (index === -1) throw new Error('Task not found');
-    
-    this.tasks[index] = { 
-      ...this.tasks[index], 
-      ...updateData, 
-      updatedAt: new Date() 
-    };
-    return this.tasks[index];
-  }
-
-  async deleteTask(id: number): Promise<void> {
-    const index = this.tasks.findIndex(t => t.id === id);
-    if (index === -1) throw new Error('Task not found');
-    
-    this.tasks.splice(index, 1);
-  }
-
-  // Users
-  async getUsers(): Promise<User[]> {
-    return this.users;
-  }
-
-  // Vendors
-  private vendors: any[] = [];
-  private nextVendorId = 1;
-
-  async getVendors(): Promise<any[]> {
-    return this.vendors;
-  }
-
-  async createVendor(vendorData: any): Promise<any> {
-    const vendor = {
-      ...vendorData,
-      id: this.nextVendorId++,
-      createdAt: new Date(),
-    };
-    this.vendors.push(vendor);
-    return vendor;
-  }
-
-  // Maintenance Requests
-  private maintenanceRequests: any[] = [];
-  private nextMaintenanceRequestId = 1;
-
-  async getMaintenanceRequests(): Promise<any[]> {
-    return this.maintenanceRequests;
-  }
-
-  async createMaintenanceRequest(requestData: any): Promise<any> {
-    const request = {
+  // Maintenance Request methods
+  async createMaintenanceRequest(requestData: any): Promise<MaintenanceRequest> {
+    const [request] = await db.insert(maintenanceRequests).values({
+      id: requestData.id || crypto.randomUUID(),
       ...requestData,
-      id: this.nextMaintenanceRequestId++,
       createdAt: new Date(),
-    };
-    this.maintenanceRequests.push(request);
+      updatedAt: new Date()
+    }).returning();
     return request;
   }
 
-  // Revenues
-  async getRevenues(): Promise<any[]> {
-    return [];
+  async getAllMaintenanceRequests(): Promise<MaintenanceRequest[]> {
+    return await db.select().from(maintenanceRequests);
   }
 
-  // Update Expense method
-  async updateExpense(id: number, updateData: any): Promise<any> {
-    const index = this.expenses.findIndex(e => e.id === id);
-    if (index === -1) throw new Error('Expense not found');
-    
-    this.expenses[index] = { ...this.expenses[index], ...updateData };
-    return this.expenses[index];
+  async getMaintenanceRequestById(id: string): Promise<MaintenanceRequest | null> {
+    const result = await db.select().from(maintenanceRequests).where(eq(maintenanceRequests.id, id)).limit(1);
+    return result[0] || null;
   }
 
-  async deleteExpense(id: number): Promise<void> {
-    const index = this.expenses.findIndex(e => e.id === id);
-    if (index === -1) throw new Error('Expense not found');
-    
-    this.expenses.splice(index, 1);
+  async updateMaintenanceRequest(id: string, requestData: any): Promise<MaintenanceRequest | null> {
+    const [request] = await db.update(maintenanceRequests)
+      .set({ ...requestData, updatedAt: new Date() })
+      .where(eq(maintenanceRequests.id, id))
+      .returning();
+    return request || null;
+  }
+
+  async deleteMaintenanceRequest(id: string): Promise<boolean> {
+    const result = await db.delete(maintenanceRequests).where(eq(maintenanceRequests.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Vendor methods
+  async createVendor(vendorData: any): Promise<Vendor> {
+    const [vendor] = await db.insert(vendors).values({
+      id: vendorData.id || crypto.randomUUID(),
+      ...vendorData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return vendor;
+  }
+
+  async getAllVendors(): Promise<Vendor[]> {
+    return await db.select().from(vendors);
+  }
+
+  async getVendorById(id: string): Promise<Vendor | null> {
+    const result = await db.select().from(vendors).where(eq(vendors.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async updateVendor(id: string, vendorData: any): Promise<Vendor | null> {
+    const [vendor] = await db.update(vendors)
+      .set({ ...vendorData, updatedAt: new Date() })
+      .where(eq(vendors.id, id))
+      .returning();
+    return vendor || null;
+  }
+
+  async deleteVendor(id: string): Promise<boolean> {
+    const result = await db.delete(vendors).where(eq(vendors.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Rent Payment methods
+  async createRentPayment(paymentData: any): Promise<RentPayment> {
+    const [payment] = await db.insert(rentPayments).values({
+      id: paymentData.id || crypto.randomUUID(),
+      ...paymentData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return payment;
+  }
+
+  async getAllRentPayments(): Promise<RentPayment[]> {
+    return await db.select().from(rentPayments);
+  }
+
+  async getRentPaymentById(id: string): Promise<RentPayment | null> {
+    const result = await db.select().from(rentPayments).where(eq(rentPayments.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async updateRentPayment(id: string, paymentData: any): Promise<RentPayment | null> {
+    const [payment] = await db.update(rentPayments)
+      .set({ ...paymentData, updatedAt: new Date() })
+      .where(eq(rentPayments.id, id))
+      .returning();
+    return payment || null;
+  }
+
+  async deleteRentPayment(id: string): Promise<boolean> {
+    const result = await db.delete(rentPayments).where(eq(rentPayments.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Mortgage methods
+  async createMortgage(mortgageData: any): Promise<Mortgage> {
+    const [mortgage] = await db.insert(mortgages).values({
+      id: mortgageData.id || crypto.randomUUID(),
+      ...mortgageData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return mortgage;
+  }
+
+  async getAllMortgages(): Promise<Mortgage[]> {
+    return await db.select().from(mortgages);
+  }
+
+  async getMortgageById(id: string): Promise<Mortgage | null> {
+    const result = await db.select().from(mortgages).where(eq(mortgages.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async updateMortgage(id: string, mortgageData: any): Promise<Mortgage | null> {
+    const [mortgage] = await db.update(mortgages)
+      .set({ ...mortgageData, updatedAt: new Date() })
+      .where(eq(mortgages.id, id))
+      .returning();
+    return mortgage || null;
+  }
+
+  async deleteMortgage(id: string): Promise<boolean> {
+    const result = await db.delete(mortgages).where(eq(mortgages.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Task methods
+  async createTask(taskData: any): Promise<Task> {
+    const [task] = await db.insert(tasks).values({
+      id: taskData.id || crypto.randomUUID(),
+      ...taskData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return task;
+  }
+
+  async getAllTasks(): Promise<Task[]> {
+    return await db.select().from(tasks);
+  }
+
+  async getTaskById(id: string): Promise<Task | null> {
+    const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async updateTask(id: string, taskData: any): Promise<Task | null> {
+    const [task] = await db.update(tasks)
+      .set({ ...taskData, updatedAt: new Date() })
+      .where(eq(tasks.id, id))
+      .returning();
+    return task || null;
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id));
+    return result.rowCount > 0;
   }
 }
 
