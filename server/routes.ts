@@ -21,7 +21,7 @@ export function registerRoutes(app: Express) {
   // Properties routes
   app.get("/api/properties", async (req, res) => {
     try {
-      const properties = await storage.getProperties();
+      const properties = await storage.getAllProperties();
       res.json(properties);
     } catch (error) {
       console.error("Error fetching properties:", error);
@@ -64,7 +64,7 @@ export function registerRoutes(app: Express) {
   // Units routes
   app.get("/api/units", async (req, res) => {
     try {
-      const units = await storage.getUnits();
+      const units = await storage.getAllUnits();
       res.json(units);
     } catch (error) {
       console.error("Error fetching units:", error);
@@ -85,7 +85,7 @@ export function registerRoutes(app: Express) {
   // Mortgages routes
   app.get("/api/mortgages", async (req, res) => {
     try {
-      const mortgages = await storage.getMortgages();
+      const mortgages = await storage.getAllMortgages();
       res.json(mortgages);
     } catch (error) {
       console.error("Error fetching mortgages:", error);
@@ -106,7 +106,7 @@ export function registerRoutes(app: Express) {
   // Expenses routes
   app.get("/api/expenses", async (req, res) => {
     try {
-      const expenses = await storage.getExpenses();
+      const expenses = await storage.getAllExpenses();
       res.json(expenses);
     } catch (error) {
       console.error("Error fetching expenses:", error);
@@ -149,7 +149,7 @@ export function registerRoutes(app: Express) {
   // Tenants routes
   app.get("/api/tenants", async (req, res) => {
     try {
-      const tenants = await storage.getTenants();
+      const tenants = await storage.getAllTenants();
       res.json(tenants);
     } catch (error) {
       console.error("Error fetching tenants:", error);
@@ -160,7 +160,7 @@ export function registerRoutes(app: Express) {
   // Rent Payments routes
   app.get("/api/rent-payments", async (req, res) => {
     try {
-      const rentPayments = await storage.getRentPayments();
+      const rentPayments = await storage.getAllRentPayments();
       res.json(rentPayments);
     } catch (error) {
       console.error("Error fetching rent payments:", error);
@@ -203,7 +203,7 @@ export function registerRoutes(app: Express) {
   // Users routes
   app.get("/api/users", async (req, res) => {
     try {
-      const users = await storage.getUsers();
+      const users = await storage.getAllUsers();
       res.json(users);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -214,7 +214,7 @@ export function registerRoutes(app: Express) {
   // Vendors routes
   app.get("/api/vendors", async (req, res) => {
     try {
-      const vendors = await storage.getVendors();
+      const vendors = await storage.getAllVendors();
       res.json(vendors);
     } catch (error) {
       console.error("Error fetching vendors:", error);
@@ -225,7 +225,7 @@ export function registerRoutes(app: Express) {
   // Maintenance requests routes
   app.get("/api/maintenance-requests", async (req, res) => {
     try {
-      const requests = await storage.getMaintenanceRequests();
+      const requests = await storage.getAllMaintenanceRequests();
       res.json(requests);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
@@ -243,21 +243,63 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Revenues route
-  app.get("/api/revenues", async (req, res) => {
+  // Dashboard KPIs route
+  app.get("/api/dashboard/kpis", async (req, res) => {
     try {
-      const revenues = await storage.getRevenues();
-      res.json(revenues);
+      // Mock KPI data for now
+      const kpis = {
+        totalProperties: 0,
+        totalUnits: 0,
+        occupancyRate: 0,
+        monthlyRevenue: 0,
+        maintenanceRequests: 0,
+        pendingRequests: 0
+      };
+      res.json(kpis);
     } catch (error) {
-      console.error("Error fetching revenues:", error);
-      res.status(500).json({ message: "Failed to fetch revenues" });
+      console.error("Error fetching KPIs:", error);
+      res.status(500).json({ message: "Failed to fetch KPIs" });
+    }
+  });
+
+  // Properties with stats route
+  app.get("/api/properties/with-stats", async (req, res) => {
+    try {
+      const properties = await storage.getAllProperties();
+      res.json(properties);
+    } catch (error) {
+      console.error("Error fetching properties with stats:", error);
+      res.status(500).json({ message: "Failed to fetch properties with stats" });
+    }
+  });
+
+  // Monthly revenues route
+  app.get("/api/revenues/monthly", async (req, res) => {
+    try {
+      // Mock monthly revenue data
+      const monthlyRevenues = [];
+      res.json(monthlyRevenues);
+    } catch (error) {
+      console.error("Error fetching monthly revenues:", error);
+      res.status(500).json({ message: "Failed to fetch monthly revenues" });
+    }
+  });
+
+  // Expenses by category route
+  app.get("/api/expenses/by-category", async (req, res) => {
+    try {
+      const expenses = await storage.getAllExpenses();
+      res.json(expenses);
+    } catch (error) {
+      console.error("Error fetching expenses by category:", error);
+      res.status(500).json({ message: "Failed to fetch expenses by category" });
     }
   });
 
   // Tasks routes
   app.get("/api/tasks", async (req, res) => {
     try {
-      const tasks = await storage.getTasks();
+      const tasks = await storage.getAllTasks();
       res.json(tasks);
     } catch (error) {
       console.error("Error fetching tasks:", error);
