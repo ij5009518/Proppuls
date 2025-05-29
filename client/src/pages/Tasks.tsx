@@ -153,7 +153,15 @@ export default function Tasks() {
       status: "pending",
       category: "general",
       isRecurring: false,
-      recurrencePeriod: "weekly",
+      dueDate: undefined,
+      assignedTo: "",
+      propertyId: "",
+      unitId: "",
+      tenantId: "",
+      vendorId: "",
+      rentPaymentId: "",
+      notes: "",
+      recurrencePeriod: "",
     },
   });
 
