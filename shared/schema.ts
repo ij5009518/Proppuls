@@ -2,26 +2,28 @@ import { z } from "zod";
 
 // Base schemas
 export const userSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),
   password: z.string(),
   role: z.enum(["admin", "manager", "tenant"]),
   phone: z.string().nullable(),
+  isActive: z.boolean(),
   createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 export const propertySchema = z.object({
-  id: z.number(),
+  id: z.string(),
   name: z.string(),
   address: z.string(),
   city: z.string(),
   state: z.string(),
   zipCode: z.string(),
   totalUnits: z.number(),
-  purchasePrice: z.string(),
-  purchaseDate: z.date(),
+  purchasePrice: z.string().nullable(),
+  purchaseDate: z.date().nullable(),
   propertyType: z.string(),
   status: z.string(),
   createdAt: z.date(),
@@ -29,12 +31,12 @@ export const propertySchema = z.object({
 });
 
 export const unitSchema = z.object({
-  id: z.number(),
-  propertyId: z.number(),
+  id: z.string(),
+  propertyId: z.string(),
   unitNumber: z.string(),
   bedrooms: z.number(),
   bathrooms: z.string(),
-  rentAmount: z.string(),
+  rentAmount: z.string().nullable(),
   status: z.enum(["vacant", "occupied", "maintenance"]),
   squareFootage: z.number().nullable(),
   createdAt: z.date(),
@@ -42,41 +44,41 @@ export const unitSchema = z.object({
 });
 
 export const tenantSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),
   phone: z.string(),
-  unitId: z.number().nullable(),
+  unitId: z.string().nullable(),
   leaseStart: z.date().nullable(),
   leaseEnd: z.date().nullable(),
-  monthlyRent: z.number().nullable(),
-  deposit: z.number().nullable(),
+  monthlyRent: z.string().nullable(),
+  deposit: z.string().nullable(),
   status: z.enum(["active", "inactive", "pending"]),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
 export const maintenanceRequestSchema = z.object({
-  id: z.number(),
-  unitId: z.number(),
-  tenantId: z.number().nullable(),
+  id: z.string(),
+  unitId: z.string(),
+  tenantId: z.string().nullable(),
   title: z.string(),
   description: z.string(),
   priority: z.enum(["low", "medium", "high", "urgent"]),
   status: z.enum(["open", "in_progress", "completed", "cancelled"]),
   submittedDate: z.date(),
   completedDate: z.date().nullable(),
-  vendorId: z.number().nullable(),
-  laborCost: z.number().nullable(),
-  materialCost: z.number().nullable(),
+  vendorId: z.string().nullable(),
+  laborCost: z.string().nullable(),
+  materialCost: z.string().nullable(),
   notes: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
 export const vendorSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   name: z.string(),
   email: z.string().email(),
   phone: z.string(),
@@ -85,16 +87,16 @@ export const vendorSchema = z.object({
   city: z.string(),
   state: z.string(),
   zipCode: z.string(),
-  rating: z.number().min(1).max(5).nullable(),
+  rating: z.string().nullable(),
   isActive: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
 export const rentPaymentSchema = z.object({
-  id: z.number(),
-  tenantId: z.number(),
-  unitId: z.number(),
+  id: z.string(),
+  tenantId: z.string(),
+  unitId: z.string(),
   amount: z.string(),
   dueDate: z.date(),
   paidDate: z.date().nullable(),
@@ -106,8 +108,8 @@ export const rentPaymentSchema = z.object({
 });
 
 export const mortgageSchema = z.object({
-  id: z.number(),
-  propertyId: z.number(),
+  id: z.string(),
+  propertyId: z.string(),
   lender: z.string(),
   originalAmount: z.string(),
   currentBalance: z.string(),
@@ -125,8 +127,8 @@ export const mortgageSchema = z.object({
 });
 
 export const expenseSchema = z.object({
-  id: z.number(),
-  propertyId: z.number(),
+  id: z.string(),
+  propertyId: z.string(),
   category: z.string(),
   description: z.string(),
   amount: z.string(),
@@ -137,18 +139,18 @@ export const expenseSchema = z.object({
 });
 
 export const taskSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   title: z.string(),
   description: z.string(),
   priority: z.enum(["low", "medium", "high", "urgent"]),
   status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
   dueDate: z.date().optional(),
   assignedTo: z.string().optional(),
-  propertyId: z.number().optional(),
-  unitId: z.number().optional(),
-  tenantId: z.number().optional(),
-  vendorId: z.number().optional(),
-  rentPaymentId: z.number().optional(),
+  propertyId: z.string().optional(),
+  unitId: z.string().optional(),
+  tenantId: z.string().optional(),
+  vendorId: z.string().optional(),
+  rentPaymentId: z.string().optional(),
   category: z.string(),
   notes: z.string().optional(),
   isRecurring: z.boolean().optional(),
