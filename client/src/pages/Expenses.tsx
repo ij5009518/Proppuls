@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Plus, Edit, Trash2, Calendar, DollarSign, Receipt, RotateCcw, Filter } from "lucide-react";
@@ -67,6 +67,20 @@ export default function Expenses() {
   const { data: expenses = [], isLoading } = useQuery<Expense[]>({
     queryKey: ["/api/expenses"],
   });
+
+  // Handle URL parameters for property integration
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get('propertyId');
+    const propertyName = urlParams.get('propertyName');
+    
+    if (propertyId && propertyName) {
+      // Auto-open the create dialog when coming from a property
+      setIsCreateDialogOpen(true);
+      // Pre-select the property
+      createForm.setValue('propertyId', parseInt(propertyId));
+    }
+  }, []);
 
   const createForm = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
@@ -197,9 +211,36 @@ export default function Expenses() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">{displayCategory}</h1>
-          <p className="text-muted-foreground">
-            Track and manage property expenses with recurring payment options
-          </p>
+          <div className="space-y-1">
+            <p className="text-muted-foreground">
+              Track and manage property expenses with recurring payment options
+            </p>
+            {(() => {
+              const urlParams = new URLSearchParams(window.location.search);
+              const propertyName = urlParams.get('propertyName');
+              const propertyId = urlParams.get('propertyId');
+              
+              if (propertyName && propertyId) {
+                const property = properties.find(p => p.id.toString() === propertyId);
+                return (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Home className="h-3 w-3" />
+                      Property: {decodeURIComponent(propertyName)}
+                    </Badge>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => window.location.href = '/expenses'}
+                    >
+                      View All Expenses
+                    </Button>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+          </div>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>

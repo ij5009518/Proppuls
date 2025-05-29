@@ -558,6 +558,18 @@ export default function Properties() {
                   >
                     <CheckSquare className="h-4 w-4" />
                   </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      // Add expense for this property
+                      const url = `/expenses?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
+                      window.location.href = url;
+                    }}
+                    title="Add Expense"
+                  >
+                    <DollarSign className="h-4 w-4" />
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => handleView(property)}>
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -607,6 +619,18 @@ export default function Properties() {
                     }}
                   >
                     <CheckSquare className="h-4 w-4" />
+                  </Button>
+                      <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      // Add expense for this property
+                      const url = `/expenses?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
+                      window.location.href = url;
+                    }}
+                    title="Add Expense"
+                  >
+                    <DollarSign className="h-4 w-4" />
                   </Button>
                       <Button size="sm" variant="outline" onClick={() => handleView(property)}>
                         <Eye className="h-4 w-4" />
