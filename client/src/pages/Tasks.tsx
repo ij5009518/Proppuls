@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Grid, List, Search, Filter, Calendar, CheckSquare, Clock, AlertTriangle, User, Building, MapPin, CreditCard, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,59 +47,72 @@ export default function Tasks() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const { toast } = useToast();
 
+  // Check for URL parameters to auto-open create dialog
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get('propertyId');
+    const unitId = urlParams.get('unitId');
+    const tenantId = urlParams.get('tenantId');
+    const vendorId = urlParams.get('vendorId');
+    const propertyName = urlParams.get('propertyName');
+    const unitNumber = urlParams.get('unitNumber');
+    const tenantName = urlParams.get('tenantName');
+
+    if (propertyId || unitId || tenantId || vendorId) {
+      // Pre-fill the form
+      if (propertyId) form.setValue('propertyId', parseInt(propertyId));
+      if (unitId) form.setValue('unitId', parseInt(unitId));
+      if (tenantId) form.setValue('tenantId', parseInt(tenantId));
+      if (vendorId) form.setValue('vendorId', parseInt(vendorId));
+      
+      // Set a default title based on context
+      let defaultTitle = "New Task";
+      if (propertyName) defaultTitle = `Task for ${propertyName}`;
+      if (unitNumber) defaultTitle = `Task for Unit ${unitNumber}`;
+      if (tenantName) defaultTitle = `Task for ${tenantName}`;
+      
+      form.setValue('title', defaultTitle);
+      form.setValue('category', 'maintenance'); // Default category
+      
+      setIsAddDialogOpen(true);
+      
+      // Clean up URL
+      window.history.replaceState({}, '', '/tasks');
+    }
+  }, []);
+
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ["tasks"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/tasks");
-      return response.json();
-    },
+    queryFn: () => apiRequest<any[]>("/api/tasks"),
   });
 
   const { data: properties = [] } = useQuery({
     queryKey: ["properties"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/properties");
-      return response.json();
-    },
+    queryFn: () => apiRequest<any[]>("/api/properties"),
   });
 
   const { data: units = [] } = useQuery({
     queryKey: ["units"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/units");
-      return response.json();
-    },
+    queryFn: () => apiRequest<any[]>("/api/units"),
   });
 
   const { data: tenants = [] } = useQuery({
     queryKey: ["tenants"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/tenants");
-      return response.json();
-    },
+    queryFn: () => apiRequest<any[]>("/api/tenants"),
   });
 
   const { data: vendors = [] } = useQuery({
     queryKey: ["vendors"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/vendors");
-      return response.json();
-    },
+    queryFn: () => apiRequest<any[]>("/api/vendors"),
   });
 
   const { data: rentPayments = [] } = useQuery({
     queryKey: ["rent-payments"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/rent-payments");
-      return response.json();
-    },
+    queryFn: () => apiRequest<any[]>("/api/rent-payments"),
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: async (taskData: z.infer<typeof taskSchema>) => {
-      const response = await apiRequest("POST", "/api/tasks", taskData);
-      return response.json();
-    },
+    mutationFn: (taskData: z.infer<typeof taskSchema>) => apiRequest<any>("/api/tasks", "POST", taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       toast({ title: "Success", description: "Task created successfully" });
@@ -112,10 +125,8 @@ export default function Tasks() {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, ...taskData }: { id: number } & Partial<z.infer<typeof taskSchema>>) => {
-      const response = await apiRequest("PUT", `/api/tasks/${id}`, taskData);
-      return response.json();
-    },
+    mutationFn: ({ id, ...taskData }: { id: number } & Partial<z.infer<typeof taskSchema>>) => 
+      apiRequest<any>(`/api/tasks/${id}`, "PUT", taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       toast({ title: "Success", description: "Task updated successfully" });
@@ -129,9 +140,7 @@ export default function Tasks() {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/tasks/${id}`);
-    },
+    mutationFn: (id: number) => apiRequest(`/api/tasks/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       toast({ title: "Success", description: "Task deleted successfully" });

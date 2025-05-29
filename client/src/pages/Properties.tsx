@@ -546,7 +546,18 @@ export default function Properties() {
                     <span className="font-semibold">Purchase Price:</span> {formatCurrency(property.purchasePrice)}
                   </p>
                 </div>
-                <div className="flex justify-end space-x-2 mt-4">
+                <div className="flex space-x-2 mt-4">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      // Create task for this property
+                      const url = `/tasks?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
+                      window.location.href = url;
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => handleView(property)}>
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -586,6 +597,17 @@ export default function Properties() {
                       <p className="text-sm text-gray-600">{formatCurrency(property.purchasePrice)}</p>
                     </div>
                     <div className="flex space-x-2">
+                      <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      // Create task for this property
+                      const url = `/tasks?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
+                      window.location.href = url;
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                       <Button size="sm" variant="outline" onClick={() => handleView(property)}>
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -839,7 +861,7 @@ export default function Properties() {
                                 <p className="text-lg font-semibold text-orange-600">{formatCurrency(mortgage.currentBalance)}</p>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-muted-foreground">Interest Rate</label>
+                                <label className`text-sm font-medium text-muted-foreground">Interest Rate</label>
                                 <p className="text-lg font-semibold">{mortgage.interestRate}%</p>
                               </div>
                               <div>

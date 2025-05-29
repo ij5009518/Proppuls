@@ -421,6 +421,17 @@ export default function Units() {
                   })()}
                 </div>
                 <div className="flex justify-end space-x-2 mt-4">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      const url = `/tasks?unitId=${unit.id}&unitNumber=${encodeURIComponent(unit.unitNumber)}&propertyId=${unit.propertyId}`;
+                      window.location.href = url;
+                    }}
+                    title="Create Task"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => handleView(unit)}>
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -471,6 +482,17 @@ export default function Units() {
                       })()}</div>
                     </div>
                     <div className="flex space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => {
+                          const url = `/tasks?unitId=${unit.id}&unitNumber=${encodeURIComponent(unit.unitNumber)}&propertyId=${unit.propertyId}`;
+                          window.location.href = url;
+                        }}
+                        title="Create Task"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => handleView(unit)}>
                         <Eye className="h-4 w-4" />
                       </Button>
