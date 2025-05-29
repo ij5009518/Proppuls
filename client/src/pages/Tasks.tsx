@@ -33,6 +33,8 @@ const taskSchema = z.object({
   rentPaymentId: z.number().optional(),
   category: z.string().min(1, "Category is required"),
   notes: z.string().optional(),
+  isRecurring: z.boolean().optional(),
+  recurrencePeriod: z.string().optional(),
 });
 
 export default function Tasks() {
@@ -147,6 +149,8 @@ export default function Tasks() {
       priority: "medium",
       status: "pending",
       category: "general",
+      isRecurring: false,
+      recurrencePeriod: "weekly",
     },
   });
 
@@ -158,6 +162,8 @@ export default function Tasks() {
       priority: "medium",
       status: "pending",
       category: "general",
+      isRecurring: false,
+      recurrencePeriod: "weekly",
     },
   });
 
@@ -187,6 +193,8 @@ export default function Tasks() {
       rentPaymentId: task.rentPaymentId || undefined,
       category: task.category,
       notes: task.notes || "",
+      isRecurring: task.isRecurring || false,
+      recurrencePeriod: task.recurrencePeriod || "weekly",
     });
     setIsEditDialogOpen(true);
   };
@@ -547,6 +555,57 @@ export default function Tasks() {
                   )}
                 />
 
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="isRecurring"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="mt-1"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Recurring Task</FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            Mark this task as recurring
+                          </p>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch("isRecurring") && (
+                    <FormField
+                      control={form.control}
+                      name="recurrencePeriod"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recurrence Period</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select period" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="quarterly">Quarterly</SelectItem>
+                              <SelectItem value="yearly">Yearly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancel
@@ -631,6 +690,7 @@ export default function Tasks() {
                   <TableHead>Relations</TableHead>
                   <TableHead>Assigned To</TableHead>
                   <TableHead>Due Date</TableHead>
+                  <TableHead>Recurrence</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -667,6 +727,15 @@ export default function Tasks() {
                     <TableCell>{task.assignedTo || "Unassigned"}</TableCell>
                     <TableCell>
                       {task.dueDate ? formatDate(task.dueDate) : "No due date"}
+                    </TableCell>
+                    <TableCell>
+                      {task.isRecurring ? (
+                        <Badge variant="outline">
+                          {task.recurrencePeriod?.charAt(0).toUpperCase() + task.recurrencePeriod?.slice(1)}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">One-time</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
@@ -730,6 +799,13 @@ export default function Tasks() {
                     <div className="flex items-center text-sm">
                       <Calendar className="h-4 w-4 mr-2" />
                       <span>{formatDate(task.dueDate)}</span>
+                    </div>
+                  )}
+
+                  {task.isRecurring && (
+                    <div className="flex items-center text-sm">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span>Repeats {task.recurrencePeriod}</span>
                     </div>
                   )}
                 </div>
@@ -884,6 +960,57 @@ export default function Tasks() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="isRecurring"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="mt-1"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Recurring Task</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Mark this task as recurring
+                        </p>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {editForm.watch("isRecurring") && (
+                  <FormField
+                    control={editForm.control}
+                    name="recurrencePeriod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Recurrence Period</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select period" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
+                            <SelectItem value="yearly">Yearly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
 
               <div className="flex justify-end space-x-2">

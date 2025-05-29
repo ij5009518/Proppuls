@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // Base schemas
@@ -141,17 +140,19 @@ export const taskSchema = z.object({
   description: z.string(),
   priority: z.enum(["low", "medium", "high", "urgent"]),
   status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
-  dueDate: z.date().nullable(),
-  assignedTo: z.string().nullable(),
-  propertyId: z.number().nullable(),
-  unitId: z.number().nullable(),
-  tenantId: z.number().nullable(),
-  vendorId: z.number().nullable(),
-  rentPaymentId: z.number().nullable(),
+  dueDate: z.date().optional(),
+  assignedTo: z.string().optional(),
+  propertyId: z.number().optional(),
+  unitId: z.number().optional(),
+  tenantId: z.number().optional(),
+  vendorId: z.number().optional(),
+  rentPaymentId: z.number().optional(),
   category: z.string(),
-  notes: z.string().nullable(),
+  notes: z.string().optional(),
+  isRecurring: z.boolean().optional(),
+  recurrencePeriod: z.enum(["weekly", "monthly", "quarterly", "yearly"]).optional(),
   createdAt: z.date(),
-  updatedAt: z.date(),
+  updatedAt: z.date().optional(),
 });
 
 // Insert schemas (for creating new records)
