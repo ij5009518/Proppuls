@@ -1,49 +1,26 @@
-
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Route, Switch } from 'wouter';
-import { AuthProvider } from './contexts/AuthContext';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import Users from './pages/Users';
-import Properties from './pages/Properties';
-import Units from './pages/Units';
-import Tenants from './pages/Tenants';
-import RentPayments from './pages/RentPayments';
-import Maintenance from './pages/Maintenance';
-import Vendors from './pages/Vendors';
-import Financials from './pages/Financials';
-import Reports from './pages/Reports';
-import Mortgages from './pages/Mortgages';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import NotFound from './pages/not-found';
-import { Toaster } from './components/ui/toaster';
-
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Route, Switch, useLocation } from "wouter";
-import { queryClient } from "@/lib/queryClient";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { Toaster } from "@/components/ui/toaster";
-import Layout from "@/components/Layout";
+import { QueryClientProvider } from '@tanstack/react-query';
+import { Route, Switch, useLocation } from 'wouter';
+import { queryClient } from '@/lib/queryClient';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { Toaster } from '@/components/ui/toaster';
+import Layout from '@/components/Layout';
 
 // Pages
-import Dashboard from "@/pages/Dashboard";
-import Users from "@/pages/Users";
-import Properties from "@/pages/Properties";
-import Units from "@/pages/Units";
-import Tenants from "@/pages/Tenants";
-import RentPayments from "@/pages/RentPayments";
-import Maintenance from "@/pages/Maintenance";
-import Vendors from "@/pages/Vendors";
-import Financials from "@/pages/Financials";
-import Reports from "@/pages/Reports";
-import Mortgages from "@/pages/Mortgages";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import ForgotPassword from "@/pages/ForgotPassword";
-import NotFound from "@/pages/not-found";
+import Dashboard from '@/pages/Dashboard';
+import Users from '@/pages/Users';
+import Properties from '@/pages/Properties';
+import Units from '@/pages/Units';
+import Tenants from '@/pages/Tenants';
+import RentPayments from '@/pages/RentPayments';
+import Maintenance from '@/pages/Maintenance';
+import Vendors from '@/pages/Vendors';
+import Financials from '@/pages/Financials';
+import Reports from '@/pages/Reports';
+import Mortgages from '@/pages/Mortgages';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
