@@ -49,6 +49,8 @@ export default function Tenants() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const { toast } = useToast();
@@ -91,10 +93,25 @@ export default function Tenants() {
     },
   });
 
+  const updateTenantMutation = useMutation({
+    mutationFn: ({ id, ...data }: { id: number } & Partial<Tenant>) => 
+      apiRequest(`/api/tenants/${id}`, "PUT", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      toast({ title: "Success", description: "Tenant updated successfully" });
+      setIsEditDialogOpen(false);
+      setSelectedTenant(null);
+      form.reset();
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update tenant", variant: "destructive" });
+    },
+  });
+
   const deleteTenantMutation = useMutation({
     mutationFn: (id: number) => apiRequest(`/api/tenants/${id}`, "DELETE"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       toast({ title: "Success", description: "Tenant deleted successfully" });
     },
     onError: () => {
@@ -143,6 +160,21 @@ export default function Tenants() {
       deposit: values.deposit || null,
     };
     createTenantMutation.mutate(formattedData);
+  };
+
+  const onEditSubmit = (values: any) => {
+    if (!selectedTenant) return;
+    
+    const formattedData = {
+      ...values,
+      unitId: values.unitId || null,
+      leaseStart: values.leaseStart || null,
+      leaseEnd: values.leaseEnd || null,
+      monthlyRent: values.monthlyRent || null,
+      deposit: values.deposit || null,
+    };
+    
+    updateTenantMutation.mutate({ id: selectedTenant.id, ...formattedData });
   };
 
   const onPaymentSubmit = (values: any) => {
@@ -655,10 +687,36 @@ export default function Tenants() {
                         <DollarSign className="h-4 w-4 mr-1" />
                         Payment
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedTenant(tenant);
+                          setIsViewDialogOpen(true);
+                        }}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedTenant(tenant);
+                          form.reset({
+                            firstName: tenant.firstName,
+                            lastName: tenant.lastName,
+                            email: tenant.email,
+                            phone: tenant.phone,
+                            status: tenant.status,
+                            unitId: tenant.unitId,
+                            leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
+                            leaseEnd: tenant.leaseEnd ? new Date(tenant.leaseEnd) : undefined,
+                            monthlyRent: tenant.monthlyRent || "",
+                            deposit: tenant.deposit || "",
+                          });
+                          setIsEditDialogOpen(true);
+                        }}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
@@ -756,10 +814,36 @@ export default function Tenants() {
                         >
                           <DollarSign className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedTenant(tenant);
+                            setIsViewDialogOpen(true);
+                          }}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedTenant(tenant);
+                            form.reset({
+                              firstName: tenant.firstName,
+                              lastName: tenant.lastName,
+                              email: tenant.email,
+                              phone: tenant.phone,
+                              status: tenant.status,
+                              unitId: tenant.unitId,
+                              leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
+                              leaseEnd: tenant.leaseEnd ? new Date(tenant.leaseEnd) : undefined,
+                              monthlyRent: tenant.monthlyRent || "",
+                              deposit: tenant.deposit || "",
+                            });
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
