@@ -110,13 +110,24 @@ export default function Tenants() {
       email: "",
       phone: "",
       status: "active",
+      unitId: "",
+      leaseStart: undefined,
+      leaseEnd: undefined,
+      monthlyRent: "",
+      deposit: "",
     },
   });
 
   const paymentForm = useForm<z.infer<typeof rentPaymentSchema>>({
     resolver: zodResolver(rentPaymentSchema),
     defaultValues: {
+      tenantId: "",
+      unitId: "",
+      amount: "",
+      dueDate: new Date(),
       status: "pending",
+      paymentMethod: "",
+      notes: "",
       lateFeeAmount: "0",
     },
   });
