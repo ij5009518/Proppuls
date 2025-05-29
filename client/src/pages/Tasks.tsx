@@ -22,15 +22,15 @@ import type { Task, InsertTask, Property, Unit, Tenant, Vendor, RentPayment } fr
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
-  priority: z.string().min(1, "Priority is required"),
-  status: z.string().min(1, "Status is required"),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
   dueDate: z.date().optional(),
   assignedTo: z.string().optional(),
-  propertyId: z.number().optional(),
-  unitId: z.number().optional(),
-  tenantId: z.number().optional(),
-  vendorId: z.number().optional(),
-  rentPaymentId: z.number().optional(),
+  propertyId: z.string().optional(),
+  unitId: z.string().optional(),
+  tenantId: z.string().optional(),
+  vendorId: z.string().optional(),
+  rentPaymentId: z.string().optional(),
   category: z.string().min(1, "Category is required"),
   notes: z.string().optional(),
   isRecurring: z.boolean().optional(),
@@ -82,39 +82,33 @@ export default function Tasks() {
   }, []);
 
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ["tasks"],
-    queryFn: () => apiRequest<any[]>("/api/tasks"),
+    queryKey: ["/api/tasks"],
   });
 
   const { data: properties = [] } = useQuery({
-    queryKey: ["properties"],
-    queryFn: () => apiRequest<any[]>("/api/properties"),
+    queryKey: ["/api/properties"],
   });
 
   const { data: units = [] } = useQuery({
-    queryKey: ["units"],
-    queryFn: () => apiRequest<any[]>("/api/units"),
+    queryKey: ["/api/units"],
   });
 
   const { data: tenants = [] } = useQuery({
-    queryKey: ["tenants"],
-    queryFn: () => apiRequest<any[]>("/api/tenants"),
+    queryKey: ["/api/tenants"],
   });
 
   const { data: vendors = [] } = useQuery({
-    queryKey: ["vendors"],
-    queryFn: () => apiRequest<any[]>("/api/vendors"),
+    queryKey: ["/api/vendors"],
   });
 
   const { data: rentPayments = [] } = useQuery({
-    queryKey: ["rent-payments"],
-    queryFn: () => apiRequest<any[]>("/api/rent-payments"),
+    queryKey: ["/api/rent-payments"],
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: (taskData: z.infer<typeof taskSchema>) => apiRequest<any>("/api/tasks", "POST", taskData),
+    mutationFn: (taskData: any) => apiRequest("POST", "/api/tasks", taskData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       toast({ title: "Success", description: "Task created successfully" });
       setIsAddDialogOpen(false);
       form.reset();
