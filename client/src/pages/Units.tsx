@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Eye, Edit, Trash2, Grid, List } from "lucide-react";
@@ -481,7 +482,7 @@ export default function Units() {
                         ) : (
                           <p className="text-xs text-muted-foreground">No tenant</p>
                         );
-                      })()}</div>
+                      })()}
                     </div>
                     <div className="flex space-x-2">
                       <Button 
@@ -506,6 +507,7 @@ export default function Units() {
                       </Button>
                     </div>
                   </div>
+                </div>
               </CardContent>
             </Card>
           ))}
