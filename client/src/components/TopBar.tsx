@@ -101,6 +101,15 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
             <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white dark:ring-card"></span>
           </div>
 
+          {/* Settings */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-slate-400 hover:text-slate-500 dark:text-muted-foreground dark:hover:text-foreground"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+
           {/* User Menu - Rightmost */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
