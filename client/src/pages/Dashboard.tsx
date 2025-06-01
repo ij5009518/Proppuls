@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import RevenueChart from "@/components/Charts/RevenueChart";
 import ExpenseBreakdown from "@/components/Charts/ExpenseBreakdown";
+import FinancialHealthRadar from "@/components/Charts/FinancialHealthRadar";
 import {
   DollarSign,
   Home,
@@ -247,6 +248,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Financial Health Radar Chart */}
+      <FinancialHealthRadar />
 
       {/* Tables Row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
