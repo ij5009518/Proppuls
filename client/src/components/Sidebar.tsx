@@ -15,6 +15,7 @@ import {
   Building2,
   CheckSquare,
   Calendar,
+  Bot,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
@@ -132,6 +133,11 @@ const menuItems: MenuItem[] = [
     title: 'Calendar',
     url: '/calendar',
     icon: Calendar,
+  },
+  {
+    title: 'AI Assistant',
+    url: '/ai-assistant',
+    icon: Bot,
   },
 ];
 
