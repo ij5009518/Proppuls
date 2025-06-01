@@ -194,8 +194,6 @@ export default function Tenants() {
       tenantId: "",
       vendorId: "",
       dueDate: new Date(),
-      estimatedCost: "",
-      actualCost: "",
     },
   });
 
@@ -249,6 +247,24 @@ export default function Tenants() {
     createPaymentMutation.mutate(paymentData);
   };
 
+  const onTaskSubmit = (values: any) => {
+    const taskData: InsertTask = {
+      title: values.title,
+      description: values.description,
+      category: values.category,
+      priority: values.priority,
+      status: values.status,
+      assignedTo: values.assignedTo || undefined,
+      propertyId: values.propertyId || undefined,
+      unitId: values.unitId || undefined,
+      tenantId: values.tenantId || undefined,
+      vendorId: values.vendorId || undefined,
+      dueDate: values.dueDate,
+    };
+    
+    createTaskMutation.mutate(taskData);
+  };
+
   const filteredTenants = (tenants as any[])?.filter((tenant: any) =>
     `${tenant.firstName} ${tenant.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tenant.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -268,6 +284,26 @@ export default function Tenants() {
 
   const getTenantPayments = (tenantId: string) => {
     return (rentPayments as any[])?.filter((payment: any) => payment.tenantId === tenantId) || [];
+  };
+
+  const handleCreateTask = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    taskForm.reset({
+      title: "",
+      description: "",
+      category: "tenant_request",
+      priority: "medium",
+      status: "pending",
+      assignedTo: "",
+      propertyId: getPropertyId(tenant.unitId) || "",
+      unitId: tenant.unitId || "",
+      tenantId: tenant.id,
+      vendorId: "",
+      dueDate: new Date(),
+      estimatedCost: "",
+      actualCost: "",
+    });
+    setIsTaskDialogOpen(true);
   };
 
   const getOverduePayments = (tenantId: number) => {
@@ -732,13 +768,10 @@ export default function Tenants() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          const url = `/tasks?tenantId=${tenant.id}&tenantName=${encodeURIComponent(tenant.firstName + ' ' + tenant.lastName)}&unitId=${tenant.unitId || ''}&propertyId=${getPropertyId(tenant.unitId) || ''}`;
-                          window.location.href = url;
-                        }}
+                        onClick={() => handleCreateTask(tenant)}
                         title="Create Task"
                       >
-                        <Plus className="h-4 w-4" />
+                        <CheckSquare className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -860,13 +893,10 @@ export default function Tenants() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => {
-                            const url = `/tasks?tenantId=${tenant.id}&tenantName=${encodeURIComponent(tenant.firstName + ' ' + tenant.lastName)}&unitId=${tenant.unitId || ''}&propertyId=${getPropertyId(tenant.unitId) || ''}`;
-                            window.location.href = url;
-                          }}
+                          onClick={() => handleCreateTask(tenant)}
                           title="Create Task"
                         >
-                          <Plus className="h-4 w-4" />
+                          <CheckSquare className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
