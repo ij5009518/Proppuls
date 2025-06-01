@@ -129,11 +129,7 @@ const menuItems: MenuItem[] = [
     url: '/mortgages',
     icon: Building2,
   },
-  {
-    title: 'Calendar',
-    url: '/calendar',
-    icon: Calendar,
-  },
+
   {
     title: 'AI Assistant',
     url: '/ai-assistant',

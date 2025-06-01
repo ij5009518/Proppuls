@@ -629,8 +629,16 @@ export default function Tasks() {
         </Dialog>
       </div>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* Tabs */}
+      <Tabs defaultValue="list" className="w-full">
+        <TabsList>
+          <TabsTrigger value="list">Task List</TabsTrigger>
+          <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="list" className="space-y-4">
+          {/* Filters and Search */}
+          <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -1034,6 +1042,181 @@ export default function Tasks() {
           </Form>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+        
+        <TabsContent value="calendar">
+          <CalendarView tasks={tasks} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// Calendar component for tasks
+function CalendarView({ tasks }: { tasks: Task[] }) {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+
+  // Generate calendar grid
+  const generateCalendarGrid = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+
+    return days;
+  };
+
+  const calendarGrid = generateCalendarGrid();
+
+  // Get tasks for a specific date
+  const getTasksForDate = (date: Date | null): Task[] => {
+    if (!date) return [];
+    return tasks.filter(task => {
+      if (!task.dueDate) return false;
+      const taskDate = new Date(task.dueDate);
+      return taskDate.toDateString() === date.toDateString();
+    });
+  };
+
+  // Navigate months
+  const previousMonth = () => {
+    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1));
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">
+              {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+            </CardTitle>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={previousMonth}>
+                ←
+              </Button>
+              <Button variant="outline" size="sm" onClick={nextMonth}>
+                →
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-7 gap-2 mb-4">
+            {dayNames.map(day => (
+              <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          <div className="grid grid-cols-7 gap-2">
+            {calendarGrid.map((date, index) => {
+              const dateTasks = getTasksForDate(date);
+              const isToday = date && date.toDateString() === new Date().toDateString();
+              
+              return (
+                <div
+                  key={index}
+                  className={`min-h-[100px] p-2 border rounded-lg ${
+                    date ? 'bg-white dark:bg-card hover:bg-gray-50 dark:hover:bg-accent' : 'bg-gray-50 dark:bg-muted'
+                  } ${isToday ? 'ring-2 ring-primary' : ''}`}
+                >
+                  {date && (
+                    <>
+                      <div className={`text-sm font-medium mb-1 ${isToday ? 'text-primary' : ''}`}>
+                        {date.getDate()}
+                      </div>
+                      <div className="space-y-1">
+                        {dateTasks.slice(0, 3).map(task => (
+                          <div
+                            key={task.id}
+                            className={`text-xs p-1 rounded border ${getPriorityColor(task.priority)}`}
+                            title={task.title}
+                          >
+                            <div className="flex items-center space-x-1">
+                              <CheckSquare className="h-3 w-3" />
+                              <span className="truncate">{task.title}</span>
+                            </div>
+                          </div>
+                        ))}
+                        {dateTasks.length > 3 && (
+                          <div className="text-xs text-muted-foreground">
+                            +{dateTasks.length - 3} more
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Legend */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Priority Legend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-green-100 border border-green-200 rounded"></div>
+              <span className="text-sm">Low Priority</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-yellow-100 border border-yellow-200 rounded"></div>
+              <span className="text-sm">Medium Priority</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-orange-100 border border-orange-200 rounded"></div>
+              <span className="text-sm">High Priority</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-red-100 border border-red-200 rounded"></div>
+              <span className="text-sm">Urgent Priority</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
