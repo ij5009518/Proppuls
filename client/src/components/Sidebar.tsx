@@ -44,11 +44,6 @@ const menuItems: MenuItem[] = [
     icon: Home,
   },
   {
-    title: 'Users',
-    url: '/users',
-    icon: Users,
-  },
-  {
     title: 'Properties',
     url: '/properties',
     icon: Building,
@@ -103,11 +98,18 @@ const menuItems: MenuItem[] = [
     url: '/mortgages',
     icon: Building2,
   },
-
   {
     title: 'AI Assistant',
     url: '/ai-assistant',
     icon: Bot,
+  },
+  {
+    title: 'Settings',
+    url: '#',
+    icon: ChevronRight,
+    subItems: [
+      { title: 'Users', url: '/users' }
+    ]
   },
 ];
 
