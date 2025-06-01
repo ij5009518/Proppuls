@@ -40,7 +40,6 @@ const rentPaymentSchema = z.object({
   dueDate: z.date(),
   paidDate: z.date().optional(),
   paymentMethod: z.string().optional(),
-  status: z.enum(["pending", "paid", "late", "cancelled"]),
   lateFeeAmount: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -142,7 +141,6 @@ export default function Tenants() {
       unitId: "",
       amount: "",
       dueDate: new Date(),
-      status: "pending",
       paymentMethod: "",
       notes: "",
       lateFeeAmount: "0",
@@ -178,7 +176,25 @@ export default function Tenants() {
   };
 
   const onPaymentSubmit = (values: any) => {
-    createPaymentMutation.mutate(values);
+    // Automatically determine status based on payment date and due date
+    const now = new Date();
+    const dueDate = new Date(values.dueDate);
+    let status = "pending";
+    
+    if (values.paidDate) {
+      status = "paid";
+    } else if (now > dueDate) {
+      status = "overdue";
+    }
+    
+    const paymentData = {
+      ...values,
+      status,
+      amount: parseFloat(values.amount),
+      lateFeeAmount: parseFloat(values.lateFeeAmount) || 0,
+    };
+    
+    createPaymentMutation.mutate(paymentData);
   };
 
   const filteredTenants = (tenants as any[])?.filter((tenant: any) =>
@@ -909,29 +925,7 @@ export default function Tenants() {
                 )}
               />
 
-              <FormField
-                control={paymentForm.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="overdue">Overdue</SelectItem>
-                        <SelectItem value="partial">Partial</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
 
               <FormField
                 control={paymentForm.control}
