@@ -78,7 +78,29 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
           </form>
         </div>
         
-        <div className="ml-4 flex items-center md:ml-6 space-x-4">
+        <div className="ml-4 flex items-center md:ml-6 space-x-3">
+          {/* Export Button */}
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            className="bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-accent text-slate-700 dark:text-foreground border border-slate-300 dark:border-border"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          
+          {/* Notifications */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-slate-400 hover:text-slate-500 dark:text-muted-foreground dark:hover:text-foreground"
+            >
+              <Bell className="h-5 w-5" />
+            </Button>
+            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white dark:ring-card"></span>
+          </div>
+
           {/* User Menu - Rightmost */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -119,37 +141,6 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Settings Icon */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-400 hover:text-slate-500 dark:text-muted-foreground dark:hover:text-foreground"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-          
-          {/* Notifications */}
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-slate-400 hover:text-slate-500 dark:text-muted-foreground dark:hover:text-foreground"
-            >
-              <Bell className="h-5 w-5" />
-            </Button>
-            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white dark:ring-card"></span>
-          </div>
-
-          {/* Export Button */}
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            className="bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-accent text-slate-700 dark:text-foreground border border-slate-300 dark:border-border"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
         </div>
       </div>
     </div>
