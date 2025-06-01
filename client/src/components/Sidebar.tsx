@@ -87,32 +87,6 @@ const menuItems: MenuItem[] = [
     title: 'Expenses',
     url: '/expenses',
     icon: DollarSign,
-    subItems: [
-      {
-        title: 'Add Tax Expense',
-        url: '/expenses/taxes',
-      },
-      {
-        title: 'Add Insurance Policy',
-        url: '/expenses/insurance',
-      },
-      {
-        title: 'Add Utility Bill',
-        url: '/expenses/utilities',
-      },
-      {
-        title: 'Add Maintenance Cost',
-        url: '/expenses/maintenance',
-      },
-      {
-        title: 'Add Legal Fee',
-        url: '/expenses/legal',
-      },
-      {
-        title: 'Add Other Expense',
-        url: '/expenses/other',
-      },
-    ],
   },
   {
     title: 'Financials',
