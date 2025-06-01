@@ -22,6 +22,7 @@ import Reports from '@/pages/Reports';
 import Mortgages from '@/pages/Mortgages';
 import Expenses from "@/pages/Expenses";
 import Calendar from "@/pages/Calendar";
+import AIAssistant from "@/pages/AIAssistant";
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
