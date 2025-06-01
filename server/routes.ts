@@ -206,7 +206,20 @@ export function registerRoutes(app: Express) {
   app.put("/api/tenants/:id", async (req, res) => {
     try {
       const id = req.params.id;
-      const tenant = await storage.updateTenant(id, req.body);
+      console.log("=== API MIDDLEWARE HIT FOR", req.url, "===");
+      console.log("Method:", req.method);
+      console.log("Body:", JSON.stringify(req.body, null, 2));
+      
+      // Convert date strings to Date objects if they exist
+      const data = { ...req.body };
+      if (data.leaseStart && typeof data.leaseStart === 'string') {
+        data.leaseStart = new Date(data.leaseStart);
+      }
+      if (data.leaseEnd && typeof data.leaseEnd === 'string') {
+        data.leaseEnd = new Date(data.leaseEnd);
+      }
+      
+      const tenant = await storage.updateTenant(id, data);
       res.json(tenant);
     } catch (error) {
       console.error("Error updating tenant:", error);

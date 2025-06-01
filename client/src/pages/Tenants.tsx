@@ -225,8 +225,8 @@ export default function Tenants() {
     const formattedData = {
       ...values,
       unitId: values.unitId || null,
-      leaseStart: values.leaseStart || null,
-      leaseEnd: values.leaseEnd || null,
+      leaseStart: values.leaseStart ? new Date(values.leaseStart) : null,
+      leaseEnd: values.leaseEnd ? new Date(values.leaseEnd) : null,
       monthlyRent: values.monthlyRent || null,
       deposit: values.deposit || null,
     };
