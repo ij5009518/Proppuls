@@ -144,7 +144,8 @@ export default function RentPayments() {
     const data: InsertRentPayment = {
       ...values,
       amount: parseFloat(values.amount),
-      paidDate: values.paidDate || null,
+      dueDate: new Date(values.dueDate),
+      paidDate: values.paidDate ? new Date(values.paidDate) : null,
       paymentMethod: values.paymentMethod as "cash" | "check" | "bank_transfer" | "credit_card",
       status: values.status as "pending" | "paid" | "overdue" | "partial",
       notes: values.notes || "",
