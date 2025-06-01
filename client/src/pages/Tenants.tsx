@@ -120,7 +120,7 @@ export default function Tenants() {
 
   const updateTenantMutation = useMutation({
     mutationFn: ({ id, ...data }: { id: number } & Partial<Tenant>) => 
-      apiRequest(`/api/tenants/${id}`, "PUT", data),
+      apiRequest("PUT", `/api/tenants/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       toast({ title: "Success", description: "Tenant updated successfully" });
