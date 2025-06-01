@@ -257,37 +257,48 @@ class Storage {
   private async generateRentPayments(tenant: Tenant): Promise<void> {
     if (!tenant.leaseStart || !tenant.leaseEnd || !tenant.monthlyRent) return;
 
-    const startDate = new Date(tenant.leaseStart);
-    const endDate = new Date(tenant.leaseEnd);
-    const monthlyAmount = parseFloat(tenant.monthlyRent);
+    try {
+      const startDate = new Date(tenant.leaseStart);
+      const endDate = new Date(tenant.leaseEnd);
+      const monthlyAmount = parseFloat(tenant.monthlyRent);
 
-    // Clear existing rent payments for this tenant
-    await db.delete(rentPayments).where(eq(rentPayments.tenantId, tenant.id));
+      console.log("Generating rent payments for tenant:", tenant.id);
+      console.log("Lease period:", startDate, "to", endDate);
+      console.log("Monthly amount:", monthlyAmount);
 
-    const payments: any[] = [];
-    const currentDate = new Date(startDate);
+      // Clear existing rent payments for this tenant
+      await db.delete(rentPayments).where(eq(rentPayments.tenantId, tenant.id));
 
-    while (currentDate <= endDate) {
-      const dueDate = new Date(currentDate);
-      dueDate.setDate(1); // Set to first of month
+      const payments: any[] = [];
+      const currentDate = new Date(startDate);
 
-      payments.push({
-        id: crypto.randomUUID(),
-        tenantId: tenant.id,
-        unitId: tenant.unitId,
-        amount: monthlyAmount.toString(),
-        dueDate: dueDate,
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
+      while (currentDate <= endDate) {
+        const dueDate = new Date(currentDate);
+        dueDate.setDate(1); // Set to first of month
 
-      // Move to next month
-      currentDate.setMonth(currentDate.getMonth() + 1);
-    }
+        payments.push({
+          id: crypto.randomUUID(),
+          tenantId: tenant.id,
+          unitId: tenant.unitId,
+          amount: monthlyAmount.toString(),
+          dueDate: dueDate,
+          status: 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
 
-    if (payments.length > 0) {
-      await db.insert(rentPayments).values(payments);
+        // Move to next month
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+
+      console.log("Creating", payments.length, "rent payment records");
+      
+      if (payments.length > 0) {
+        await db.insert(rentPayments).values(payments);
+        console.log("Rent payments created successfully");
+      }
+    } catch (error) {
+      console.error("Error generating rent payments:", error);
     }
   }
 
