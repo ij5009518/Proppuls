@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Menu, Download, Bell, Search, Settings, User, LogOut } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
@@ -102,13 +102,29 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
           </div>
 
           {/* Settings */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-400 hover:text-slate-500 dark:text-muted-foreground dark:hover:text-foreground"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-slate-400 hover:text-slate-500 dark:text-muted-foreground dark:hover:text-foreground"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuItem asChild>
+                <Link href="/users">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Users</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>General Settings</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* User Menu - Rightmost */}
           <DropdownMenu>
