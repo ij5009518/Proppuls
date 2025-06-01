@@ -428,6 +428,89 @@ export default function Expenses() {
                   )}
                 />
 
+                {/* Date Range Fields for Taxes, Insurance, Utilities */}
+                {(createForm.watch("category") === "taxes" || 
+                  createForm.watch("category") === "insurance" || 
+                  createForm.watch("category") === "utilities") && (
+                  <div className="space-y-4">
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium mb-3">
+                        {createForm.watch("category") === "taxes" && "Tax Period"}
+                        {createForm.watch("category") === "insurance" && "Insurance Coverage Period"}
+                        {createForm.watch("category") === "utilities" && "Utility Billing Period"}
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={createForm.control}
+                          name="startDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start Date</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="date"
+                                  value={field.value?.toISOString().split('T')[0] || ""}
+                                  onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={createForm.control}
+                          name="endDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End Date</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="date"
+                                  value={field.value?.toISOString().split('T')[0] || ""}
+                                  onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Document Attachment */}
+                    <div className="border-t pt-4">
+                      <FormField
+                        control={createForm.control}
+                        name="documentFile"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Attach Document
+                              {createForm.watch("category") === "taxes" && " (Tax Documents)"}
+                              {createForm.watch("category") === "insurance" && " (Insurance Policy)"}
+                              {createForm.watch("category") === "utilities" && " (Utility Bill)"}
+                            </FormLabel>
+                            <FormControl>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                  onChange={(e) => field.onChange(e.target.files?.[0])}
+                                />
+                                <Upload className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Supported formats: PDF, JPG, PNG, DOC, DOCX
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <FormField
                   control={createForm.control}
                   name="isRecurring"
@@ -523,14 +606,13 @@ export default function Expenses() {
 
       {/* Category Tabs */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-6">
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="taxes">Taxes</TabsTrigger>
           <TabsTrigger value="insurance">Insurance</TabsTrigger>
           <TabsTrigger value="utilities">Utilities</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-          <TabsTrigger value="legal">Legal</TabsTrigger>
-          <TabsTrigger value="other">Other</TabsTrigger>
+          <TabsTrigger value="mortgage">Mortgage</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="space-y-4">
