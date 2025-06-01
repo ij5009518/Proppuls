@@ -73,6 +73,12 @@ export const expenses = pgTable('expenses', {
   amount: decimal('amount').notNull(),
   date: timestamp('date').notNull(),
   isRecurring: boolean('is_recurring').notNull().default(false),
+  vendorName: text('vendor_name'),
+  notes: text('notes'),
+  startDate: timestamp('start_date'),
+  endDate: timestamp('end_date'),
+  documentPath: text('document_path'),
+  recurrencePeriod: text('recurrence_period'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

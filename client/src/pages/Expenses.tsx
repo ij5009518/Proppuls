@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Edit, Trash2, Calendar, DollarSign, Receipt, RotateCcw, Filter, Home } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, DollarSign, Receipt, RotateCcw, Filter, Home, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +29,11 @@ const expenseSchema = z.object({
   recurrencePeriod: z.enum(["monthly", "quarterly", "yearly"]).optional(),
   vendorName: z.string().optional(),
   notes: z.string().optional(),
+  // Date range fields for taxes, insurance, utilities
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+  // Document attachment
+  documentFile: z.any().optional(),
 });
 
 type ExpenseFormData = z.infer<typeof expenseSchema>;
@@ -38,14 +43,12 @@ const expenseCategories = {
   insurance: "Insurance Policies", 
   utilities: "Utility Bills",
   maintenance: "Maintenance Costs",
-  legal: "Legal Fees",
   mortgage: "Mortgage Payments",
   marketing: "Marketing & Advertising",
   office: "Office Supplies",
   professional: "Professional Services",
   repairs: "Repairs & Renovations",
-  travel: "Travel & Transportation",
-  other: "Other Expenses"
+  travel: "Travel & Transportation"
 };
 
 export default function Expenses() {
@@ -83,7 +86,7 @@ export default function Expenses() {
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       propertyId: 0,
-      category: "other",
+      category: "taxes",
       description: "",
       amount: "",
       date: new Date(),
@@ -91,6 +94,9 @@ export default function Expenses() {
       recurrencePeriod: "monthly",
       vendorName: "",
       notes: "",
+      startDate: undefined,
+      endDate: undefined,
+      documentFile: undefined,
     },
   });
 
