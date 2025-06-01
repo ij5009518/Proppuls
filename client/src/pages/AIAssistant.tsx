@@ -195,7 +195,7 @@ export default function AIAssistant() {
 
     const formData = new FormData();
     formData.append('document', selectedFile);
-    if (selectedProperty) {
+    if (selectedProperty && selectedProperty !== 'none') {
       formData.append('propertyId', selectedProperty);
     }
 
@@ -285,7 +285,7 @@ export default function AIAssistant() {
                   <SelectValue placeholder="Select property" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No specific property</SelectItem>
+                  <SelectItem value="none">No specific property</SelectItem>
                   {(properties as any[]).map((property) => (
                     <SelectItem key={property.id} value={property.id}>
                       {property.name}
