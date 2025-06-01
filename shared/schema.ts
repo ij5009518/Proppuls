@@ -134,6 +134,12 @@ export const expenseSchema = z.object({
   amount: z.string(),
   date: z.date(),
   isRecurring: z.boolean(),
+  vendorName: z.string().optional(),
+  notes: z.string().optional(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+  documentPath: z.string().optional(),
+  recurrencePeriod: z.enum(["monthly", "quarterly", "yearly"]).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
