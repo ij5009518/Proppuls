@@ -426,13 +426,36 @@ class Storage {
 
   // Mortgage methods
   async createMortgage(mortgageData: any): Promise<Mortgage> {
-    const [mortgage] = await db.insert(mortgages).values({
-      id: mortgageData.id || crypto.randomUUID(),
-      ...mortgageData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
-    return mortgage;
+    try {
+      console.log("Creating mortgage with data:", mortgageData);
+      
+      const insertData = {
+        id: mortgageData.id || crypto.randomUUID(),
+        propertyId: mortgageData.propertyId,
+        lender: mortgageData.lender,
+        originalAmount: mortgageData.originalAmount?.toString() || "0",
+        currentBalance: mortgageData.currentBalance?.toString() || "0",
+        interestRate: mortgageData.interestRate?.toString() || "0",
+        monthlyPayment: mortgageData.monthlyPayment?.toString() || "0",
+        startDate: mortgageData.startDate ? new Date(mortgageData.startDate) : new Date(),
+        termYears: mortgageData.termYears || 30,
+        principalAmount: mortgageData.principalAmount?.toString() || "0",
+        interestAmount: mortgageData.interestAmount?.toString() || "0",
+        escrowAmount: mortgageData.escrowAmount?.toString() || "0",
+        accountNumber: mortgageData.accountNumber || null,
+        notes: mortgageData.notes || null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      console.log("Formatted mortgage data:", insertData);
+      
+      const [mortgage] = await db.insert(mortgages).values(insertData).returning();
+      return mortgage;
+    } catch (error) {
+      console.error("Error creating mortgage:", error);
+      throw error;
+    }
   }
 
   async getAllMortgages(): Promise<Mortgage[]> {
