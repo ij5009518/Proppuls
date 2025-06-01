@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, Upload, FileText, DollarSign, Calendar, Clock, AlertTriangle } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, Upload, FileText, DollarSign, Calendar, Clock, AlertTriangle, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +18,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Tenant, InsertTenant, Unit, RentPayment, InsertRentPayment } from "@shared/schema";
+import type { Tenant, InsertTenant, Unit, RentPayment, InsertRentPayment, Task, InsertTask } from "@shared/schema";
 
 const tenantSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -44,6 +44,22 @@ const rentPaymentSchema = z.object({
   notes: z.string().optional(),
 });
 
+const taskSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  category: z.string().min(1, "Category is required"),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
+  assignedTo: z.string().optional(),
+  propertyId: z.string().optional(),
+  unitId: z.string().optional(),
+  tenantId: z.string().optional(),
+  vendorId: z.string().optional(),
+  dueDate: z.date(),
+  estimatedCost: z.string().optional(),
+  actualCost: z.string().optional(),
+});
+
 export default function Tenants() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,6 +67,7 @@ export default function Tenants() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const { toast } = useToast();
 
@@ -118,6 +135,22 @@ export default function Tenants() {
     },
   });
 
+  const createTaskMutation = useMutation({
+    mutationFn: async (data: InsertTask) => {
+      const response = await apiRequest("POST", "/api/tasks", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      toast({ title: "Success", description: "Task created successfully" });
+      setIsTaskDialogOpen(false);
+      taskForm.reset();
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create task", variant: "destructive" });
+    },
+  });
+
   const form = useForm<z.infer<typeof tenantSchema>>({
     resolver: zodResolver(tenantSchema),
     defaultValues: {
@@ -144,6 +177,25 @@ export default function Tenants() {
       paymentMethod: "",
       notes: "",
       lateFeeAmount: "0",
+    },
+  });
+
+  const taskForm = useForm<z.infer<typeof taskSchema>>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      category: "tenant_request",
+      priority: "medium",
+      status: "pending",
+      assignedTo: "",
+      propertyId: "",
+      unitId: "",
+      tenantId: "",
+      vendorId: "",
+      dueDate: new Date(),
+      estimatedCost: "",
+      actualCost: "",
     },
   });
 
