@@ -683,9 +683,9 @@ export default function Tenants() {
                           paymentForm.setValue("amount", tenant.monthlyRent || "");
                           setIsPaymentDialogOpen(true);
                         }}
+                        title="Record Payment"
                       >
-                        <DollarSign className="h-4 w-4 mr-1" />
-                        Payment
+                        <DollarSign className="h-4 w-4" />
                       </Button>
                       <Button 
                         size="sm" 
@@ -811,6 +811,7 @@ export default function Tenants() {
                             paymentForm.setValue("amount", tenant.monthlyRent || "");
                             setIsPaymentDialogOpen(true);
                           }}
+                          title="Record Payment"
                         >
                           <DollarSign className="h-4 w-4" />
                         </Button>
@@ -977,138 +978,372 @@ export default function Tenants() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="lease">Lease Details</TabsTrigger>
+                  <TabsTrigger value="documents">Documents</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="basic" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="john.doe@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input placeholder="(555) 123-4567" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="john.doe@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="dateOfBirth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date of Birth</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone</FormLabel>
-                      <FormControl>
-                        <Input placeholder="(555) 123-4567" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Jane Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactPhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Phone</FormLabel>
+                          <FormControl>
+                            <Input placeholder="(555) 987-6543" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <TabsContent value="lease" className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="unitId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unit</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {(units as any[])?.map((unit: any) => (
+                              <SelectItem key={unit.id} value={unit.id}>
+                                Unit {unit.unitNumber} - {unit.type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="leaseStart"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Lease Start Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="leaseEnd"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Lease End Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="monthlyRent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Monthly Rent</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="1500" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="securityDeposit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Security Deposit</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="1500" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="moveInDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Move-in Date</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                            onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
 
-                <FormField
-                  control={form.control}
-                  name="unitId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <TabsContent value="documents" className="space-y-4">
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <div className="text-center">
+                        <p className="text-sm font-medium">Upload Lease Documents</p>
+                        <p className="text-xs text-muted-foreground">
+                          Drag and drop files here, or click to browse
+                        </p>
+                      </div>
+                      <Input type="file" className="hidden" multiple />
+                    </div>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Additional Notes</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select unit" />
-                          </SelectTrigger>
+                          <Textarea placeholder="Any additional notes about the tenant..." {...field} />
                         </FormControl>
-                        <SelectContent>
-                          {(units as any[])?.map((unit: any) => (
-                            <SelectItem key={unit.id} value={unit.id}>
-                              Unit {unit.unitNumber}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
 
-                <FormField
-                  control={form.control}
-                  name="monthlyRent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly Rent</FormLabel>
-                      <FormControl>
-                        <Input placeholder="1200.00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateTenantMutation.isPending}>
+                  {updateTenantMutation.isPending ? "Updating..." : "Update Tenant"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-                <FormField
-                  control={form.control}
-                  name="deposit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Security Deposit</FormLabel>
-                      <FormControl>
-                        <Input placeholder="1200.00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      {/* View Tenant Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Tenant Details</DialogTitle>
+          </DialogHeader>
+          {selectedTenant && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Name</label>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedTenant.firstName} {selectedTenant.lastName}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Status</label>
+                  <Badge className={getStatusColor(selectedTenant.status)}>
+                    {selectedTenant.status}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <p className="text-sm text-muted-foreground">{selectedTenant.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Phone</label>
+                  <p className="text-sm text-muted-foreground">{selectedTenant.phone}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Unit</label>
+                  <p className="text-sm text-muted-foreground">{getUnitNumber(selectedTenant.unitId)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Monthly Rent</label>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedTenant.monthlyRent ? formatCurrency(selectedTenant.monthlyRent) : "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              {selectedTenant.leaseStart && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Lease Start</label>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(selectedTenant.leaseStart)}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Lease End</label>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedTenant.leaseEnd ? formatDate(selectedTenant.leaseEnd) : "N/A"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
               </div>
 
               <div className="flex justify-end space-x-2">
