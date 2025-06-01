@@ -120,6 +120,26 @@ export default function RentPayments() {
     },
   });
 
+  const handleView = (payment: RentPayment) => {
+    setSelectedPayment(payment);
+    // You can add a view dialog here if needed
+  };
+
+  const handleEdit = (payment: RentPayment) => {
+    setSelectedPayment(payment);
+    form.reset({
+      tenantId: payment.tenantId,
+      unitId: payment.unitId,
+      amount: payment.amount.toString(),
+      dueDate: new Date(payment.dueDate),
+      paidDate: payment.paidDate ? new Date(payment.paidDate) : undefined,
+      status: payment.status,
+      paymentMethod: payment.paymentMethod || "",
+      notes: payment.notes || "",
+    });
+    setIsAddDialogOpen(true);
+  };
+
   const onSubmit = (values: z.infer<typeof rentPaymentSchema>) => {
     const data: InsertRentPayment = {
       ...values,
@@ -498,10 +518,18 @@ export default function RentPayments() {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleView(payment)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEdit(payment)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
