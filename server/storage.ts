@@ -245,7 +245,50 @@ class Storage {
       .set({ ...tenantData, updatedAt: new Date() })
       .where(eq(tenants.id, id))
       .returning();
+    
+    // Auto-generate rent payment records if lease information is provided
+    if (tenant && tenantData.leaseStart && tenantData.leaseEnd && tenantData.monthlyRent) {
+      await this.generateRentPayments(tenant);
+    }
+    
     return tenant || null;
+  }
+
+  private async generateRentPayments(tenant: Tenant): Promise<void> {
+    if (!tenant.leaseStart || !tenant.leaseEnd || !tenant.monthlyRent) return;
+
+    const startDate = new Date(tenant.leaseStart);
+    const endDate = new Date(tenant.leaseEnd);
+    const monthlyAmount = parseFloat(tenant.monthlyRent);
+
+    // Clear existing rent payments for this tenant
+    await db.delete(rentPayments).where(eq(rentPayments.tenantId, tenant.id));
+
+    const payments: any[] = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dueDate = new Date(currentDate);
+      dueDate.setDate(1); // Set to first of month
+
+      payments.push({
+        id: crypto.randomUUID(),
+        tenantId: tenant.id,
+        unitId: tenant.unitId,
+        amount: monthlyAmount.toString(),
+        dueDate: dueDate,
+        status: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      // Move to next month
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+
+    if (payments.length > 0) {
+      await db.insert(rentPayments).values(payments);
+    }
   }
 
   async deleteTenant(id: string): Promise<boolean> {
