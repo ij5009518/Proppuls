@@ -494,7 +494,7 @@ export default function RentPayments() {
                     </Badge>
                   </TableCell>
                   <TableCell className="capitalize">
-                    {payment.paymentMethod.replace("_", " ")}
+                    {payment.paymentMethod ? payment.paymentMethod.replace("_", " ") : "Not set"}
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
