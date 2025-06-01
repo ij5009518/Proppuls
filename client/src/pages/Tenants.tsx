@@ -1270,68 +1270,136 @@ export default function Tenants() {
 
       {/* View Tenant Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Tenant Details</DialogTitle>
           </DialogHeader>
           {selectedTenant && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Name</label>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedTenant.firstName} {selectedTenant.lastName}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Status</label>
-                  <Badge className={getStatusColor(selectedTenant.status)}>
-                    {selectedTenant.status}
-                  </Badge>
-                </div>
-              </div>
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="lease">Lease Details</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
+              </TabsList>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Email</label>
-                  <p className="text-sm text-muted-foreground">{selectedTenant.email}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Phone</label>
-                  <p className="text-sm text-muted-foreground">{selectedTenant.phone}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Unit</label>
-                  <p className="text-sm text-muted-foreground">{getUnitNumber(selectedTenant.unitId)}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Monthly Rent</label>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedTenant.monthlyRent ? formatCurrency(selectedTenant.monthlyRent) : "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              {selectedTenant.leaseStart && (
+              <TabsContent value="basic" className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium">Lease Start</label>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(selectedTenant.leaseStart)}
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedTenant.firstName}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedTenant.lastName}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedTenant.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedTenant.phone}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTenant.dateOfBirth ? formatDate(selectedTenant.dateOfBirth) : "Not provided"}
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Lease End</label>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedTenant.leaseEnd ? formatDate(selectedTenant.leaseEnd) : "N/A"}
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                    <Badge className={`${getStatusColor(selectedTenant.status)} mt-1`}>
+                      {selectedTenant.status}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Emergency Contact Name</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTenant.emergencyContactName || "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Emergency Contact Phone</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTenant.emergencyContactPhone || "Not provided"}
                     </p>
                   </div>
                 </div>
-              )}
-            </div>
+              </TabsContent>
+
+              <TabsContent value="lease" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Unit</label>
+                    <p className="text-sm text-muted-foreground mt-1">{getUnitNumber(selectedTenant.unitId)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Monthly Rent</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTenant.monthlyRent ? formatCurrency(selectedTenant.monthlyRent) : "Not set"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Lease Start</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTenant.leaseStart ? formatDate(selectedTenant.leaseStart) : "Not set"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Lease End</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTenant.leaseEnd ? formatDate(selectedTenant.leaseEnd) : "Not set"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Security Deposit</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTenant.securityDeposit ? formatCurrency(selectedTenant.securityDeposit) : "Not set"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Move-in Date</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTenant.moveInDate ? formatDate(selectedTenant.moveInDate) : "Not set"}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedTenant.notes && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                    <p className="text-sm text-muted-foreground mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                      {selectedTenant.notes}
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="documents" className="space-y-4">
+                <div className="text-center py-8">
+                  <div className="text-gray-500 dark:text-gray-400">
+                    <FileText className="mx-auto h-12 w-12 mb-2" />
+                    <p>Document management coming soon</p>
+                    <p className="text-sm">Lease agreements, ID copies, and other tenant documents will be stored here</p>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           )}
         </DialogContent>
       </Dialog>
