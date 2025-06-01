@@ -14,6 +14,7 @@ import {
   FileText,
   Building2,
   CheckSquare,
+  Calendar,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
@@ -126,6 +127,11 @@ const menuItems: MenuItem[] = [
     title: 'Mortgages',
     url: '/mortgages',
     icon: Building2,
+  },
+  {
+    title: 'Calendar',
+    url: '/calendar',
+    icon: Calendar,
   },
 ];
 
