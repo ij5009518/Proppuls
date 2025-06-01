@@ -237,7 +237,7 @@ export default function RentPayments() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Tenant</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                        <Select onValueChange={(value) => field.onChange(value)}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select tenant" />
@@ -261,7 +261,7 @@ export default function RentPayments() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Unit</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                        <Select onValueChange={(value) => field.onChange(value)}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select unit" />

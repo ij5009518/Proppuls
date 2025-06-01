@@ -375,13 +375,31 @@ class Storage {
 
   // Rent Payment methods
   async createRentPayment(paymentData: any): Promise<RentPayment> {
-    const [payment] = await db.insert(rentPayments).values({
-      id: paymentData.id || crypto.randomUUID(),
-      ...paymentData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
-    return payment;
+    try {
+      console.log("Creating rent payment with data:", paymentData);
+      
+      const insertData = {
+        id: paymentData.id || crypto.randomUUID(),
+        tenantId: paymentData.tenantId?.toString() || "",
+        unitId: paymentData.unitId?.toString() || "",
+        amount: paymentData.amount?.toString() || "0",
+        dueDate: paymentData.dueDate ? new Date(paymentData.dueDate) : new Date(),
+        paidDate: paymentData.paidDate ? new Date(paymentData.paidDate) : null,
+        status: paymentData.status || 'pending',
+        paymentMethod: paymentData.paymentMethod || null,
+        notes: paymentData.notes || null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      console.log("Formatted rent payment data:", insertData);
+      
+      const [payment] = await db.insert(rentPayments).values(insertData).returning();
+      return payment;
+    } catch (error) {
+      console.error("Error creating rent payment:", error);
+      throw error;
+    }
   }
 
   async getAllRentPayments(): Promise<RentPayment[]> {
