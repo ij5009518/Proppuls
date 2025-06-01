@@ -377,7 +377,13 @@ export function registerRoutes(app: Express) {
 
   app.post("/api/tasks", async (req, res) => {
     try {
-      const task = await storage.createTask(req.body);
+      // Convert date string to Date object if present
+      const taskData = { ...req.body };
+      if (taskData.dueDate) {
+        taskData.dueDate = new Date(taskData.dueDate);
+      }
+      
+      const task = await storage.createTask(taskData);
       res.json(task);
     } catch (error) {
       console.error("Error creating task:", error);
