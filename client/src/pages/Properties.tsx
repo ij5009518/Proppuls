@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Grid, List, Eye, Edit, Trash2, Home, DollarSign, Calculator, Users, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -112,13 +112,20 @@ export default function Properties() {
   const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
   const [isCreateExpenseDialogOpen, setIsCreateExpenseDialogOpen] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [localProperties, setLocalProperties] = useState<Property[]>([]);
 
   const { toast } = useToast();
 
   const { data: properties = [], isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
   });
+
+  // Sync server data with local state on initial load
+  useEffect(() => {
+    if (properties.length > 0 && localProperties.length === 0) {
+      setLocalProperties(properties);
+    }
+  }, [properties, localProperties.length]);
 
   // Additional data for property details
   const { data: units = [] } = useQuery<Unit[]>({
@@ -310,26 +317,20 @@ export default function Properties() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<InsertProperty> }) => {
-      setIsUpdating(true);
-      return apiRequest("PATCH", `/api/properties/${id}`, data);
-    },
+    mutationFn: ({ id, data }: { id: string; data: Partial<InsertProperty> }) =>
+      apiRequest("PATCH", `/api/properties/${id}`, data),
     onSuccess: (updatedProperty) => {
-      // Wait a moment then update without visual disruption
-      setTimeout(() => {
-        const currentData = queryClient.getQueryData<Property[]>(["/api/properties"]) || [];
-        const updatedData = currentData.map(property => 
+      // Update local state immediately without affecting React Query cache
+      setLocalProperties(prev => 
+        prev.map(property => 
           property.id === updatedProperty.id ? updatedProperty : property
-        );
-        queryClient.setQueryData(["/api/properties"], updatedData);
-        setIsUpdating(false);
-        setIsEditDialogOpen(false);
-        setSelectedProperty(null);
-        toast({ title: "Property updated successfully" });
-      }, 50);
+        )
+      );
+      setIsEditDialogOpen(false);
+      setSelectedProperty(null);
+      toast({ title: "Property updated successfully" });
     },
     onError: (error: Error) => {
-      setIsUpdating(false);
       toast({ title: "Failed to update property", description: error.message, variant: "destructive" });
     },
   });
