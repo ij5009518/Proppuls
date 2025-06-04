@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Edit, Trash2, Calendar, DollarSign, Receipt, RotateCcw, Filter, Home, Upload } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, DollarSign, Receipt, RotateCcw, Filter, Home, Upload, Store, Phone, Mail, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Property, Expense, InsertExpense } from "@shared/schema";
+import type { Property, Expense, InsertExpense, Vendor, InsertVendor } from "@shared/schema";
 
 const expenseSchema = z.object({
   propertyId: z.number().min(1, "Property is required"),
@@ -36,7 +36,21 @@ const expenseSchema = z.object({
   documentFile: z.any().optional(),
 });
 
+const vendorSchema = z.object({
+  name: z.string().min(1, "Vendor name is required"),
+  contactPerson: z.string().optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  category: z.string().min(1, "Category is required"),
+  notes: z.string().optional(),
+});
+
 type ExpenseFormData = z.infer<typeof expenseSchema>;
+type VendorFormData = z.infer<typeof vendorSchema>;
 
 const expenseCategories = {
   taxes: "Tax Expenses",
@@ -51,6 +65,25 @@ const expenseCategories = {
   travel: "Travel & Transportation"
 };
 
+const vendorCategories = {
+  maintenance: "Maintenance & Repairs",
+  cleaning: "Cleaning Services",
+  landscaping: "Landscaping",
+  hvac: "HVAC Services",
+  plumbing: "Plumbing",
+  electrical: "Electrical",
+  roofing: "Roofing",
+  flooring: "Flooring",
+  painting: "Painting",
+  legal: "Legal Services",
+  accounting: "Accounting",
+  insurance: "Insurance",
+  supplies: "Supplies",
+  utilities: "Utilities",
+  security: "Security Services",
+  other: "Other"
+};
+
 export default function Expenses() {
   const [location] = useLocation();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -59,6 +92,13 @@ export default function Expenses() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
+  
+  // Vendor state
+  const [isCreateVendorDialogOpen, setIsCreateVendorDialogOpen] = useState(false);
+  const [isEditVendorDialogOpen, setIsEditVendorDialogOpen] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [vendorSearchTerm, setVendorSearchTerm] = useState("");
+  const [selectedVendorCategory, setSelectedVendorCategory] = useState<string>("all");
 
   const { toast } = useToast();
 

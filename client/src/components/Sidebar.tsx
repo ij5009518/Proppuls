@@ -77,9 +77,6 @@ const menuItems: MenuItem[] = [
     title: 'Expenses',
     url: '/expenses',
     icon: DollarSign,
-    subItems: [
-      { title: 'Vendors', url: '/vendors' }
-    ]
   },
   {
     title: 'Financials',
