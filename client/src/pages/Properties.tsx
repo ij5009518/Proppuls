@@ -311,14 +311,19 @@ export default function Properties() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<InsertProperty> }) =>
       apiRequest("PATCH", `/api/properties/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
+    onSuccess: (updatedProperty, variables) => {
+      // Update the specific property in the cache to maintain order
+      queryClient.setQueryData(["/api/properties"], (oldData: Property[] = []) => 
+        oldData.map(property => 
+          property.id === variables.id ? { ...property, ...variables.data, updatedAt: new Date() } : property
+        )
+      );
       setIsEditDialogOpen(false);
       setSelectedProperty(null);
       toast({ title: "Property updated successfully" });
     },
-    onError: () => {
-      toast({ title: "Failed to update property", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Failed to update property", description: error.message, variant: "destructive" });
     },
   });
 
