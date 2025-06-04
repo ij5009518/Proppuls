@@ -632,6 +632,29 @@ export default function Properties() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={createPropertyForm.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                            <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                            <SelectItem value="sold">Sold</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -1655,6 +1678,29 @@ export default function Properties() {
                           <SelectItem value="single_family">Single Family</SelectItem>
                           <SelectItem value="duplex">Duplex</SelectItem>
                           <SelectItem value="commercial">Commercial</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                          <SelectItem value="sold">Sold</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
