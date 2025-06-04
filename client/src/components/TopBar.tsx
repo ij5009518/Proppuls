@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, Download, Bell, Search, Settings, User, LogOut } from "lucide-react";
+import { Menu, Bell, Search, Settings, User, LogOut } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -29,9 +29,7 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
   const { user, logout } = useAuth();
   const currentTitle = pageTitle[location] || "PropertyFlow";
 
-  const handleExport = () => {
-    window.open("/api/export/expenses", "_blank");
-  };
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,14 +57,17 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
         </Button>
       )}
       
-      <div className="flex-1 px-4 flex justify-between items-center">
-        <div className="flex-1 flex items-center">
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-foreground mr-6">
+      <div className="flex-1 px-4 flex items-center justify-between">
+        {/* Left section - Title */}
+        <div className="flex items-center min-w-0 flex-1">
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-foreground truncate">
             {currentTitle}
           </h2>
-          
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="relative max-w-md w-full">
+        </div>
+        
+        {/* Center section - Search Bar */}
+        <div className="flex-1 flex justify-center px-6">
+          <form onSubmit={handleSearch} className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
             <Input
               type="text"
@@ -78,17 +79,9 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
           </form>
         </div>
         
-        <div className="ml-4 flex items-center md:ml-6 space-x-3">
-          {/* Export Button */}
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            className="bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-accent text-slate-700 dark:text-foreground border border-slate-300 dark:border-border"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          
+        {/* Right section - Controls */}
+        <div className="flex items-center justify-end min-w-0 flex-1">
+          <div className="flex items-center space-x-4">
           {/* Notifications */}
           <div className="relative">
             <Button
@@ -166,6 +159,7 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
       </div>
     </div>
