@@ -340,9 +340,14 @@ export default function Properties() {
       }
       toast({ title: "Failed to update property", description: error.message, variant: "destructive" });
     },
-    onSettled: () => {
-      // Always refetch after error or success to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
+    onSettled: async () => {
+      // Delay background refetch to prevent visual disruption
+      setTimeout(() => {
+        queryClient.refetchQueries({ 
+          queryKey: ["/api/properties"],
+          type: 'inactive' // Only refetch if not currently being used
+        });
+      }, 100);
     },
   });
 
