@@ -121,11 +121,33 @@ class Storage {
   }
 
   async updateProperty(id: string, propertyData: any): Promise<Property | null> {
-    const [property] = await db.update(properties)
-      .set({ ...propertyData, updatedAt: new Date() })
-      .where(eq(properties.id, id))
-      .returning();
-    return property || null;
+    try {
+      console.log("Storage: Updating property with data:", propertyData);
+      
+      // Convert date strings to Date objects
+      const updateData = {
+        ...propertyData,
+        updatedAt: new Date()
+      };
+      
+      // Handle purchaseDate conversion if it exists
+      if (propertyData.purchaseDate) {
+        updateData.purchaseDate = new Date(propertyData.purchaseDate);
+      }
+      
+      console.log("Storage: Update data after conversion:", updateData);
+      
+      const [property] = await db.update(properties)
+        .set(updateData)
+        .where(eq(properties.id, id))
+        .returning();
+        
+      console.log("Storage: Property updated successfully:", property);
+      return property || null;
+    } catch (error) {
+      console.error("Storage: Error updating property:", error);
+      throw error;
+    }
   }
 
   async deleteProperty(id: string): Promise<boolean> {
