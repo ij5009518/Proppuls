@@ -59,7 +59,7 @@ const menuItems: MenuItem[] = [
     icon: UserCheck,
   },
   {
-    title: 'Tasks',
+    title: 'Tasks & Maintenance',
     url: '/tasks',
     icon: CheckSquare,
   },
