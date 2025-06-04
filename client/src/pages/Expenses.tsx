@@ -32,6 +32,9 @@ const expenseSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   documentFile: z.any().optional(),
+  documentUploadDate: z.date().optional(),
+  policyEffectiveDate: z.date().optional(),
+  policyExpirationDate: z.date().optional(),
 });
 
 const vendorSchema = z.object({
@@ -356,6 +359,9 @@ export default function Expenses() {
       notes: data.notes || "",
       startDate: data.startDate,
       endDate: data.endDate,
+      documentUploadDate: data.documentUploadDate,
+      policyEffectiveDate: data.policyEffectiveDate,
+      policyExpirationDate: data.policyExpirationDate,
     };
 
     createMutation.mutate(expenseData);
@@ -376,6 +382,9 @@ export default function Expenses() {
       notes: data.notes || "",
       startDate: data.startDate,
       endDate: data.endDate,
+      documentUploadDate: data.documentUploadDate,
+      policyEffectiveDate: data.policyEffectiveDate,
+      policyExpirationDate: data.policyExpirationDate,
     };
 
     updateMutation.mutate({ id: selectedExpense.id, expense: expenseData });
@@ -395,6 +404,9 @@ export default function Expenses() {
       notes: expense.notes || "",
       startDate: expense.startDate ? new Date(expense.startDate) : undefined,
       endDate: expense.endDate ? new Date(expense.endDate) : undefined,
+      documentUploadDate: expense.documentUploadDate ? new Date(expense.documentUploadDate) : undefined,
+      policyEffectiveDate: expense.policyEffectiveDate ? new Date(expense.policyEffectiveDate) : undefined,
+      policyExpirationDate: expense.policyExpirationDate ? new Date(expense.policyExpirationDate) : undefined,
     });
     setIsEditDialogOpen(true);
   };
@@ -628,6 +640,64 @@ export default function Expenses() {
                           </FormItem>
                         )}
                       />
+
+                      {(createForm.watch("category") === "insurance" || createForm.watch("category") === "taxes") && (
+                        <>
+                          <div className="grid grid-cols-3 gap-4">
+                            <FormField
+                              control={createForm.control}
+                              name="documentUploadDate"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Document Upload Date</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="date" 
+                                      value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                                      onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={createForm.control}
+                              name="policyEffectiveDate"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Policy Effective Date</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="date" 
+                                      value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                                      onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={createForm.control}
+                              name="policyExpirationDate"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Policy Expiration Date</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="date" 
+                                      value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                                      onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </>
+                      )}
 
                       <FormField
                         control={createForm.control}
