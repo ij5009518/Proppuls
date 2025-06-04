@@ -135,6 +135,8 @@ export default function Expenses() {
       isRecurring: false,
       vendorName: "",
       notes: "",
+      accountNumber: "",
+      attachmentUrl: "",
     },
   });
 
