@@ -115,7 +115,8 @@ export default function Settings() {
           propertyType: 'apartment',
           totalUnits: '12',
           purchasePrice: '500000',
-          currentValue: '600000'
+          currentValue: '600000',
+          status: 'active'
         },
         {
           type: 'property',
@@ -127,7 +128,8 @@ export default function Settings() {
           propertyType: 'house',
           totalUnits: '1',
           purchasePrice: '800000',
-          currentValue: '900000'
+          currentValue: '900000',
+          status: 'active'
         }
       ],
       units: [

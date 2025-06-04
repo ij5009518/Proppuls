@@ -707,7 +707,8 @@ export function registerRoutes(app: Express) {
                 totalUnits: parseInt(record.totalUnits) || 1,
                 propertyType: record.propertyType || 'apartment',
                 purchasePrice: parseFloat(record.purchasePrice) || 0,
-                currentValue: parseFloat(record.currentValue) || 0
+                currentValue: parseFloat(record.currentValue) || 0,
+                status: record.status || 'active'
               });
               results.propertiesCreated++;
               break;
