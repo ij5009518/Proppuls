@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Edit, Trash2, Calendar, DollarSign, Receipt, RotateCcw, Filter, Home, Upload, Store, Phone, Mail, MapPin } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, DollarSign, Receipt, RotateCcw, Filter, Home, Upload, Store, Phone, Mail, MapPin, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -704,8 +704,8 @@ export default function Expenses() {
               </Select>
             </div>
 
-            {/* Summary cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Dashboard Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
@@ -718,7 +718,54 @@ export default function Expenses() {
                   </p>
                 </CardContent>
               </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
+                  <Wrench className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(filteredExpenses.filter(e => e.category === 'maintenance').reduce((sum, e) => sum + parseFloat(e.amount.toString()), 0))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {filteredExpenses.filter(e => e.category === 'maintenance').length} maintenance expenses
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Utilities</CardTitle>
+                  <Receipt className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(filteredExpenses.filter(e => e.category === 'utilities').reduce((sum, e) => sum + parseFloat(e.amount.toString()), 0))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {filteredExpenses.filter(e => e.category === 'utilities').length} utility bills
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Recurring</CardTitle>
+                  <RotateCcw className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(filteredExpenses.filter(e => e.isRecurring).reduce((sum, e) => sum + parseFloat(e.amount.toString()), 0))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {filteredExpenses.filter(e => e.isRecurring).length} recurring expenses
+                  </p>
+                </CardContent>
+              </Card>
             </div>
+
+
 
             {/* Expenses table */}
             <div className="grid gap-6">
