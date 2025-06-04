@@ -34,8 +34,6 @@ const taskSchema = z.object({
   priority: z.string().min(1, "Priority is required"),
   dueDate: z.string().optional(),
   assignedTo: z.string().optional(),
-  estimatedHours: z.number().optional(),
-  actualHours: z.number().optional(),
 });
 
 type UnitFormData = z.infer<typeof unitSchema>;
@@ -98,8 +96,6 @@ export default function Units() {
       priority: "medium",
       dueDate: "",
       assignedTo: "",
-      estimatedHours: 0,
-      actualHours: 0,
     },
   });
 
@@ -214,8 +210,6 @@ export default function Units() {
         unitId: selectedUnit.id,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
         assignedTo: data.assignedTo || null,
-        estimatedHours: data.estimatedHours || 0,
-        actualHours: data.actualHours || 0,
         completedAt: null,
         maintenanceRequestId: null,
         expenseId: null,
@@ -909,44 +903,7 @@ export default function Units() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={taskForm.control}
-                  name="estimatedHours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estimated Hours</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.5"
-                          placeholder="2"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={taskForm.control}
-                  name="actualHours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Actual Hours</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.5"
-                          placeholder="0"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 <FormField
                   control={taskForm.control}
                   name="description"
