@@ -409,7 +409,6 @@ export default function Expenses() {
       accountNumber: expense.accountNumber || "",
       policyEffectiveDate: expense.policyEffectiveDate ? new Date(expense.policyEffectiveDate) : undefined,
       policyExpirationDate: expense.policyExpirationDate ? new Date(expense.policyExpirationDate) : undefined,
-      attachmentUrl: expense.attachmentUrl || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -644,7 +643,7 @@ export default function Expenses() {
                         )}
                       />
 
-                      {(createForm.watch("category") === "insurance" || createForm.watch("category") === "utilities") && (
+                      {(createForm.watch("category") === "insurance" || createForm.watch("category") === "utilities" || createForm.watch("category") === "taxes") && (
                         <>
                           <div className="grid grid-cols-2 gap-4">
                             <FormField
@@ -665,14 +664,15 @@ export default function Expenses() {
                             />
                             <FormField
                               control={createForm.control}
-                              name="attachmentUrl"
+                              name="documentFile"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Attachment URL</FormLabel>
+                                  <FormLabel>Upload Document</FormLabel>
                                   <FormControl>
                                     <Input 
-                                      placeholder="Enter document URL"
-                                      {...field}
+                                      type="file"
+                                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                      onChange={(e) => field.onChange(e.target.files?.[0])}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -680,14 +680,14 @@ export default function Expenses() {
                               )}
                             />
                           </div>
-                          {createForm.watch("category") === "insurance" && (
+                          {(createForm.watch("category") === "insurance" || createForm.watch("category") === "taxes") && (
                             <div className="grid grid-cols-2 gap-4">
                               <FormField
                                 control={createForm.control}
                                 name="policyEffectiveDate"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Policy Effective Date</FormLabel>
+                                    <FormLabel>{createForm.watch("category") === "insurance" ? "Policy Effective Date" : "Tax Period Start"}</FormLabel>
                                     <FormControl>
                                       <Input 
                                         type="date" 
@@ -704,7 +704,7 @@ export default function Expenses() {
                                 name="policyExpirationDate"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Policy Expiration Date</FormLabel>
+                                    <FormLabel>{createForm.watch("category") === "insurance" ? "Policy Expiration Date" : "Tax Period End"}</FormLabel>
                                     <FormControl>
                                       <Input 
                                         type="date" 
@@ -1344,7 +1344,7 @@ export default function Expenses() {
                 )}
               />
 
-              {(editForm.watch("category") === "insurance" || editForm.watch("category") === "utilities") && (
+              {(editForm.watch("category") === "insurance" || editForm.watch("category") === "utilities" || editForm.watch("category") === "taxes") && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
@@ -1365,14 +1365,15 @@ export default function Expenses() {
                     />
                     <FormField
                       control={editForm.control}
-                      name="attachmentUrl"
+                      name="documentFile"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Attachment URL</FormLabel>
+                          <FormLabel>Upload Document</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="Enter document URL"
-                              {...field}
+                              type="file"
+                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                              onChange={(e) => field.onChange(e.target.files?.[0])}
                             />
                           </FormControl>
                           <FormMessage />
@@ -1380,14 +1381,14 @@ export default function Expenses() {
                       )}
                     />
                   </div>
-                  {editForm.watch("category") === "insurance" && (
+                  {(editForm.watch("category") === "insurance" || editForm.watch("category") === "taxes") && (
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={editForm.control}
                         name="policyEffectiveDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Policy Effective Date</FormLabel>
+                            <FormLabel>{editForm.watch("category") === "insurance" ? "Policy Effective Date" : "Tax Period Start"}</FormLabel>
                             <FormControl>
                               <Input 
                                 type="date" 
@@ -1404,7 +1405,7 @@ export default function Expenses() {
                         name="policyExpirationDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Policy Expiration Date</FormLabel>
+                            <FormLabel>{editForm.watch("category") === "insurance" ? "Policy Expiration Date" : "Tax Period End"}</FormLabel>
                             <FormControl>
                               <Input 
                                 type="date" 
