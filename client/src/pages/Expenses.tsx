@@ -313,7 +313,13 @@ export default function Expenses() {
                          (expense.vendorName && expense.vendorName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = selectedCategory === "all" || expense.category === selectedCategory;
     const matchesProperty = selectedProperty === "all" || expense.propertyId.toString() === selectedProperty;
-    return matchesSearch && matchesCategory && matchesProperty;
+    
+    // Date filtering
+    const expenseDate = new Date(expense.date);
+    const matchesStartDate = !startDate || expenseDate >= new Date(startDate);
+    const matchesEndDate = !endDate || expenseDate <= new Date(endDate);
+    
+    return matchesSearch && matchesCategory && matchesProperty && matchesStartDate && matchesEndDate;
   });
 
   const filteredVendors = vendors.filter((vendor) => {
@@ -670,12 +676,28 @@ export default function Expenses() {
             </div>
 
             {/* Expense filters */}
-            <div className="flex gap-4">
-              <div className="relative flex-1">
+            <div className="flex flex-wrap gap-4">
+              <div className="relative flex-1 min-w-64">
                 <Input
                   placeholder="Search expenses..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  placeholder="Start date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-40"
+                />
+                <Input
+                  type="date"
+                  placeholder="End date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-40"
                 />
               </div>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -708,7 +730,7 @@ export default function Expenses() {
 
             {/* Dashboard Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+              <Card className="bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Expenses</CardTitle>
                   <div className="p-2 bg-blue-500 rounded-lg">
@@ -723,7 +745,7 @@ export default function Expenses() {
                 </CardContent>
               </Card>
               
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
+              <Card className="bg-white dark:bg-gray-800 border-green-200 dark:border-green-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Monthly Recurring</CardTitle>
                   <div className="p-2 bg-green-500 rounded-lg">
@@ -740,7 +762,7 @@ export default function Expenses() {
                 </CardContent>
               </Card>
               
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+              <Card className="bg-white dark:bg-gray-800 border-purple-200 dark:border-purple-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Records</CardTitle>
                   <div className="p-2 bg-purple-500 rounded-lg">
