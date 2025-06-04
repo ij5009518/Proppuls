@@ -332,7 +332,7 @@ export default function Expenses() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold">Expenses & Vendors</h1>
+        <h1 className="text-3xl font-bold">Expenses & Vendors</h1>
         <p className="text-muted-foreground">
           Track expenses and manage vendors in one place
         </p>
@@ -350,7 +350,7 @@ export default function Expenses() {
               <h2 className="text-xl font-semibold">Expense Management</h2>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Button>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Expense
                   </Button>
@@ -897,7 +897,6 @@ export default function Expenses() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
                                   onClick={() => handleEdit(expense)}
                                 >
                                   <Edit className="h-4 w-4" />
@@ -905,7 +904,6 @@ export default function Expenses() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="border-red-200 text-red-600 hover:bg-red-50"
                                   onClick={() => handleDelete(expense.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -929,7 +927,7 @@ export default function Expenses() {
               <h2 className="text-xl font-semibold">Vendor Management</h2>
               <Dialog open={isCreateVendorDialogOpen} onOpenChange={setIsCreateVendorDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-green-600 hover:bg-green-700">
+                  <Button>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Vendor
                   </Button>
@@ -1158,7 +1156,6 @@ export default function Expenses() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-blue-200 text-blue-600 hover:bg-blue-50"
                                 onClick={() => handleEditVendor(vendor)}
                               >
                                 <Edit className="h-4 w-4" />
@@ -1166,7 +1163,6 @@ export default function Expenses() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-red-200 text-red-600 hover:bg-red-50"
                                 onClick={() => handleDeleteVendor(vendor.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
