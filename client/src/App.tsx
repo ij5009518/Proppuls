@@ -23,6 +23,7 @@ import Mortgages from '@/pages/Mortgages';
 import Expenses from "@/pages/Expenses";
 import Calendar from "@/pages/Calendar";
 import AIAssistant from "@/pages/AIAssistant";
+import Settings from "@/pages/Settings";
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -79,6 +80,7 @@ function AuthenticatedApp() {
         <Route path="/expenses/:category?" component={Expenses} />
         <Route path="/calendar" component={Calendar} />
         <Route path="/ai-assistant" component={AIAssistant} />
+        <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

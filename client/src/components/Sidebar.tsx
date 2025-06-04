@@ -16,6 +16,7 @@ import {
   CheckSquare,
   Calendar,
   Bot,
+  Settings,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -86,9 +87,9 @@ const menuItems: MenuItem[] = [
     icon: Bot,
   },
   {
-    title: 'Users',
-    url: '/users',
-    icon: Users,
+    title: 'Settings',
+    url: '/settings',
+    icon: Settings,
   },
 ];
 

@@ -3,6 +3,8 @@ import { createServer } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import multer from "multer";
+import { parse } from "csv-parse/sync";
 
 export function registerRoutes(app: Express) {
   // Create HTTP server
