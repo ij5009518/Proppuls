@@ -154,7 +154,7 @@ export default function EmailManager() {
                   <SelectValue placeholder="Filter by property" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Properties</SelectItem>
+                  <SelectItem value="all">All Properties</SelectItem>
                   {properties.map((property: any) => (
                     <SelectItem key={property.id} value={property.id}>
                       {property.name}
@@ -206,7 +206,7 @@ export default function EmailManager() {
                   <SelectValue placeholder="Select property or leave blank for all" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Properties</SelectItem>
+                  <SelectItem value="all">All Properties</SelectItem>
                   {properties.map((property: any) => (
                     <SelectItem key={property.id} value={property.id}>
                       {property.name}
