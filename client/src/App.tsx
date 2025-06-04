@@ -16,7 +16,7 @@ import Tenants from "./pages/Tenants";
 import Tasks from "./pages/Tasks";
 import RentPayments from "./pages/RentPayments";
 import Maintenance from '@/pages/Maintenance';
-import Vendors from '@/pages/Vendors';
+
 import Financials from '@/pages/Financials';
 import Reports from '@/pages/Reports';
 import Mortgages from '@/pages/Mortgages';
@@ -72,7 +72,7 @@ function AuthenticatedApp() {
         <Route path="/tasks" component={Tasks} />
         <Route path="/rent-payments" component={RentPayments} />
         <Route path="/maintenance" component={Maintenance} />
-        <Route path="/vendors" component={Vendors} />
+
         <Route path="/financials" component={Financials} />
         <Route path="/reports" component={Reports} />
         <Route path="/mortgages" component={Mortgages} />
