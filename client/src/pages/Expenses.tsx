@@ -93,6 +93,8 @@ export default function Expenses() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedProperty, setSelectedProperty] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   
   // State for vendors
   const [isCreateVendorDialogOpen, setIsCreateVendorDialogOpen] = useState(false);
