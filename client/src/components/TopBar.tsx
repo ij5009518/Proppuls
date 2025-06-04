@@ -57,16 +57,16 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
         </Button>
       )}
       
-      <div className="flex-1 px-4 flex items-center justify-between">
+      <div className="flex-1 px-4 flex items-center">
         {/* Left section - Title */}
-        <div className="flex items-center min-w-0 flex-1">
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-foreground truncate">
+        <div className="flex items-center">
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-foreground">
             {currentTitle}
           </h2>
         </div>
         
         {/* Center section - Search Bar */}
-        <div className="flex-1 flex justify-center px-6">
+        <div className="flex-1 flex justify-center px-8">
           <form onSubmit={handleSearch} className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
             <Input
@@ -79,8 +79,8 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
           </form>
         </div>
         
-        {/* Right section - Controls */}
-        <div className="flex items-center justify-end min-w-0 flex-1">
+        {/* Right section - Controls - All the way to the right */}
+        <div className="flex items-center ml-auto">
           <div className="flex items-center space-x-4">
           {/* Notifications */}
           <div className="relative">
