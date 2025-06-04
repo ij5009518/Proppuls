@@ -1146,15 +1146,14 @@ export default function Properties() {
               <TabsContent value="taxes" className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Property Expenses & Taxes</h3>
-                  <Button size="sm" onClick={() => {
-                    toast({
-                      title: "Feature Coming Soon",
-                      description: "Expense management interface will be available soon.",
-                    });
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Expense
-                  </Button>
+                  <Dialog open={isCreateExpenseDialogOpen} onOpenChange={setIsCreateExpenseDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Expense
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
                 </div>
 
                 {getPropertyExpenses(selectedProperty.id).length === 0 ? (
