@@ -113,6 +113,7 @@ export default function Settings() {
           state: 'CA',
           zipCode: '90210',
           propertyType: 'apartment',
+          totalUnits: '12',
           purchasePrice: '500000',
           currentValue: '600000'
         },
@@ -124,6 +125,7 @@ export default function Settings() {
           state: 'CA',
           zipCode: '94102',
           propertyType: 'house',
+          totalUnits: '1',
           purchasePrice: '800000',
           currentValue: '900000'
         }

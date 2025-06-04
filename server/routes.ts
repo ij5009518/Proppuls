@@ -704,6 +704,7 @@ export function registerRoutes(app: Express) {
                 city: record.city,
                 state: record.state,
                 zipCode: record.zipCode,
+                totalUnits: parseInt(record.totalUnits) || 1,
                 propertyType: record.propertyType || 'apartment',
                 purchasePrice: parseFloat(record.purchasePrice) || 0,
                 currentValue: parseFloat(record.currentValue) || 0

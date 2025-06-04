@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, Bell, Search, Settings, User, LogOut } from "lucide-react";
+import { Menu, Bell, Search, Settings, User, LogOut, Mail, Calendar, ListTodo, Bot } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -112,9 +112,36 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
                   <span>Users</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>General Settings</span>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>General Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/email-manager">
+                  <Mail className="mr-2 h-4 w-4" />
+                  <span>Email Manager</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/calendar">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  <span>Calendar</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/tasks">
+                  <ListTodo className="mr-2 h-4 w-4" />
+                  <span>Tasks</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/ai-assistant">
+                  <Bot className="mr-2 h-4 w-4" />
+                  <span>AI Assistant</span>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
