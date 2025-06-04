@@ -80,7 +80,7 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
         </div>
         
         {/* Right section - Controls */}
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+        <div className="flex-shrink-0 ml-auto">
           <div className="flex items-center space-x-3">
           {/* Notifications */}
           <div className="relative">
