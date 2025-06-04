@@ -74,14 +74,12 @@ const menuItems: MenuItem[] = [
     icon: Wrench,
   },
   {
-    title: 'Vendors',
-    url: '/vendors',
-    icon: Store,
-  },
-  {
     title: 'Expenses',
     url: '/expenses',
     icon: DollarSign,
+    subItems: [
+      { title: 'Vendors', url: '/vendors' }
+    ]
   },
   {
     title: 'Financials',
