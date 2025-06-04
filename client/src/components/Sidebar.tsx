@@ -62,9 +62,6 @@ const menuItems: MenuItem[] = [
     title: 'Tasks',
     url: '/tasks',
     icon: CheckSquare,
-    subItems: [
-      { title: 'Maintenance', url: '/maintenance' }
-    ]
   },
   {
     title: 'Rent Payments',

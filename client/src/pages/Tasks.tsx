@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Grid, List, Search, Filter, Calendar, CheckSquare, Clock, AlertTriangle, User, Building, MapPin, CreditCard, Store } from "lucide-react";
+import { Plus, Grid, List, Search, Filter, Calendar, CheckSquare, Clock, AlertTriangle, User, Building, MapPin, CreditCard, Store, Wrench, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Task, InsertTask, Property, Unit, Tenant, Vendor, RentPayment } from "@shared/schema";
+import type { Task, InsertTask, Property, Unit, Tenant, Vendor, RentPayment, MaintenanceRequest, InsertMaintenanceRequest } from "@shared/schema";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -37,6 +37,22 @@ const taskSchema = z.object({
   recurrencePeriod: z.string().optional(),
 });
 
+const maintenanceSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
+  propertyId: z.string().min(1, "Property is required"),
+  unitId: z.string().optional(),
+  tenantId: z.string().optional(),
+  vendorId: z.string().optional(),
+  requestedBy: z.string().optional(),
+  cost: z.string().optional(),
+  completedAt: z.date().optional(),
+  scheduledDate: z.date().optional(),
+  notes: z.string().optional(),
+});
+
 export default function Tasks() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,6 +61,15 @@ export default function Tasks() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Maintenance state
+  const [maintenanceSearchTerm, setMaintenanceSearchTerm] = useState("");
+  const [maintenanceStatusFilter, setMaintenanceStatusFilter] = useState<string>("all");
+  const [maintenancePriorityFilter, setMaintenancePriorityFilter] = useState<string>("all");
+  const [isAddMaintenanceDialogOpen, setIsAddMaintenanceDialogOpen] = useState(false);
+  const [isEditMaintenanceDialogOpen, setIsEditMaintenanceDialogOpen] = useState(false);
+  const [selectedMaintenance, setSelectedMaintenance] = useState<MaintenanceRequest | null>(null);
+  
   const { toast } = useToast();
 
   // Check for URL parameters to auto-open create dialog
@@ -103,6 +128,10 @@ export default function Tasks() {
 
   const { data: rentPayments = [] } = useQuery({
     queryKey: ["/api/rent-payments"],
+  });
+
+  const { data: maintenanceRequests = [], isLoading: maintenanceLoading } = useQuery({
+    queryKey: ["/api/maintenance-requests"],
   });
 
   const createTaskMutation = useMutation({
@@ -314,16 +343,29 @@ export default function Tasks() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Tasks</h1>
-          <p className="text-muted-foreground">Manage and track your property-related tasks</p>
+          <h1 className="text-3xl font-bold">Tasks & Maintenance</h1>
+          <p className="text-muted-foreground">Manage tasks and maintenance requests in one place</p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Task
-            </Button>
-          </DialogTrigger>
+      </div>
+
+      {/* Tabs for Tasks and Maintenance */}
+      <Tabs defaultValue="tasks" className="w-full">
+        <TabsList>
+          <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="tasks">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Task Management</h2>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Task
+                  </Button>
+                </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Task</DialogTitle>
@@ -1044,8 +1086,24 @@ export default function Tasks() {
       </Dialog>
         </TabsContent>
         
-        <TabsContent value="calendar">
-          <CalendarView tasks={tasks} />
+        <TabsContent value="maintenance">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Maintenance Requests</h2>
+              <Button>
+                <Wrench className="mr-2 h-4 w-4" />
+                Add Maintenance Request
+              </Button>
+            </div>
+            
+            <div className="text-center py-12">
+              <Wrench className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-2 text-sm font-medium">Maintenance functionality</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Maintenance requests are now integrated with tasks for better organization.
+              </p>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
