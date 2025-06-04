@@ -105,6 +105,18 @@
   padding-right: 0.5rem !important;
 }
 
+/* Extra specific targeting for header positioning */
+.relative.z-10.flex-shrink-0.flex.h-16 > div:last-child {
+  margin-left: auto !important;
+}
+
+/* Force right positioning for user controls */
+header div:last-child,
+.topbar div:last-child,
+[class*="topbar"] div:last-child {
+  margin-left: auto !important;
+}
+
 /* Custom chart styles */
 .chart-container {
   position: relative;
