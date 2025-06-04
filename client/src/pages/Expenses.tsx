@@ -38,15 +38,15 @@ const expenseSchema = z.object({
 
 const vendorSchema = z.object({
   name: z.string().min(1, "Vendor name is required"),
-  contactPerson: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  zipCode: z.string().optional(),
-  category: z.string().min(1, "Category is required"),
-  notes: z.string().optional(),
+  phone: z.string().min(1, "Phone is required"),
+  specialty: z.string().min(1, "Specialty is required"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  zipCode: z.string().min(1, "Zip code is required"),
+  rating: z.string().optional(),
+  isActive: z.boolean(),
 });
 
 type ExpenseFormData = z.infer<typeof expenseSchema>;
@@ -110,6 +110,10 @@ export default function Expenses() {
     queryKey: ["/api/expenses"],
   });
 
+  const { data: vendors = [], isLoading: vendorsLoading } = useQuery<Vendor[]>({
+    queryKey: ["/api/vendors"],
+  });
+
   // Handle URL parameters for property integration
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -151,6 +155,39 @@ export default function Expenses() {
       isRecurring: false,
       recurrencePeriod: "monthly",
       vendorName: "",
+      notes: "",
+    },
+  });
+
+  // Vendor forms
+  const createVendorForm = useForm<VendorFormData>({
+    resolver: zodResolver(vendorSchema),
+    defaultValues: {
+      name: "",
+      contactPerson: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      category: "other",
+      notes: "",
+    },
+  });
+
+  const editVendorForm = useForm<VendorFormData>({
+    resolver: zodResolver(vendorSchema),
+    defaultValues: {
+      name: "",
+      contactPerson: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      category: "other",
       notes: "",
     },
   });
@@ -206,6 +243,48 @@ export default function Expenses() {
     },
   });
 
+  // Vendor mutations
+  const createVendorMutation = useMutation({
+    mutationFn: async (data: InsertVendor) => {
+      return apiRequest("POST", "/api/vendors", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
+      toast({ title: "Success", description: "Vendor created successfully" });
+      setIsCreateVendorDialogOpen(false);
+      createVendorForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const updateVendorMutation = useMutation({
+    mutationFn: async (data: { id: string; vendor: Partial<InsertVendor> }) => {
+      return apiRequest("PATCH", `/api/vendors/${data.id}`, data.vendor);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
+      toast({ title: "Success", description: "Vendor updated successfully" });
+      setIsEditVendorDialogOpen(false);
+      setSelectedVendor(null);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteVendorMutation = useMutation({
+    mutationFn: async (id: string) => apiRequest("DELETE", `/api/vendors/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
+      toast({ title: "Success", description: "Vendor deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   const filteredExpenses = expenses.filter((expense) => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -226,6 +305,15 @@ export default function Expenses() {
       default: return sum + amount;
     }
   }, 0);
+
+  // Vendor filtering
+  const filteredVendors = vendors.filter((vendor) => {
+    const matchesSearch = vendor.name.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
+                         (vendor.contactPerson && vendor.contactPerson.toLowerCase().includes(vendorSearchTerm.toLowerCase())) ||
+                         (vendor.email && vendor.email.toLowerCase().includes(vendorSearchTerm.toLowerCase()));
+    const matchesCategory = selectedVendorCategory === "all" || vendor.category === selectedVendorCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const onCreateSubmit = (data: ExpenseFormData) => {
     const expenseData: InsertExpense = {
@@ -286,6 +374,66 @@ export default function Expenses() {
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this expense?")) {
       deleteMutation.mutate(id);
+    }
+  };
+
+  // Vendor handlers
+  const onCreateVendorSubmit = (data: VendorFormData) => {
+    const vendorData: InsertVendor = {
+      name: data.name,
+      contactPerson: data.contactPerson,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      zipCode: data.zipCode,
+      category: data.category,
+      notes: data.notes,
+    };
+
+    createVendorMutation.mutate(vendorData);
+  };
+
+  const onEditVendorSubmit = (data: VendorFormData) => {
+    if (!selectedVendor) return;
+
+    const vendorData: Partial<InsertVendor> = {
+      name: data.name,
+      contactPerson: data.contactPerson,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      zipCode: data.zipCode,
+      category: data.category,
+      notes: data.notes,
+    };
+
+    updateVendorMutation.mutate({ id: selectedVendor.id, vendor: vendorData });
+  };
+
+  const handleEditVendor = (vendor: Vendor) => {
+    setSelectedVendor(vendor);
+    editVendorForm.reset({
+      name: vendor.name,
+      contactPerson: vendor.contactPerson || "",
+      email: vendor.email || "",
+      phone: vendor.phone || "",
+      address: vendor.address || "",
+      city: vendor.city || "",
+      state: vendor.state || "",
+      zipCode: vendor.zipCode || "",
+      category: vendor.category,
+      notes: vendor.notes || "",
+    });
+    setIsEditVendorDialogOpen(true);
+  };
+
+  const handleDeleteVendor = (id: string) => {
+    if (confirm("Are you sure you want to delete this vendor?")) {
+      deleteVendorMutation.mutate(id);
     }
   };
 
