@@ -311,20 +311,38 @@ export default function Properties() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<InsertProperty> }) =>
       apiRequest("PATCH", `/api/properties/${id}`, data),
+    onMutate: async ({ id, data }) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ["/api/properties"] });
+
+      // Snapshot the previous value
+      const previousProperties = queryClient.getQueryData<Property[]>(["/api/properties"]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(["/api/properties"], (old: Property[] = []) =>
+        old.map(property => 
+          property.id === id ? { ...property, ...data, updatedAt: new Date() } : property
+        )
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousProperties };
+    },
     onSuccess: (updatedProperty) => {
-      // Update the specific property in the cache while maintaining order
-      queryClient.setQueryData(["/api/properties"], (oldData: Property[] = []) => {
-        if (!oldData || !Array.isArray(oldData)) return oldData;
-        return oldData.map(property => 
-          property && property.id === updatedProperty.id ? updatedProperty : property
-        );
-      });
       setIsEditDialogOpen(false);
       setSelectedProperty(null);
       toast({ title: "Property updated successfully" });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousProperties) {
+        queryClient.setQueryData(["/api/properties"], context.previousProperties);
+      }
       toast({ title: "Failed to update property", description: error.message, variant: "destructive" });
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure we have the latest data
+      queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
     },
   });
 
