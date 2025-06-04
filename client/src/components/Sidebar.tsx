@@ -17,6 +17,7 @@ import {
   Calendar,
   Bot,
   Settings,
+  Mail,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -85,6 +86,11 @@ const menuItems: MenuItem[] = [
     title: 'AI Assistant',
     url: '/ai-assistant',
     icon: Bot,
+  },
+  {
+    title: 'Email Manager',
+    url: '/email-manager',
+    icon: Mail,
   },
   {
     title: 'Settings',

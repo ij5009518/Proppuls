@@ -28,6 +28,7 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import NotFound from '@/pages/not-found';
+import EmailManager from '@/pages/EmailManager';
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -80,6 +81,7 @@ function AuthenticatedApp() {
         <Route path="/expenses/:category?" component={Expenses} />
         <Route path="/calendar" component={Calendar} />
         <Route path="/ai-assistant" component={AIAssistant} />
+        <Route path="/email-manager" component={EmailManager} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
