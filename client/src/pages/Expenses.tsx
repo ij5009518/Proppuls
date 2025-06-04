@@ -350,7 +350,7 @@ export default function Expenses() {
               <h2 className="text-xl font-semibold">Expense Management</h2>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Button>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Expense
                   </Button>
@@ -929,7 +929,7 @@ export default function Expenses() {
               <h2 className="text-xl font-semibold">Vendor Management</h2>
               <Dialog open={isCreateVendorDialogOpen} onOpenChange={setIsCreateVendorDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-green-600 hover:bg-green-700">
+                  <Button>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Vendor
                   </Button>

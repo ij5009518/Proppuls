@@ -1148,7 +1148,7 @@ export default function Properties() {
                   <h3 className="text-lg font-semibold">Property Expenses & Taxes</h3>
                   <Dialog open={isCreateExpenseDialogOpen} onOpenChange={setIsCreateExpenseDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      <Button size="sm">
                         <Plus className="h-4 w-4 mr-2" />
                         Add Expense
                       </Button>

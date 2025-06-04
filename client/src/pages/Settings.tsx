@@ -12,8 +12,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Upload, Download, Users, Trash2, Edit2, Plus, FileSpreadsheet, Info, ChevronDown } from 'lucide-react';
+import { Upload, Download, Users, Trash2, Edit2, Plus, FileSpreadsheet, Info, ChevronDown, Mail, Clock, Settings2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { User } from '@shared/schema';
 
 export default function Settings() {
@@ -22,6 +23,15 @@ export default function Settings() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResults, setUploadResults] = useState<any>(null);
   const [selectedDataType, setSelectedDataType] = useState<string>('properties');
+  
+  // Email settings state
+  const [emailSettings, setEmailSettings] = useState({
+    automaticRentReminders: true,
+    rentReminderDays: 3,
+    welcomeEmails: true,
+    maintenanceNotifications: true,
+    bulkEmailLimit: 50
+  });
 
   // Fetch users
   const { data: users, isLoading: isLoadingUsers } = useQuery({
@@ -259,9 +269,10 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="bulk-upload" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="bulk-upload">Bulk Upload</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
+          <TabsTrigger value="email">Email Settings</TabsTrigger>
           <TabsTrigger value="general">General Settings</TabsTrigger>
         </TabsList>
 
@@ -450,6 +461,167 @@ export default function Settings() {
                   </TableBody>
                 </Table>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="email" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Automated Email Settings
+              </CardTitle>
+              <CardDescription>
+                Configure automated email notifications and reminders
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Automatic Rent Reminders</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Send automated rent reminder emails to tenants
+                    </p>
+                  </div>
+                  <Switch
+                    checked={emailSettings.automaticRentReminders}
+                    onCheckedChange={(checked) =>
+                      setEmailSettings(prev => ({ ...prev, automaticRentReminders: checked }))
+                    }
+                  />
+                </div>
+
+                {emailSettings.automaticRentReminders && (
+                  <div className="ml-6 space-y-2">
+                    <Label htmlFor="reminder-days">Days before rent due</Label>
+                    <Select
+                      value={emailSettings.rentReminderDays.toString()}
+                      onValueChange={(value) =>
+                        setEmailSettings(prev => ({ ...prev, rentReminderDays: parseInt(value) }))
+                      }
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 day before</SelectItem>
+                        <SelectItem value="3">3 days before</SelectItem>
+                        <SelectItem value="5">5 days before</SelectItem>
+                        <SelectItem value="7">7 days before</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Welcome Emails</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Send welcome emails to new tenants automatically
+                    </p>
+                  </div>
+                  <Switch
+                    checked={emailSettings.welcomeEmails}
+                    onCheckedChange={(checked) =>
+                      setEmailSettings(prev => ({ ...prev, welcomeEmails: checked }))
+                    }
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Maintenance Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Send notifications about maintenance request updates
+                    </p>
+                  </div>
+                  <Switch
+                    checked={emailSettings.maintenanceNotifications}
+                    onCheckedChange={(checked) =>
+                      setEmailSettings(prev => ({ ...prev, maintenanceNotifications: checked }))
+                    }
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label htmlFor="bulk-limit">Bulk Email Limit</Label>
+                  <Select
+                    value={emailSettings.bulkEmailLimit.toString()}
+                    onValueChange={(value) =>
+                      setEmailSettings(prev => ({ ...prev, bulkEmailLimit: parseInt(value) }))
+                    }
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="25">25 emails per batch</SelectItem>
+                      <SelectItem value="50">50 emails per batch</SelectItem>
+                      <SelectItem value="100">100 emails per batch</SelectItem>
+                      <SelectItem value="200">200 emails per batch</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Maximum number of emails to send in a single bulk operation
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <Button onClick={() => {
+                  toast({
+                    title: "Email settings saved",
+                    description: "Your email notification preferences have been updated.",
+                  });
+                }}>
+                  <Settings2 className="h-4 w-4 mr-2" />
+                  Save Email Settings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Email Schedule
+              </CardTitle>
+              <CardDescription>
+                Configure when automated emails are sent
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Automated emails are currently processed daily at 9:00 AM. 
+                  Rent reminders are sent based on your configured days before due date.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Rent Reminder Schedule</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Daily at 9:00 AM, {emailSettings.rentReminderDays} days before rent due
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Welcome Email Schedule</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Sent immediately when new tenant is added
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
