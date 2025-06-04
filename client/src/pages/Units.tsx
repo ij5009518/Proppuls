@@ -196,6 +196,29 @@ export default function Units() {
     }
   };
 
+  const onTaskSubmit = (data: TaskFormData) => {
+    if (selectedUnit) {
+      const taskData: InsertTask = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        priority: data.priority as "low" | "medium" | "high" | "urgent",
+        status: "pending",
+        propertyId: selectedUnit.propertyId,
+        unitId: selectedUnit.id,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        assignedTo: null,
+        completedAt: null,
+        maintenanceRequestId: null,
+        expenseId: null,
+        tenantId: null,
+        vendorId: null,
+        rentPaymentId: null,
+      };
+      createTaskMutation.mutate(taskData);
+    }
+  };
+
   const getPropertyName = (propertyId: string) => {
     const property = properties.find(p => p.id === propertyId);
     return property?.name || "Unknown Property";
