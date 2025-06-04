@@ -10,6 +10,12 @@ export function registerRoutes(app: Express) {
   // Create HTTP server
   const server = createServer(app);
 
+  // Configure multer for file uploads
+  const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  });
+
   // Add a basic API route for testing
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", message: "Server is running" });
@@ -505,6 +511,139 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Bulk upload endpoint
+  app.post("/api/bulk-upload", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const csvContent = req.file.buffer.toString('utf8');
+      
+      // Parse CSV
+      const records = parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      });
+
+      const results = {
+        successCount: 0,
+        errorCount: 0,
+        propertiesCreated: 0,
+        unitsCreated: 0,
+        tenantsCreated: 0,
+        expensesCreated: 0,
+        errors: []
+      };
+
+      // Process each record
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i];
+        try {
+          switch (record.type?.toLowerCase()) {
+            case 'property':
+              await storage.createProperty({
+                name: record.name,
+                address: record.address,
+                city: record.city,
+                state: record.state,
+                zipCode: record.zipCode,
+                propertyType: record.propertyType || 'apartment',
+                purchasePrice: parseFloat(record.purchasePrice) || 0,
+                currentValue: parseFloat(record.currentValue) || 0
+              });
+              results.propertiesCreated++;
+              break;
+
+            case 'unit':
+              // Find property by name
+              const properties = await storage.getAllProperties();
+              const property = properties.find(p => p.name === record.propertyName);
+              if (!property) {
+                throw new Error(`Property "${record.propertyName}" not found`);
+              }
+              
+              await storage.createUnit({
+                propertyId: property.id,
+                unitNumber: record.unitNumber,
+                bedrooms: parseInt(record.bedrooms) || 0,
+                bathrooms: parseFloat(record.bathrooms) || 0,
+                squareFootage: parseInt(record.squareFootage) || 0,
+                monthlyRent: parseFloat(record.monthlyRent) || 0,
+                isOccupied: false
+              });
+              results.unitsCreated++;
+              break;
+
+            case 'tenant':
+              // Find property and unit
+              const allProperties = await storage.getAllProperties();
+              const tenantProperty = allProperties.find(p => p.name === record.propertyName);
+              if (!tenantProperty) {
+                throw new Error(`Property "${record.propertyName}" not found`);
+              }
+              
+              const units = await storage.getAllUnits();
+              const unit = units.find(u => u.propertyId === tenantProperty.id && u.unitNumber === record.unitNumber);
+              if (!unit) {
+                throw new Error(`Unit "${record.unitNumber}" not found in property "${record.propertyName}"`);
+              }
+
+              await storage.createTenant({
+                firstName: record.firstName,
+                lastName: record.lastName,
+                email: record.email,
+                phone: record.phone,
+                unitId: unit.id,
+                leaseStart: new Date(record.leaseStart),
+                leaseEnd: new Date(record.leaseEnd),
+                monthlyRent: parseFloat(record.monthlyRent) || 0,
+                securityDeposit: parseFloat(record.securityDeposit) || 0
+              });
+              results.tenantsCreated++;
+              break;
+
+            case 'expense':
+              // Find property
+              const expenseProperties = await storage.getAllProperties();
+              const expenseProperty = expenseProperties.find(p => p.name === record.propertyName);
+              if (!expenseProperty) {
+                throw new Error(`Property "${record.propertyName}" not found`);
+              }
+
+              await storage.createExpense({
+                propertyId: expenseProperty.id,
+                category: record.category,
+                amount: parseFloat(record.amount) || 0,
+                description: record.description,
+                date: new Date(record.date),
+                vendor: record.vendor
+              });
+              results.expensesCreated++;
+              break;
+
+            default:
+              throw new Error(`Unknown record type: ${record.type}`);
+          }
+          
+          results.successCount++;
+        } catch (error) {
+          results.errorCount++;
+          results.errors.push(`Row ${i + 1}: ${error.message}`);
+        }
+      }
+
+      res.json(results);
+    } catch (error) {
+      console.error("Bulk upload error:", error);
+      res.status(500).json({ 
+        message: "Bulk upload failed",
+        error: error.message 
+      });
     }
   });
 
