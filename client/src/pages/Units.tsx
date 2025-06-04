@@ -15,7 +15,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Unit, InsertUnit, Property, Tenant } from "@shared/schema";
+import type { Unit, InsertUnit, Property, Tenant, Task, InsertTask } from "@shared/schema";
 
 const unitSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
@@ -27,12 +27,22 @@ const unitSchema = z.object({
   squareFootage: z.number().optional(),
 });
 
+const taskSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  category: z.string().min(1, "Category is required"),
+  priority: z.string().min(1, "Priority is required"),
+  dueDate: z.string().optional(),
+});
+
 type UnitFormData = z.infer<typeof unitSchema>;
+type TaskFormData = z.infer<typeof taskSchema>;
 
 export default function Units() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,6 +86,17 @@ export default function Units() {
     },
   });
 
+  const taskForm = useForm<TaskFormData>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      category: "general",
+      priority: "medium",
+      dueDate: "",
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: (data: InsertUnit) => apiRequest("POST", "/api/units", data),
     onSuccess: () => {
@@ -112,6 +133,19 @@ export default function Units() {
     },
     onError: () => {
       toast({ title: "Failed to delete unit", variant: "destructive" });
+    },
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      setIsTaskDialogOpen(false);
+      taskForm.reset();
+      toast({ title: "Task created successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to create task", variant: "destructive" });
     },
   });
 
@@ -508,6 +542,7 @@ export default function Units() {
                   <Button
                     size="sm"
                     variant="outline"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsViewDialogOpen(false);
