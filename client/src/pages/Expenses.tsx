@@ -35,7 +35,6 @@ const expenseSchema = z.object({
   accountNumber: z.string().optional(),
   policyEffectiveDate: z.date().optional(),
   policyExpirationDate: z.date().optional(),
-  attachmentUrl: z.string().optional(),
 });
 
 const vendorSchema = z.object({
@@ -120,7 +119,6 @@ export default function Expenses() {
       vendorName: "",
       notes: "",
       accountNumber: "",
-      attachmentUrl: "",
     },
   });
 
@@ -136,7 +134,6 @@ export default function Expenses() {
       vendorName: "",
       notes: "",
       accountNumber: "",
-      attachmentUrl: "",
     },
   });
 
@@ -367,7 +364,6 @@ export default function Expenses() {
       accountNumber: data.accountNumber,
       policyEffectiveDate: data.policyEffectiveDate,
       policyExpirationDate: data.policyExpirationDate,
-      attachmentUrl: data.attachmentUrl,
     };
 
     createMutation.mutate(expenseData);
@@ -391,7 +387,6 @@ export default function Expenses() {
       accountNumber: data.accountNumber,
       policyEffectiveDate: data.policyEffectiveDate,
       policyExpirationDate: data.policyExpirationDate,
-      attachmentUrl: data.attachmentUrl,
     };
 
     updateMutation.mutate({ id: selectedExpense.id, expense: expenseData });
