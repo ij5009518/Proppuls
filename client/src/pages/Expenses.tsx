@@ -65,7 +65,7 @@ const expenseCategories = {
   travel: "Travel & Transportation"
 };
 
-const vendorCategories = {
+const vendorSpecialties = {
   maintenance: "Maintenance & Repairs",
   cleaning: "Cleaning Services",
   landscaping: "Landscaping",
@@ -164,15 +164,15 @@ export default function Expenses() {
     resolver: zodResolver(vendorSchema),
     defaultValues: {
       name: "",
-      contactPerson: "",
       email: "",
       phone: "",
+      specialty: "other",
       address: "",
       city: "",
       state: "",
       zipCode: "",
-      category: "other",
-      notes: "",
+      rating: "",
+      isActive: true,
     },
   });
 
@@ -180,15 +180,15 @@ export default function Expenses() {
     resolver: zodResolver(vendorSchema),
     defaultValues: {
       name: "",
-      contactPerson: "",
       email: "",
       phone: "",
+      specialty: "other",
       address: "",
       city: "",
       state: "",
       zipCode: "",
-      category: "other",
-      notes: "",
+      rating: "",
+      isActive: true,
     },
   });
 
@@ -309,9 +309,9 @@ export default function Expenses() {
   // Vendor filtering
   const filteredVendors = vendors.filter((vendor) => {
     const matchesSearch = vendor.name.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
-                         (vendor.contactPerson && vendor.contactPerson.toLowerCase().includes(vendorSearchTerm.toLowerCase())) ||
+                         vendor.specialty.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
                          (vendor.email && vendor.email.toLowerCase().includes(vendorSearchTerm.toLowerCase()));
-    const matchesCategory = selectedVendorCategory === "all" || vendor.category === selectedVendorCategory;
+    const matchesCategory = selectedVendorCategory === "all" || vendor.specialty === selectedVendorCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -381,15 +381,15 @@ export default function Expenses() {
   const onCreateVendorSubmit = (data: VendorFormData) => {
     const vendorData: InsertVendor = {
       name: data.name,
-      contactPerson: data.contactPerson,
-      email: data.email,
+      email: data.email || "",
       phone: data.phone,
+      specialty: data.specialty,
       address: data.address,
       city: data.city,
       state: data.state,
       zipCode: data.zipCode,
-      category: data.category,
-      notes: data.notes,
+      rating: data.rating || null,
+      isActive: data.isActive,
     };
 
     createVendorMutation.mutate(vendorData);
@@ -400,15 +400,15 @@ export default function Expenses() {
 
     const vendorData: Partial<InsertVendor> = {
       name: data.name,
-      contactPerson: data.contactPerson,
-      email: data.email,
+      email: data.email || "",
       phone: data.phone,
+      specialty: data.specialty,
       address: data.address,
       city: data.city,
       state: data.state,
       zipCode: data.zipCode,
-      category: data.category,
-      notes: data.notes,
+      rating: data.rating || null,
+      isActive: data.isActive,
     };
 
     updateVendorMutation.mutate({ id: selectedVendor.id, vendor: vendorData });
@@ -418,15 +418,15 @@ export default function Expenses() {
     setSelectedVendor(vendor);
     editVendorForm.reset({
       name: vendor.name,
-      contactPerson: vendor.contactPerson || "",
       email: vendor.email || "",
-      phone: vendor.phone || "",
-      address: vendor.address || "",
-      city: vendor.city || "",
-      state: vendor.state || "",
-      zipCode: vendor.zipCode || "",
-      category: vendor.category,
-      notes: vendor.notes || "",
+      phone: vendor.phone,
+      specialty: vendor.specialty,
+      address: vendor.address,
+      city: vendor.city,
+      state: vendor.state,
+      zipCode: vendor.zipCode,
+      rating: vendor.rating || "",
+      isActive: vendor.isActive,
     });
     setIsEditVendorDialogOpen(true);
   };
@@ -445,10 +445,10 @@ export default function Expenses() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">All Expenses</h1>
+          <h1 className="text-3xl font-bold">Expenses & Vendors</h1>
           <div className="space-y-1">
             <p className="text-muted-foreground">
-              Track and manage all property expenses with recurring payment options
+              Track expenses and manage vendors in one place
             </p>
             {(() => {
               const urlParams = new URLSearchParams(window.location.search);
@@ -477,14 +477,15 @@ export default function Expenses() {
             })()}
           </div>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Expense
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+        <div className="flex gap-2">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Expense
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Expense</DialogTitle>
             </DialogHeader>
@@ -1148,6 +1149,261 @@ export default function Expenses() {
           </Form>
         </DialogContent>
       </Dialog>
+        </div>
+      </div>
+
+      {/* Add tabs for Expenses and Vendors */}
+      <Tabs defaultValue="expenses" className="w-full">
+        <TabsList>
+          <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="vendors">Vendors</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="expenses">
+          {/* Existing expenses content */}
+          <div className="space-y-4">
+            {/* Add existing expense filters and table here */}
+            <p>Expenses content will be moved here</p>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="vendors">
+          {/* Vendors content */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Vendor Management</h3>
+              <Dialog open={isCreateVendorDialogOpen} onOpenChange={setIsCreateVendorDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Store className="h-4 w-4 mr-2" />
+                    Add Vendor
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Vendor</DialogTitle>
+                  </DialogHeader>
+                  <Form {...createVendorForm}>
+                    <form onSubmit={createVendorForm.handleSubmit(onCreateVendorSubmit)} className="space-y-4">
+                      <FormField
+                        control={createVendorForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Vendor Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter vendor name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={createVendorForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input placeholder="vendor@example.com" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={createVendorForm.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone</FormLabel>
+                              <FormControl>
+                                <Input placeholder="(555) 123-4567" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <FormField
+                        control={createVendorForm.control}
+                        name="specialty"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Specialty</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select specialty" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {Object.entries(vendorSpecialties).map(([key, label]) => (
+                                  <SelectItem key={key} value={key}>
+                                    {label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={createVendorForm.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Street address" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          control={createVendorForm.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>City</FormLabel>
+                              <FormControl>
+                                <Input placeholder="City" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={createVendorForm.control}
+                          name="state"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>State</FormLabel>
+                              <FormControl>
+                                <Input placeholder="State" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={createVendorForm.control}
+                          name="zipCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Zip Code</FormLabel>
+                              <FormControl>
+                                <Input placeholder="12345" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end space-x-3 pt-4">
+                        <Button type="button" variant="outline" onClick={() => setIsCreateVendorDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={createVendorMutation.isPending}>
+                          {createVendorMutation.isPending ? "Creating..." : "Add Vendor"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </div>
+            
+            {/* Vendor filters */}
+            <div className="flex gap-4">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Search vendors..."
+                  value={vendorSearchTerm}
+                  onChange={(e) => setVendorSearchTerm(e.target.value)}
+                />
+              </div>
+              <Select value={selectedVendorCategory} onValueChange={setSelectedVendorCategory}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by specialty" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Specialties</SelectItem>
+                  {Object.entries(vendorSpecialties).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Vendor grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredVendors.map((vendor) => (
+                <Card key={vendor.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
+                          <Store className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{vendor.name}</CardTitle>
+                          <Badge variant="outline">{vendorSpecialties[vendor.specialty] || vendor.specialty}</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {vendor.email && (
+                        <div className="flex items-center space-x-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground truncate">{vendor.email}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{vendor.phone}</span>
+                      </div>
+
+                      <div className="flex items-start space-x-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <span className="text-muted-foreground">
+                          {vendor.address}, {vendor.city}, {vendor.state} {vendor.zipCode}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-end space-x-2 pt-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditVendor(vendor)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteVendor(vendor.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
