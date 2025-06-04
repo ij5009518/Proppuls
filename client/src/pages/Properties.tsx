@@ -497,7 +497,7 @@ export default function Properties() {
 
 
 
-  const filteredProperties = properties.filter(
+  const filteredProperties = (localProperties.length > 0 ? localProperties : properties).filter(
     (property) =>
       property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
