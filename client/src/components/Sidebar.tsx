@@ -74,14 +74,13 @@ const menuItems: MenuItem[] = [
     icon: DollarSign,
   },
   {
-    title: 'Financials',
-    url: '/financials',
-    icon: FileText,
-  },
-  {
     title: 'Reports',
     url: '/reports',
     icon: FileText,
+    subItems: [
+      { title: 'Financial Reports', url: '/financials' },
+      { title: 'Custom Reports', url: '/reports' }
+    ]
   },
   {
     title: 'Mortgages',
