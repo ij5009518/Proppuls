@@ -201,6 +201,12 @@ export default function Properties() {
       isRecurring: false,
       vendorName: "",
       notes: "",
+      startDate: "",
+      endDate: "",
+      accountNumber: "",
+      policyEffectiveDate: "",
+      policyExpirationDate: "",
+      recurrencePeriod: "monthly",
     },
   });
 
@@ -421,6 +427,12 @@ export default function Properties() {
       isRecurring: data.isRecurring,
       vendorName: data.vendorName || undefined,
       notes: data.notes || undefined,
+      startDate: data.startDate ? new Date(data.startDate) : undefined,
+      endDate: data.endDate ? new Date(data.endDate) : undefined,
+      accountNumber: data.accountNumber || undefined,
+      policyEffectiveDate: data.policyEffectiveDate ? new Date(data.policyEffectiveDate) : undefined,
+      policyExpirationDate: data.policyExpirationDate ? new Date(data.policyExpirationDate) : undefined,
+      recurrencePeriod: data.recurrencePeriod || undefined,
     };
     createExpenseMutation.mutate(expenseData);
   };
@@ -1230,6 +1242,139 @@ export default function Properties() {
                                   </FormItem>
                                 )}
                               />
+                              {/* Conditional fields based on category */}
+                              {(expenseForm.watch("category") === "insurance" || expenseForm.watch("category") === "taxes") && (
+                                <>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <FormField
+                                      control={expenseForm.control}
+                                      name="policyEffectiveDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            {expenseForm.watch("category") === "insurance" ? "Policy Effective Date" : "Tax Period Start"}
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input type="date" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={expenseForm.control}
+                                      name="policyExpirationDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            {expenseForm.watch("category") === "insurance" ? "Policy Expiration Date" : "Tax Period End"}
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input type="date" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  <FormField
+                                    control={expenseForm.control}
+                                    name="accountNumber"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>
+                                          {expenseForm.watch("category") === "insurance" ? "Policy Number" : "Account Number"}
+                                        </FormLabel>
+                                        <FormControl>
+                                          <Input placeholder={expenseForm.watch("category") === "insurance" ? "Policy number" : "Account number"} {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </>
+                              )}
+                              
+                              {/* Recurring expense fields */}
+                              {expenseForm.watch("isRecurring") && (
+                                <>
+                                  <div className="grid grid-cols-3 gap-4">
+                                    <FormField
+                                      control={expenseForm.control}
+                                      name="recurrencePeriod"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Frequency</FormLabel>
+                                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                              <SelectTrigger>
+                                                <SelectValue placeholder="Select frequency" />
+                                              </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                              <SelectItem value="monthly">Monthly</SelectItem>
+                                              <SelectItem value="quarterly">Quarterly</SelectItem>
+                                              <SelectItem value="yearly">Yearly</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={expenseForm.control}
+                                      name="startDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Start Date</FormLabel>
+                                          <FormControl>
+                                            <Input type="date" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={expenseForm.control}
+                                      name="endDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>End Date (Optional)</FormLabel>
+                                          <FormControl>
+                                            <Input type="date" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              
+                              {/* Recurring expense toggle */}
+                              <FormField
+                                control={expenseForm.control}
+                                name="isRecurring"
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                      <FormLabel className="text-base">Recurring Expense</FormLabel>
+                                      <div className="text-sm text-muted-foreground">
+                                        This expense repeats on a regular schedule
+                                      </div>
+                                    </div>
+                                    <FormControl>
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        className="rounded border border-input"
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              
                               <FormField
                                 control={expenseForm.control}
                                 name="notes"
