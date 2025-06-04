@@ -4,11 +4,18 @@ import { Progress } from "@/components/ui/progress";
 const expenseColors: Record<string, string> = {
   maintenance: "bg-blue-500",
   utilities: "bg-green-500",
+  water: "bg-cyan-500",
+  sewer: "bg-teal-500",
+  sanitation: "bg-emerald-500",
   insurance: "bg-purple-500",
   taxes: "bg-orange-500",
   management: "bg-red-500",
   landscaping: "bg-yellow-500",
   repairs: "bg-indigo-500",
+  legal: "bg-slate-500",
+  marketing: "bg-pink-500",
+  supplies: "bg-amber-500",
+  improvements: "bg-violet-500",
   other: "bg-gray-500",
 };
 
