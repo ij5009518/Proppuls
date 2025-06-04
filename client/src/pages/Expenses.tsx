@@ -56,6 +56,9 @@ type VendorFormData = z.infer<typeof vendorSchema>;
 const expenseCategories = {
   maintenance: "Maintenance & Repairs",
   utilities: "Utilities",
+  water: "Water",
+  sewer: "Sewer",
+  sanitation: "Sanitation",
   insurance: "Insurance",
   taxes: "Property Taxes",
   management: "Property Management",
@@ -643,7 +646,7 @@ export default function Expenses() {
                         )}
                       />
 
-                      {(createForm.watch("category") === "insurance" || createForm.watch("category") === "utilities" || createForm.watch("category") === "taxes") && (
+                      {(createForm.watch("category") === "insurance" || createForm.watch("category") === "utilities" || createForm.watch("category") === "water" || createForm.watch("category") === "sewer" || createForm.watch("category") === "sanitation" || createForm.watch("category") === "taxes") && (
                         <>
                           <div className="grid grid-cols-2 gap-4">
                             <FormField
@@ -705,6 +708,44 @@ export default function Expenses() {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>{createForm.watch("category") === "insurance" ? "Policy Expiration Date" : "Tax Period End"}</FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        type="date" 
+                                        value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          )}
+                          {(createForm.watch("category") === "utilities" || createForm.watch("category") === "water" || createForm.watch("category") === "sewer" || createForm.watch("category") === "sanitation") && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={createForm.control}
+                                name="startDate"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Service Period Start</FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        type="date" 
+                                        value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={createForm.control}
+                                name="endDate"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Service Period End</FormLabel>
                                     <FormControl>
                                       <Input 
                                         type="date" 
@@ -1344,7 +1385,7 @@ export default function Expenses() {
                 )}
               />
 
-              {(editForm.watch("category") === "insurance" || editForm.watch("category") === "utilities" || editForm.watch("category") === "taxes") && (
+              {(editForm.watch("category") === "insurance" || editForm.watch("category") === "utilities" || editForm.watch("category") === "water" || editForm.watch("category") === "sewer" || editForm.watch("category") === "sanitation" || editForm.watch("category") === "taxes") && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
@@ -1406,6 +1447,44 @@ export default function Expenses() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>{editForm.watch("category") === "insurance" ? "Policy Expiration Date" : "Tax Period End"}</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="date" 
+                                value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                                onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                  {(editForm.watch("category") === "utilities" || editForm.watch("category") === "water" || editForm.watch("category") === "sewer" || editForm.watch("category") === "sanitation") && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={editForm.control}
+                        name="startDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Service Period Start</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="date" 
+                                value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                                onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={editForm.control}
+                        name="endDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Service Period End</FormLabel>
                             <FormControl>
                               <Input 
                                 type="date" 
