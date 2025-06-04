@@ -258,7 +258,7 @@ export default function Vendors() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No rating</SelectItem>
+                          <SelectItem value="0">No rating</SelectItem>
                           <SelectItem value="1">1 Star</SelectItem>
                           <SelectItem value="2">2 Stars</SelectItem>
                           <SelectItem value="3">3 Stars</SelectItem>
