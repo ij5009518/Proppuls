@@ -57,7 +57,7 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
         </Button>
       )}
       
-      <div className="flex-1 px-4 flex items-center">
+      <div className="flex-1 px-4 flex items-center" data-topbar-layout="true">
         {/* Left section - Title */}
         <div className="flex items-center">
           <h2 className="text-2xl font-semibold text-slate-900 dark:text-foreground">
@@ -80,8 +80,8 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
         </div>
         
         {/* Right section - Controls - All the way to the right */}
-        <div className="flex items-center ml-auto">
-          <div className="flex items-center space-x-4">
+        <div className="flex items-center ml-auto pr-2">
+          <div className="flex items-center space-x-3">
           {/* Notifications */}
           <div className="relative">
             <Button

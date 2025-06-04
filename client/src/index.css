@@ -78,6 +78,33 @@
   }
 }
 
+/* Force TopBar Layout - Override all cached styles */
+[data-topbar-layout="true"] {
+  display: flex !important;
+  flex: 1 !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  align-items: center !important;
+}
+
+[data-topbar-layout="true"] > div:first-child {
+  flex-shrink: 0 !important;
+}
+
+[data-topbar-layout="true"] > div:nth-child(2) {
+  flex: 1 !important;
+  display: flex !important;
+  justify-content: center !important;
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+}
+
+[data-topbar-layout="true"] > div:last-child {
+  flex-shrink: 0 !important;
+  margin-left: auto !important;
+  padding-right: 0.5rem !important;
+}
+
 /* Custom chart styles */
 .chart-container {
   position: relative;
