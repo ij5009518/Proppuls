@@ -12,7 +12,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Upload, Download, Users, Trash2, Edit2, Plus, FileSpreadsheet, Info } from 'lucide-react';
+import { Upload, Download, Users, Trash2, Edit2, Plus, FileSpreadsheet, Info, ChevronDown } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User } from '@shared/schema';
 
 export default function Settings() {
@@ -20,6 +21,7 @@ export default function Settings() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResults, setUploadResults] = useState<any>(null);
+  const [selectedDataType, setSelectedDataType] = useState<string>('properties');
 
   // Fetch users
   const { data: users, isLoading: isLoadingUsers } = useQuery({
@@ -80,51 +82,158 @@ export default function Settings() {
     }
   };
 
+  // Data type options
+  const dataTypeOptions = [
+    { value: 'properties', label: 'Properties' },
+    { value: 'units', label: 'Units' },
+    { value: 'tenants', label: 'Tenants' },
+    { value: 'tasks', label: 'Tasks' },
+    { value: 'expenses', label: 'Expenses' },
+    { value: 'mortgages', label: 'Mortgages' }
+  ];
+
   const downloadSampleFile = () => {
-    const sampleData = [
-      {
-        type: 'property',
-        name: 'Sample Property',
-        address: '123 Main St',
-        city: 'New York',
-        state: 'NY',
-        zipCode: '10001',
-        propertyType: 'apartment',
-        purchasePrice: '500000',
-        currentValue: '550000'
-      },
-      {
-        type: 'unit',
-        propertyName: 'Sample Property',
-        unitNumber: '101',
-        bedrooms: '2',
-        bathrooms: '1',
-        squareFootage: '800',
-        monthlyRent: '2000'
-      },
-      {
-        type: 'tenant',
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        phone: '555-0123',
-        unitNumber: '101',
-        propertyName: 'Sample Property',
-        leaseStart: '2024-01-01',
-        leaseEnd: '2024-12-31',
-        monthlyRent: '2000',
-        securityDeposit: '2000'
-      },
-      {
-        type: 'expense',
-        propertyName: 'Sample Property',
-        category: 'maintenance',
-        amount: '500',
-        description: 'Plumbing repair',
-        date: '2024-01-15',
-        vendor: 'ABC Plumbing'
-      }
-    ];
+    const sampleDataTemplates: Record<string, any[]> = {
+      properties: [
+        {
+          type: 'property',
+          name: 'Sunset Apartments',
+          address: '123 Main St',
+          city: 'Los Angeles',
+          state: 'CA',
+          zipCode: '90210',
+          propertyType: 'apartment',
+          purchasePrice: '500000',
+          currentValue: '600000'
+        },
+        {
+          type: 'property',
+          name: 'Oak Villa',
+          address: '456 Oak Ave',
+          city: 'San Francisco',
+          state: 'CA',
+          zipCode: '94102',
+          propertyType: 'house',
+          purchasePrice: '800000',
+          currentValue: '900000'
+        }
+      ],
+      units: [
+        {
+          type: 'unit',
+          propertyName: 'Sunset Apartments',
+          unitNumber: '101',
+          bedrooms: '2',
+          bathrooms: '1',
+          squareFootage: '800',
+          monthlyRent: '1500'
+        },
+        {
+          type: 'unit',
+          propertyName: 'Sunset Apartments',
+          unitNumber: '102',
+          bedrooms: '1',
+          bathrooms: '1',
+          squareFootage: '600',
+          monthlyRent: '1200'
+        }
+      ],
+      tenants: [
+        {
+          type: 'tenant',
+          propertyName: 'Sunset Apartments',
+          unitNumber: '101',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@email.com',
+          phone: '555-0123',
+          leaseStart: '2024-01-01',
+          leaseEnd: '2024-12-31',
+          monthlyRent: '1500',
+          securityDeposit: '3000'
+        },
+        {
+          type: 'tenant',
+          propertyName: 'Oak Villa',
+          unitNumber: 'A',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@email.com',
+          phone: '555-0456',
+          leaseStart: '2024-02-01',
+          leaseEnd: '2025-01-31',
+          monthlyRent: '2500',
+          securityDeposit: '5000'
+        }
+      ],
+      tasks: [
+        {
+          type: 'task',
+          propertyName: 'Sunset Apartments',
+          title: 'Fix leaky faucet',
+          description: 'Repair faucet in unit 101',
+          category: 'maintenance',
+          priority: 'high',
+          status: 'pending',
+          dueDate: '2024-07-15'
+        },
+        {
+          type: 'task',
+          propertyName: 'Oak Villa',
+          title: 'Annual inspection',
+          description: 'Conduct yearly property inspection',
+          category: 'inspection',
+          priority: 'medium',
+          status: 'pending',
+          dueDate: '2024-08-01'
+        }
+      ],
+      expenses: [
+        {
+          type: 'expense',
+          propertyName: 'Sunset Apartments',
+          category: 'maintenance',
+          amount: '150.00',
+          description: 'Plumbing repair',
+          date: '2024-06-01',
+          vendor: 'ABC Plumbing'
+        },
+        {
+          type: 'expense',
+          propertyName: 'Oak Villa',
+          category: 'utilities',
+          amount: '250.00',
+          description: 'Monthly electricity bill',
+          date: '2024-06-01',
+          vendor: 'City Electric'
+        }
+      ],
+      mortgages: [
+        {
+          type: 'mortgage',
+          propertyName: 'Sunset Apartments',
+          lenderName: 'Bank of America',
+          loanAmount: '400000',
+          interestRate: '3.5',
+          termYears: '30',
+          monthlyPayment: '1796.18',
+          startDate: '2020-01-01'
+        },
+        {
+          type: 'mortgage',
+          propertyName: 'Oak Villa',
+          lenderName: 'Wells Fargo',
+          loanAmount: '600000',
+          interestRate: '3.25',
+          termYears: '25',
+          monthlyPayment: '2930.24',
+          startDate: '2021-06-01'
+        }
+      ]
+    };
+
+    const sampleData = sampleDataTemplates[selectedDataType];
+    if (!sampleData || sampleData.length === 0) return;
 
     const csv = [
       Object.keys(sampleData[0]).join(','),
@@ -135,7 +244,7 @@ export default function Settings() {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'bulk_upload_sample.csv';
+    link.download = `${selectedDataType}_sample.csv`;
     link.click();
     window.URL.revokeObjectURL(url);
   };
@@ -168,10 +277,26 @@ export default function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <Label htmlFor="data-type">Data Type</Label>
+                <Select value={selectedDataType} onValueChange={setSelectedDataType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select data type to upload" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dataTypeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Upload a CSV file with your data. Each row should include a 'type' column specifying whether it's a 'property', 'unit', 'tenant', or 'expense'.
+                  Upload a CSV file with {dataTypeOptions.find(opt => opt.value === selectedDataType)?.label.toLowerCase()} data. Download the sample file below to see the expected format.
                 </AlertDescription>
               </Alert>
 
@@ -200,10 +325,10 @@ export default function Settings() {
                     className="w-full"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    Download Sample CSV
+                    Download {dataTypeOptions.find(opt => opt.value === selectedDataType)?.label} Sample
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    Download a sample file to see the expected format
+                    Download a sample file to see the expected format for {dataTypeOptions.find(opt => opt.value === selectedDataType)?.label.toLowerCase()}
                   </p>
                 </div>
               </div>
