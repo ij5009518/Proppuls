@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2 } from "lucide-react";
+import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -228,11 +228,12 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* Tabs for Tasks and Maintenance */}
+      {/* Tabs for Tasks, Maintenance, and Calendar */}
       <Tabs defaultValue="tasks" className="w-full">
         <TabsList>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
         </TabsList>
         
         <TabsContent value="tasks">
@@ -464,6 +465,10 @@ export default function Tasks() {
             </div>
           </div>
         </TabsContent>
+
+        <TabsContent value="calendar">
+          <CalendarView tasks={tasks as Task[]} />
+        </TabsContent>
       </Tabs>
 
       {/* Edit Task Dialog */}
@@ -606,4 +611,120 @@ export default function Tasks() {
   );
 }
 
-// Additional calendar and maintenance components would go here if needed
+// Calendar component for tasks
+function CalendarView({ tasks }: { tasks: Task[] }) {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  // Generate calendar grid
+  const generateCalendarGrid = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+    
+    return days;
+  };
+
+  const calendarGrid = generateCalendarGrid();
+
+  const getTasksForDate = (date: Date) => {
+    return tasks.filter(task => 
+      task.dueDate && new Date(task.dueDate).toDateString() === date.toDateString()
+    );
+  };
+
+  const previousMonth = () => {
+    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1));
+  };
+
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return (
+    <div className="space-y-4">
+      {/* Calendar Header */}
+      <div className="flex justify-between items-center">
+        <Button variant="outline" onClick={previousMonth}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="text-xl font-semibold">
+          {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+        </h2>
+        <Button variant="outline" onClick={nextMonth}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Day Headers */}
+      <div className="grid grid-cols-7 gap-2">
+        {dayNames.map((day, index) => (
+          <div key={index} className="p-2 text-center text-sm font-medium text-muted-foreground">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-2">
+        {calendarGrid.map((date, index) => {
+          const tasksForDate = date ? getTasksForDate(date) : [];
+          
+          return (
+            <div
+              key={index}
+              className={`min-h-24 p-2 border rounded-lg ${
+                date ? 'bg-card hover:bg-accent cursor-pointer' : 'bg-muted'
+              }`}
+            >
+              {date && (
+                <>
+                  <div className="text-sm font-medium mb-1">
+                    {date.getDate()}
+                  </div>
+                  <div className="space-y-1">
+                    {tasksForDate.slice(0, 2).map((task, taskIndex) => (
+                      <div
+                        key={taskIndex}
+                        className={`text-xs p-1 rounded truncate ${
+                          getPriorityColor(task.priority)
+                        }`}
+                      >
+                        {task.title}
+                      </div>
+                    ))}
+                    {tasksForDate.length > 2 && (
+                      <div className="text-xs text-muted-foreground">
+                        +{tasksForDate.length - 2} more
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
