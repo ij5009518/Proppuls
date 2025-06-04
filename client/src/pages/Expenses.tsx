@@ -20,21 +20,24 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Property, Expense, InsertExpense, Vendor, InsertVendor } from "@shared/schema";
 
 const expenseSchema = z.object({
-  propertyId: z.number().min(1, "Property is required"),
+  propertyId: z.string().min(1, "Property is required"),
   category: z.string().min(1, "Category is required"),
   description: z.string().min(1, "Description is required"),
   amount: z.string().min(1, "Amount is required"),
-  date: z.date(),
+  date: z.string().min(1, "Date is required"),
   isRecurring: z.boolean(),
   recurrencePeriod: z.enum(["monthly", "quarterly", "yearly"]).optional(),
   vendorName: z.string().optional(),
   notes: z.string().optional(),
-  startDate: z.date().optional(),
-  endDate: z.date().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
   documentFile: z.any().optional(),
   accountNumber: z.string().optional(),
-  policyEffectiveDate: z.date().optional(),
-  policyExpirationDate: z.date().optional(),
+  policyEffectiveDate: z.string().optional(),
+  policyExpirationDate: z.string().optional(),
+  meterReadingStart: z.string().optional(),
+  meterReadingEnd: z.string().optional(),
+  usageAmount: z.string().optional(),
 });
 
 const vendorSchema = z.object({
@@ -113,30 +116,46 @@ export default function Expenses() {
   const createForm = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
-      propertyId: 0,
+      propertyId: "",
       category: "",
       description: "",
       amount: "",
-      date: new Date(),
+      date: new Date().toISOString().split('T')[0],
       isRecurring: false,
       vendorName: "",
       notes: "",
       accountNumber: "",
+      startDate: "",
+      endDate: "",
+      policyEffectiveDate: "",
+      policyExpirationDate: "",
+      meterReadingStart: "",
+      meterReadingEnd: "",
+      usageAmount: "",
+      recurrencePeriod: "monthly",
     },
   });
 
   const editForm = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
-      propertyId: 0,
+      propertyId: "",
       category: "",
       description: "",
       amount: "",
-      date: new Date(),
+      date: new Date().toISOString().split('T')[0],
       isRecurring: false,
       vendorName: "",
       notes: "",
       accountNumber: "",
+      startDate: "",
+      endDate: "",
+      policyEffectiveDate: "",
+      policyExpirationDate: "",
+      meterReadingStart: "",
+      meterReadingEnd: "",
+      usageAmount: "",
+      recurrencePeriod: "monthly",
     },
   });
 
@@ -353,20 +372,23 @@ export default function Expenses() {
   // Handlers
   const onCreateSubmit = (data: ExpenseFormData) => {
     const expenseData: InsertExpense = {
-      propertyId: data.propertyId.toString(),
+      propertyId: data.propertyId,
       category: data.category,
       description: data.description,
       amount: data.amount,
-      date: data.date,
+      date: new Date(data.date),
       isRecurring: data.isRecurring,
       recurrencePeriod: data.recurrencePeriod,
       vendorName: data.vendorName || "",
       notes: data.notes || "",
-      startDate: data.startDate,
-      endDate: data.endDate,
+      startDate: data.startDate ? new Date(data.startDate) : undefined,
+      endDate: data.endDate ? new Date(data.endDate) : undefined,
       accountNumber: data.accountNumber,
-      policyEffectiveDate: data.policyEffectiveDate,
-      policyExpirationDate: data.policyExpirationDate,
+      policyEffectiveDate: data.policyEffectiveDate ? new Date(data.policyEffectiveDate) : undefined,
+      policyExpirationDate: data.policyExpirationDate ? new Date(data.policyExpirationDate) : undefined,
+      meterReadingStart: data.meterReadingStart,
+      meterReadingEnd: data.meterReadingEnd,
+      usageAmount: data.usageAmount,
     };
 
     createMutation.mutate(expenseData);
@@ -376,20 +398,23 @@ export default function Expenses() {
     if (!selectedExpense) return;
 
     const expenseData: Partial<InsertExpense> = {
-      propertyId: data.propertyId.toString(),
+      propertyId: data.propertyId,
       category: data.category,
       description: data.description,
       amount: data.amount,
-      date: data.date,
+      date: new Date(data.date),
       isRecurring: data.isRecurring,
       recurrencePeriod: data.recurrencePeriod,
       vendorName: data.vendorName || "",
       notes: data.notes || "",
-      startDate: data.startDate,
-      endDate: data.endDate,
+      startDate: data.startDate ? new Date(data.startDate) : undefined,
+      endDate: data.endDate ? new Date(data.endDate) : undefined,
       accountNumber: data.accountNumber,
-      policyEffectiveDate: data.policyEffectiveDate,
-      policyExpirationDate: data.policyExpirationDate,
+      policyEffectiveDate: data.policyEffectiveDate ? new Date(data.policyEffectiveDate) : undefined,
+      policyExpirationDate: data.policyExpirationDate ? new Date(data.policyExpirationDate) : undefined,
+      meterReadingStart: data.meterReadingStart,
+      meterReadingEnd: data.meterReadingEnd,
+      usageAmount: data.usageAmount,
     };
 
     updateMutation.mutate({ id: selectedExpense.id, expense: expenseData });
@@ -398,20 +423,23 @@ export default function Expenses() {
   const handleEdit = (expense: Expense) => {
     setSelectedExpense(expense);
     editForm.reset({
-      propertyId: parseInt(expense.propertyId),
+      propertyId: expense.propertyId,
       category: expense.category,
       description: expense.description,
       amount: expense.amount.toString(),
-      date: new Date(expense.date),
+      date: new Date(expense.date).toISOString().split('T')[0],
       isRecurring: expense.isRecurring,
       recurrencePeriod: expense.recurrencePeriod || undefined,
       vendorName: expense.vendorName || "",
       notes: expense.notes || "",
-      startDate: expense.startDate ? new Date(expense.startDate) : undefined,
-      endDate: expense.endDate ? new Date(expense.endDate) : undefined,
+      startDate: expense.startDate ? new Date(expense.startDate).toISOString().split('T')[0] : "",
+      endDate: expense.endDate ? new Date(expense.endDate).toISOString().split('T')[0] : "",
       accountNumber: expense.accountNumber || "",
-      policyEffectiveDate: expense.policyEffectiveDate ? new Date(expense.policyEffectiveDate) : undefined,
-      policyExpirationDate: expense.policyExpirationDate ? new Date(expense.policyExpirationDate) : undefined,
+      policyEffectiveDate: expense.policyEffectiveDate ? new Date(expense.policyEffectiveDate).toISOString().split('T')[0] : "",
+      policyExpirationDate: expense.policyExpirationDate ? new Date(expense.policyExpirationDate).toISOString().split('T')[0] : "",
+      meterReadingStart: expense.meterReadingStart || "",
+      meterReadingEnd: expense.meterReadingEnd || "",
+      usageAmount: expense.usageAmount || "",
     });
     setIsEditDialogOpen(true);
   };
