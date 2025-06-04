@@ -626,6 +626,46 @@ export function registerRoutes(app: Express) {
               results.expensesCreated++;
               break;
 
+            case 'task':
+              // Find property
+              const taskProperties = await storage.getAllProperties();
+              const taskProperty = taskProperties.find(p => p.name === record.propertyName);
+              if (!taskProperty) {
+                throw new Error(`Property "${record.propertyName}" not found`);
+              }
+
+              await storage.createTask({
+                propertyId: taskProperty.id,
+                title: record.title,
+                description: record.description,
+                category: record.category,
+                priority: record.priority,
+                status: record.status || 'pending',
+                dueDate: record.dueDate ? new Date(record.dueDate) : undefined
+              });
+              results.tasksCreated = (results.tasksCreated || 0) + 1;
+              break;
+
+            case 'mortgage':
+              // Find property
+              const mortgageProperties = await storage.getAllProperties();
+              const mortgageProperty = mortgageProperties.find(p => p.name === record.propertyName);
+              if (!mortgageProperty) {
+                throw new Error(`Property "${record.propertyName}" not found`);
+              }
+
+              await storage.createMortgage({
+                propertyId: mortgageProperty.id,
+                lenderName: record.lenderName,
+                loanAmount: parseFloat(record.loanAmount) || 0,
+                interestRate: parseFloat(record.interestRate) || 0,
+                termYears: parseInt(record.termYears) || 30,
+                monthlyPayment: parseFloat(record.monthlyPayment) || 0,
+                startDate: new Date(record.startDate)
+              });
+              results.mortgagesCreated = (results.mortgagesCreated || 0) + 1;
+              break;
+
             default:
               throw new Error(`Unknown record type: ${record.type}`);
           }
