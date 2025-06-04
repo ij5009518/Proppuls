@@ -461,7 +461,7 @@ export default function Calendar() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">No property</SelectItem>
+                              <SelectItem value="none">No property</SelectItem>
                               {(properties as any[]).map((property) => (
                                 <SelectItem key={property.id} value={property.id}>
                                   {property.name}
