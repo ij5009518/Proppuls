@@ -732,14 +732,14 @@ export default function Expenses() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Expenses</CardTitle>
+                  <CardTitle className="text-sm font-medium text-black dark:text-white">Total Expenses</CardTitle>
                   <div className="p-2 bg-blue-500 rounded-lg">
                     <DollarSign className="h-4 w-4 text-white" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{formatCurrency(totalExpenses)}</div>
-                  <p className="text-xs text-blue-600 dark:text-blue-400">
+                  <div className="text-2xl font-bold text-black dark:text-white">{formatCurrency(totalExpenses)}</div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
                     {filteredExpenses.length} expense records
                   </p>
                 </CardContent>
@@ -747,16 +747,16 @@ export default function Expenses() {
               
               <Card className="bg-white dark:bg-gray-800 border-green-200 dark:border-green-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Monthly Recurring</CardTitle>
+                  <CardTitle className="text-sm font-medium text-black dark:text-white">Monthly Recurring</CardTitle>
                   <div className="p-2 bg-green-500 rounded-lg">
                     <RotateCcw className="h-4 w-4 text-white" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-900 dark:text-green-100">
+                  <div className="text-2xl font-bold text-black dark:text-white">
                     {formatCurrency(filteredExpenses.filter(e => e.isRecurring && e.recurrencePeriod === 'monthly').reduce((sum, e) => sum + parseFloat(e.amount.toString()), 0))}
                   </div>
-                  <p className="text-xs text-green-600 dark:text-green-400">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
                     {filteredExpenses.filter(e => e.isRecurring && e.recurrencePeriod === 'monthly').length} monthly expenses
                   </p>
                 </CardContent>
@@ -764,14 +764,14 @@ export default function Expenses() {
               
               <Card className="bg-white dark:bg-gray-800 border-purple-200 dark:border-purple-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Records</CardTitle>
+                  <CardTitle className="text-sm font-medium text-black dark:text-white">Total Records</CardTitle>
                   <div className="p-2 bg-purple-500 rounded-lg">
                     <Receipt className="h-4 w-4 text-white" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{filteredExpenses.length}</div>
-                  <p className="text-xs text-purple-600 dark:text-purple-400">
+                  <div className="text-2xl font-bold text-black dark:text-white">{filteredExpenses.length}</div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
                     Across {properties.length} properties
                   </p>
                 </CardContent>
