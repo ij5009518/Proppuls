@@ -45,7 +45,7 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
   };
 
   return (
-    <div className="relative z-10 flex-shrink-0 flex h-16 bg-white dark:bg-card shadow-sm border-b border-slate-200 dark:border-border">
+    <div className="relative z-10 flex-shrink-0 flex h-16 bg-white dark:bg-card shadow-sm border-b border-slate-200 dark:border-border w-full">
       {showMenuButton && (
         <Button
           variant="ghost"
@@ -80,7 +80,7 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
         </div>
         
         {/* Right section - Controls */}
-        <div className="flex-shrink-0">
+        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
           <div className="flex items-center space-x-3">
           {/* Notifications */}
           <div className="relative">
