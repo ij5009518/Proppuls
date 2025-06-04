@@ -16,7 +16,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Property, InsertProperty, Unit, Mortgage, Expense, InsertUnit, InsertTask, Task } from "@shared/schema";
+import type { Property, InsertProperty, Unit, Mortgage, Expense, InsertExpense, InsertUnit, InsertTask, Task } from "@shared/schema";
 
 const propertySchema = z.object({
   name: z.string().min(1, "Property name is required"),
@@ -65,10 +65,40 @@ const taskSchema = z.object({
   dueDate: z.string().optional(),
 });
 
+const expenseSchema = z.object({
+  propertyId: z.string().min(1, "Property is required"),
+  category: z.string().min(1, "Category is required"),
+  description: z.string().min(1, "Description is required"),
+  amount: z.string().min(1, "Amount is required"),
+  date: z.string().min(1, "Date is required"),
+  isRecurring: z.boolean(),
+  recurrencePeriod: z.enum(["monthly", "quarterly", "yearly"]).optional(),
+  vendorName: z.string().optional(),
+  notes: z.string().optional(),
+});
+
 type PropertyFormData = z.infer<typeof propertySchema>;
 type MortgageFormData = z.infer<typeof mortgageSchema>;
 type UnitFormData = z.infer<typeof unitSchema>;
 type TaskFormData = z.infer<typeof taskSchema>;
+type ExpenseFormData = z.infer<typeof expenseSchema>;
+
+const expenseCategories = {
+  maintenance: "Maintenance & Repairs",
+  utilities: "Utilities",
+  water: "Water",
+  sewer: "Sewer",
+  sanitation: "Sanitation",
+  insurance: "Insurance",
+  taxes: "Property Taxes",
+  management: "Property Management",
+  legal: "Legal & Professional",
+  marketing: "Marketing & Advertising",
+  supplies: "Supplies & Materials",
+  landscaping: "Landscaping & Grounds",
+  improvements: "Capital Improvements",
+  other: "Other"
+};
 
 export default function Properties() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -81,6 +111,7 @@ export default function Properties() {
   const [isMortgageDialogOpen, setIsMortgageDialogOpen] = useState(false);
   const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
+  const [isCreateExpenseDialogOpen, setIsCreateExpenseDialogOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -156,6 +187,20 @@ export default function Properties() {
       category: "general",
       priority: "medium",
       propertyId: "",
+    },
+  });
+
+  const expenseForm = useForm<ExpenseFormData>({
+    resolver: zodResolver(expenseSchema),
+    defaultValues: {
+      propertyId: "",
+      category: "",
+      description: "",
+      amount: "",
+      date: new Date().toISOString().split('T')[0],
+      isRecurring: false,
+      vendorName: "",
+      notes: "",
     },
   });
 
