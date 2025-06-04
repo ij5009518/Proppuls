@@ -33,6 +33,9 @@ const taskSchema = z.object({
   category: z.string().min(1, "Category is required"),
   priority: z.string().min(1, "Priority is required"),
   dueDate: z.string().optional(),
+  assignedTo: z.string().optional(),
+  estimatedHours: z.number().optional(),
+  actualHours: z.number().optional(),
 });
 
 type UnitFormData = z.infer<typeof unitSchema>;
@@ -94,6 +97,9 @@ export default function Units() {
       category: "general",
       priority: "medium",
       dueDate: "",
+      assignedTo: "",
+      estimatedHours: 0,
+      actualHours: 0,
     },
   });
 
@@ -207,7 +213,9 @@ export default function Units() {
         propertyId: selectedUnit.propertyId,
         unitId: selectedUnit.id,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        assignedTo: null,
+        assignedTo: data.assignedTo || null,
+        estimatedHours: data.estimatedHours || 0,
+        actualHours: data.actualHours || 0,
         completedAt: null,
         maintenanceRequestId: null,
         expenseId: null,
@@ -838,11 +846,14 @@ export default function Units() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                          <SelectItem value="repair">Repair</SelectItem>
-                          <SelectItem value="cleaning">Cleaning</SelectItem>
-                          <SelectItem value="inspection">Inspection</SelectItem>
                           <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="inspection">Inspection</SelectItem>
+                          <SelectItem value="lease">Lease</SelectItem>
+                          <SelectItem value="payment">Payment</SelectItem>
+                          <SelectItem value="vendor">Vendor</SelectItem>
+                          <SelectItem value="legal">Legal</SelectItem>
+                          <SelectItem value="administrative">Administrative</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -874,12 +885,63 @@ export default function Units() {
                 />
                 <FormField
                   control={taskForm.control}
+                  name="assignedTo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assigned To (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Person or vendor name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={taskForm.control}
                   name="dueDate"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
+                    <FormItem>
                       <FormLabel>Due Date (Optional)</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={taskForm.control}
+                  name="estimatedHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estimated Hours</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          placeholder="2"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={taskForm.control}
+                  name="actualHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Actual Hours</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          placeholder="0"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
