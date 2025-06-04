@@ -337,6 +337,19 @@ export default function Properties() {
     },
   });
 
+  const createExpenseMutation = useMutation({
+    mutationFn: async (data: InsertExpense) => apiRequest("POST", "/api/expenses", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
+      setIsCreateExpenseDialogOpen(false);
+      expenseForm.reset();
+      toast({ title: "Expense created successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to create expense", description: error.message, variant: "destructive" });
+    },
+  });
+
   const onCreateSubmit = (data: PropertyFormData) => {
     console.log("Form data being submitted:", data);
     // Ensure proper data formatting for database
@@ -396,6 +409,20 @@ export default function Properties() {
     createTaskMutation.mutate(taskData);
     taskForm.reset();
     setIsCreateTaskDialogOpen(false);
+  };
+
+  const onCreateExpenseSubmit = (data: ExpenseFormData) => {
+    const expenseData: InsertExpense = {
+      propertyId: selectedProperty?.id?.toString(),
+      category: data.category,
+      description: data.description,
+      amount: parseFloat(data.amount),
+      date: new Date(data.date),
+      isRecurring: data.isRecurring,
+      vendorName: data.vendorName || undefined,
+      notes: data.notes || undefined,
+    };
+    createExpenseMutation.mutate(expenseData);
   };
 
   // Helper functions for property details
@@ -1117,14 +1144,117 @@ export default function Properties() {
                     <CardContent className="p-6 text-center">
                       <Calculator className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground mb-4">No expenses recorded for this property.</p>
-                      <Button onClick={() => {
-                        toast({
-                          title: "Feature Coming Soon",
-                          description: "Expense tracking will be available soon.",
-                        });
-                      }}>
-                        Add First Expense
-                      </Button>
+                      <Dialog open={isCreateExpenseDialogOpen} onOpenChange={setIsCreateExpenseDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button>Add First Expense</Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Add New Expense</DialogTitle>
+                          </DialogHeader>
+                          <Form {...expenseForm}>
+                            <form onSubmit={expenseForm.handleSubmit(onCreateExpenseSubmit)} className="space-y-4">
+                              <FormField
+                                control={expenseForm.control}
+                                name="category"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Category</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select category" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {Object.entries(expenseCategories).map(([key, label]) => (
+                                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={expenseForm.control}
+                                name="description"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Expense description" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                  control={expenseForm.control}
+                                  name="amount"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Amount</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="0.00" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={expenseForm.control}
+                                  name="date"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Date</FormLabel>
+                                      <FormControl>
+                                        <Input type="date" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <FormField
+                                control={expenseForm.control}
+                                name="vendorName"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Vendor (Optional)</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Vendor name" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={expenseForm.control}
+                                name="notes"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Notes (Optional)</FormLabel>
+                                    <FormControl>
+                                      <Textarea placeholder="Additional notes" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <div className="flex justify-end space-x-2">
+                                <Button type="button" variant="outline" onClick={() => setIsCreateExpenseDialogOpen(false)}>
+                                  Cancel
+                                </Button>
+                                <Button type="submit" disabled={createExpenseMutation.isPending}>
+                                  {createExpenseMutation.isPending ? "Creating..." : "Add Expense"}
+                                </Button>
+                              </div>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
                     </CardContent>
                   </Card>
                 ) : (
