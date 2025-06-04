@@ -521,7 +521,11 @@ export default function Properties() {
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProperties.map((property) => (
-            <Card key={property.id} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={property.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleView(property)}
+            >
               <CardHeader>
                 <CardTitle className="flex justify-between items-start">
                   <span>{property.name}</span>
@@ -546,40 +550,6 @@ export default function Properties() {
                     <span className="font-semibold">Purchase Price:</span> {formatCurrency(property.purchasePrice)}
                   </p>
                 </div>
-                <div className="flex space-x-2 mt-4">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => {
-                      // Create task for this property
-                      const url = `/tasks?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
-                      window.location.href = url;
-                    }}
-                  >
-                    <CheckSquare className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => {
-                      // Add expense for this property
-                      const url = `/expenses?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
-                      window.location.href = url;
-                    }}
-                    title="Add Expense"
-                  >
-                    <DollarSign className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleView(property)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(property)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDelete(property.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           ))}
@@ -587,7 +557,11 @@ export default function Properties() {
       ) : (
         <div className="space-y-4">
           {filteredProperties.map((property) => (
-            <Card key={property.id} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={property.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleView(property)}
+            >
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
                   <div className="flex-1">
@@ -608,40 +582,6 @@ export default function Properties() {
                       <p className="text-sm font-semibold">{property.totalUnits} units</p>
                       <p className="text-sm text-gray-600">{formatCurrency(property.purchasePrice)}</p>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => {
-                      // Create task for this property
-                      const url = `/tasks?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
-                      window.location.href = url;
-                    }}
-                  >
-                    <CheckSquare className="h-4 w-4" />
-                  </Button>
-                      <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => {
-                      // Add expense for this property
-                      const url = `/expenses?propertyId=${property.id}&propertyName=${encodeURIComponent(property.name)}`;
-                      window.location.href = url;
-                    }}
-                    title="Add Expense"
-                  >
-                    <DollarSign className="h-4 w-4" />
-                  </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleView(property)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(property)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDelete(property.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -654,10 +594,62 @@ export default function Properties() {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Home className="h-5 w-5" />
-              {selectedProperty?.name} - Property Details
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <Home className="h-5 w-5" />
+                {selectedProperty?.name} - Property Details
+              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const url = `/tasks?propertyId=${selectedProperty?.id}&propertyName=${encodeURIComponent(selectedProperty?.name || '')}`;
+                    window.location.href = url;
+                  }}
+                  title="Add Task"
+                >
+                  <CheckSquare className="h-4 w-4 mr-1" />
+                  Add Task
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const url = `/expenses?propertyId=${selectedProperty?.id}&propertyName=${encodeURIComponent(selectedProperty?.name || '')}`;
+                    window.location.href = url;
+                  }}
+                  title="Add Expense"
+                >
+                  <DollarSign className="h-4 w-4 mr-1" />
+                  Add Expense
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(selectedProperty!);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="destructive" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(selectedProperty!.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            </div>
           </DialogHeader>
           {selectedProperty && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
