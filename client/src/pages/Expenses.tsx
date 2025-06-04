@@ -901,7 +901,7 @@ export default function Expenses() {
                         </div>
                       </div>
                     </CardHeader>
-                    {(expense.vendorName || expense.notes) && (
+                    {(expense.vendorName || expense.notes || (expense.category === "insurance" || expense.category === "taxes") && (expense.documentUploadDate || expense.policyEffectiveDate || expense.policyExpirationDate)) && (
                       <CardContent className="pt-0">
                         <div className="space-y-2 text-sm">
                           {expense.vendorName && (
@@ -914,6 +914,31 @@ export default function Expenses() {
                             <div className="flex items-start space-x-2">
                               <Receipt className="h-4 w-4 text-muted-foreground mt-0.5" />
                               <span className="text-muted-foreground">{expense.notes}</span>
+                            </div>
+                          )}
+                          {(expense.category === "insurance" || expense.category === "taxes") && (
+                            <div className="space-y-1 border-t pt-2">
+                              <div className="text-xs font-medium text-muted-foreground mb-1">Document Tracking</div>
+                              <div className="grid grid-cols-3 gap-2 text-xs">
+                                {expense.documentUploadDate && (
+                                  <div>
+                                    <div className="font-medium">Upload Date</div>
+                                    <div className="text-muted-foreground">{formatDate(expense.documentUploadDate)}</div>
+                                  </div>
+                                )}
+                                {expense.policyEffectiveDate && (
+                                  <div>
+                                    <div className="font-medium">Effective Date</div>
+                                    <div className="text-muted-foreground">{formatDate(expense.policyEffectiveDate)}</div>
+                                  </div>
+                                )}
+                                {expense.policyExpirationDate && (
+                                  <div>
+                                    <div className="font-medium">Expiration Date</div>
+                                    <div className="text-muted-foreground">{formatDate(expense.policyExpirationDate)}</div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -1296,6 +1321,64 @@ export default function Expenses() {
                   </FormItem>
                 )}
               />
+
+              {(editForm.watch("category") === "insurance" || editForm.watch("category") === "taxes") && (
+                <>
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="documentUploadDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Document Upload Date</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="date" 
+                              value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="policyEffectiveDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Policy Effective Date</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="date" 
+                              value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="policyExpirationDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Policy Expiration Date</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="date" 
+                              value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </>
+              )}
 
               <FormField
                 control={editForm.control}
