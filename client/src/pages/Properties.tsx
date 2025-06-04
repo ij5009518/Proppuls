@@ -145,6 +145,18 @@ export default function Properties() {
     },
   });
 
+  const taskForm = useForm<TaskFormData>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      status: "pending",
+      category: "",
+      priority: "medium",
+      propertyId: "",
+    },
+  });
+
   // Mortgage payment calculator function
   const calculateMortgagePayments = (principal: number, interestRate: number, termYears: number) => {
     const monthlyRate = interestRate / 100 / 12;
@@ -254,6 +266,19 @@ export default function Properties() {
     },
   });
 
+  const createTaskMutation = useMutation({
+    mutationFn: async (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      setIsCreateTaskDialogOpen(false);
+      taskForm.reset();
+      toast({ title: "Task created successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to create task", description: error.message, variant: "destructive" });
+    },
+  });
+
   const onCreateSubmit = (data: PropertyFormData) => {
     console.log("Form data being submitted:", data);
     // Ensure proper data formatting for database
@@ -298,6 +323,16 @@ export default function Properties() {
     if (confirm("Are you sure you want to delete this property?")) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const onCreateTaskSubmit = (data: TaskFormData) => {
+    const taskData: InsertTask = {
+      ...data,
+      status: data.status as "pending" | "in_progress" | "completed" | "cancelled",
+      priority: data.priority as "low" | "medium" | "high" | "urgent",
+      propertyId: selectedProperty?.id,
+    };
+    createTaskMutation.mutate(taskData);
   };
 
   // Helper functions for property details
