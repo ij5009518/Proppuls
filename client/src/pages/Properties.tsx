@@ -15,7 +15,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Property, InsertProperty, Unit, Mortgage, Expense, InsertUnit } from "@shared/schema";
+import type { Property, InsertProperty, Unit, Mortgage, Expense, InsertUnit, InsertTask, Task } from "@shared/schema";
 
 const propertySchema = z.object({
   name: z.string().min(1, "Property name is required"),
@@ -54,9 +54,19 @@ const mortgageSchema = z.object({
   notes: z.string().optional(),
 });
 
+const taskSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  status: z.string().min(1, "Status is required"),
+  category: z.string().min(1, "Category is required"),
+  priority: z.string().min(1, "Priority is required"),
+  propertyId: z.string().optional(),
+});
+
 type PropertyFormData = z.infer<typeof propertySchema>;
 type MortgageFormData = z.infer<typeof mortgageSchema>;
 type UnitFormData = z.infer<typeof unitSchema>;
+type TaskFormData = z.infer<typeof taskSchema>;
 
 export default function Properties() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -67,7 +77,8 @@ export default function Properties() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [isMortgageDialogOpen, setIsMortgageDialogOpen] = useState(false);
-  const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false); // Add state for Unit Dialog
+  const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
+  const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -599,32 +610,18 @@ export default function Properties() {
                 <Home className="h-5 w-5" />
                 {selectedProperty?.name} - Property Details
               </DialogTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mr-8">
                 <Button 
                   size="sm" 
                   variant="outline" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    const url = `/tasks?propertyId=${selectedProperty?.id}&propertyName=${encodeURIComponent(selectedProperty?.name || '')}`;
-                    window.location.href = url;
+                    setIsCreateTaskDialogOpen(true);
                   }}
                   title="Add Task"
                 >
                   <CheckSquare className="h-4 w-4 mr-1" />
                   Add Task
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const url = `/expenses?propertyId=${selectedProperty?.id}&propertyName=${encodeURIComponent(selectedProperty?.name || '')}`;
-                    window.location.href = url;
-                  }}
-                  title="Add Expense"
-                >
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  Add Expense
                 </Button>
                 <Button 
                   size="sm" 
@@ -639,7 +636,8 @@ export default function Properties() {
                 </Button>
                 <Button 
                   size="sm" 
-                  variant="destructive" 
+                  variant="outline" 
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete(selectedProperty!.id);
