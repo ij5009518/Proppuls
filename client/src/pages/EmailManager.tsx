@@ -107,10 +107,10 @@ export default function EmailManager() {
   };
 
   const handleBulkRentReminders = () => {
-    sendBulkRentRemindersMutation.mutate(selectedProperty || undefined);
+    sendBulkRentRemindersMutation.mutate(selectedProperty === "all" ? undefined : selectedProperty || undefined);
   };
 
-  const filteredTenants = selectedProperty 
+  const filteredTenants = selectedProperty && selectedProperty !== "all"
     ? tenants.filter((tenant: any) => {
         // You'll need to join with units to filter by property
         return true; // Simplified for now
