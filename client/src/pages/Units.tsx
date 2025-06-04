@@ -566,7 +566,7 @@ export default function Units() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 ml-2"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsViewDialogOpen(false);
