@@ -112,6 +112,7 @@ export default function Properties() {
   const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
   const [isCreateExpenseDialogOpen, setIsCreateExpenseDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const { toast } = useToast();
 
@@ -309,41 +310,26 @@ export default function Properties() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<InsertProperty> }) =>
-      apiRequest("PATCH", `/api/properties/${id}`, data),
-    onMutate: async ({ id, data }) => {
-      // Cancel any outgoing refetches so they don't overwrite our optimistic update
-      await queryClient.cancelQueries({ queryKey: ["/api/properties"] });
-
-      // Snapshot the previous value
-      const previousProperties = queryClient.getQueryData<Property[]>(["/api/properties"]);
-
-      // Optimistically update to the new value immediately
-      queryClient.setQueryData(["/api/properties"], (old: Property[] = []) =>
-        old.map(property => 
-          property.id === id ? { ...property, ...data, updatedAt: new Date() } : property
-        )
-      );
-
-      // Return a context object with the snapshotted value
-      return { previousProperties };
+    mutationFn: ({ id, data }: { id: string; data: Partial<InsertProperty> }) => {
+      setIsUpdating(true);
+      return apiRequest("PATCH", `/api/properties/${id}`, data);
     },
     onSuccess: (updatedProperty) => {
-      // Update with server response but maintain order
-      queryClient.setQueryData(["/api/properties"], (old: Property[] = []) =>
-        old.map(property => 
+      // Wait a moment then update without visual disruption
+      setTimeout(() => {
+        const currentData = queryClient.getQueryData<Property[]>(["/api/properties"]) || [];
+        const updatedData = currentData.map(property => 
           property.id === updatedProperty.id ? updatedProperty : property
-        )
-      );
-      setIsEditDialogOpen(false);
-      setSelectedProperty(null);
-      toast({ title: "Property updated successfully" });
+        );
+        queryClient.setQueryData(["/api/properties"], updatedData);
+        setIsUpdating(false);
+        setIsEditDialogOpen(false);
+        setSelectedProperty(null);
+        toast({ title: "Property updated successfully" });
+      }, 50);
     },
-    onError: (error: Error, variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
-      if (context?.previousProperties) {
-        queryClient.setQueryData(["/api/properties"], context.previousProperties);
-      }
+    onError: (error: Error) => {
+      setIsUpdating(false);
       toast({ title: "Failed to update property", description: error.message, variant: "destructive" });
     },
   });
