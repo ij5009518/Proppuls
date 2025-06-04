@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -373,7 +373,11 @@ export default function Units() {
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredUnits.map((unit) => (
-            <Card key={unit.id} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={unit.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleView(unit)}
+            >
               <CardHeader>
                 <CardTitle className="flex justify-between items-start">
                   <span>Unit {unit.unitNumber}</span>
@@ -408,12 +412,9 @@ export default function Units() {
                         <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
                           Current Tenant
                         </p>
-                        <button
-                          onClick={() => window.location.href = '/tenants'}
-                          className="text-sm hover:underline text-left w-full"
-                        >
+                        <p className="text-sm">
                           {tenant.firstName} {tenant.lastName}
-                        </button>
+                        </p>
                         <p className="text-xs text-muted-foreground">{tenant.email}</p>
                       </div>
                     ) : (
@@ -423,28 +424,6 @@ export default function Units() {
                     );
                   })()}
                 </div>
-                <div className="flex justify-end space-x-2 mt-4">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => {
-                      const url = `/tasks?unitId=${unit.id}&unitNumber=${encodeURIComponent(unit.unitNumber)}&propertyId=${unit.propertyId}`;
-                      window.location.href = url;
-                    }}
-                    title="Create Task"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleView(unit)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(unit)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDelete(unit.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           ))}
@@ -452,7 +431,11 @@ export default function Units() {
       ) : (
         <div className="space-y-4">
           {filteredUnits.map((unit) => (
-            <Card key={unit.id} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={unit.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleView(unit)}
+            >
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
                   <div className="flex-1">
@@ -473,38 +456,13 @@ export default function Units() {
                       {(() => {
                         const tenant = getTenantForUnit(unit.id);
                         return tenant ? (
-                          <button
-                            onClick={() => window.location.href = '/tenants'}
-                            className="text-xs text-blue-600 hover:underline"
-                          >
+                          <p className="text-xs text-blue-600">
                             {tenant.firstName} {tenant.lastName}
-                          </button>
+                          </p>
                         ) : (
                           <p className="text-xs text-muted-foreground">No tenant</p>
                         );
                       })()}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => {
-                          const url = `/tasks?unitId=${unit.id}&unitNumber=${encodeURIComponent(unit.unitNumber)}&propertyId=${unit.propertyId}`;
-                          window.location.href = url;
-                        }}
-                        title="Create Task"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleView(unit)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(unit)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDelete(unit.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
                 </div>
@@ -518,7 +476,50 @@ export default function Units() {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Unit Details</DialogTitle>
+            <div className="flex justify-between items-center">
+              <DialogTitle>Unit Details</DialogTitle>
+              {selectedUnit && (
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const url = `/tasks?unitId=${selectedUnit.id}&unitNumber=${encodeURIComponent(selectedUnit.unitNumber)}&propertyId=${selectedUnit.propertyId}`;
+                      window.location.href = url;
+                    }}
+                    title="Add Task"
+                  >
+                    <CheckSquare className="h-4 w-4 mr-1" />
+                    Add Task
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsViewDialogOpen(false);
+                      handleEdit(selectedUnit);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsViewDialogOpen(false);
+                      handleDelete(selectedUnit.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              )}
+            </div>
           </DialogHeader>
           {selectedUnit && (
             <div className="space-y-4">
