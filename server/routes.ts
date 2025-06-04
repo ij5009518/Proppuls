@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import multer from "multer";
 import { parse } from "csv-parse/sync";
+import { emailService } from "./email";
 
 export function registerRoutes(app: Express) {
   // Create HTTP server
@@ -511,6 +512,157 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Email routes
+  app.post("/api/email/rent-reminder", async (req, res) => {
+    try {
+      const { tenantId } = req.body;
+      
+      // Get tenant details
+      const tenant = await storage.getTenantById(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+      
+      // Get unit and property details
+      const unit = await storage.getUnitById(tenant.unitId);
+      const property = await storage.getPropertyById(unit.propertyId);
+      
+      const success = await emailService.sendRentReminder(tenant.email, {
+        tenantName: `${tenant.firstName} ${tenant.lastName}`,
+        unitNumber: unit.unitNumber,
+        propertyName: property.name,
+        amount: tenant.monthlyRent,
+        dueDate: new Date().toLocaleDateString(),
+      });
+      
+      if (success) {
+        res.json({ message: "Rent reminder sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send email" });
+      }
+    } catch (error) {
+      console.error("Error sending rent reminder:", error);
+      res.status(500).json({ message: "Failed to send rent reminder" });
+    }
+  });
+
+  app.post("/api/email/maintenance-notification", async (req, res) => {
+    try {
+      const { tenantId, description, status } = req.body;
+      
+      const tenant = await storage.getTenantById(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+      
+      const unit = await storage.getUnitById(tenant.unitId);
+      const property = await storage.getPropertyById(unit.propertyId);
+      
+      const success = await emailService.sendMaintenanceNotification(tenant.email, {
+        tenantName: `${tenant.firstName} ${tenant.lastName}`,
+        unitNumber: unit.unitNumber,
+        propertyName: property.name,
+        description,
+        status,
+      });
+      
+      if (success) {
+        res.json({ message: "Maintenance notification sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send email" });
+      }
+    } catch (error) {
+      console.error("Error sending maintenance notification:", error);
+      res.status(500).json({ message: "Failed to send maintenance notification" });
+    }
+  });
+
+  app.post("/api/email/welcome", async (req, res) => {
+    try {
+      const { tenantId } = req.body;
+      
+      const tenant = await storage.getTenantById(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+      
+      const unit = await storage.getUnitById(tenant.unitId);
+      const property = await storage.getPropertyById(unit.propertyId);
+      
+      const success = await emailService.sendWelcomeEmail(
+        tenant.email,
+        `${tenant.firstName} ${tenant.lastName}`,
+        property.name,
+        unit.unitNumber
+      );
+      
+      if (success) {
+        res.json({ message: "Welcome email sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send email" });
+      }
+    } catch (error) {
+      console.error("Error sending welcome email:", error);
+      res.status(500).json({ message: "Failed to send welcome email" });
+    }
+  });
+
+  app.post("/api/email/bulk-rent-reminders", async (req, res) => {
+    try {
+      const { propertyId } = req.body;
+      
+      let tenants;
+      if (propertyId) {
+        // Get tenants for specific property
+        const units = await storage.getAllUnits();
+        const propertyUnits = units.filter(unit => unit.propertyId === propertyId);
+        const allTenants = await storage.getAllTenants();
+        tenants = allTenants.filter(tenant => 
+          propertyUnits.some(unit => unit.id === tenant.unitId)
+        );
+      } else {
+        // Get all tenants
+        tenants = await storage.getAllTenants();
+      }
+      
+      const results = {
+        sent: 0,
+        failed: 0,
+        errors: []
+      };
+      
+      for (const tenant of tenants) {
+        try {
+          const unit = await storage.getUnitById(tenant.unitId);
+          const property = await storage.getPropertyById(unit.propertyId);
+          
+          const success = await emailService.sendRentReminder(tenant.email, {
+            tenantName: `${tenant.firstName} ${tenant.lastName}`,
+            unitNumber: unit.unitNumber,
+            propertyName: property.name,
+            amount: tenant.monthlyRent,
+            dueDate: new Date().toLocaleDateString(),
+          });
+          
+          if (success) {
+            results.sent++;
+          } else {
+            results.failed++;
+            results.errors.push(`Failed to send to ${tenant.email}`);
+          }
+        } catch (error) {
+          results.failed++;
+          results.errors.push(`Error processing ${tenant.email}: ${error.message}`);
+        }
+      }
+      
+      res.json(results);
+    } catch (error) {
+      console.error("Error sending bulk rent reminders:", error);
+      res.status(500).json({ message: "Failed to send bulk rent reminders" });
     }
   });
 

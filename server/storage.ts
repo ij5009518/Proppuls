@@ -3,6 +3,7 @@ import { db, users, properties, expenses, units, tenants, maintenanceRequests, v
 import { eq } from 'drizzle-orm';
 import crypto from "crypto";
 import { Property, Expense, Unit, Tenant, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
+import nodemailer from 'nodemailer';
 
 interface Session {
   token: string;
@@ -82,7 +83,7 @@ class Storage {
     try {
       console.log("Storage: Creating property with data:", propertyData);
       const propertyId = crypto.randomUUID();
-      
+
       const insertData = {
         id: propertyId,
         name: propertyData.name,
@@ -98,9 +99,9 @@ class Storage {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
+
       console.log("Storage: Insert data:", insertData);
-      
+
       const [property] = await db.insert(properties).values(insertData).returning();
       console.log("Storage: Property created successfully:", property);
       return property;
@@ -203,7 +204,7 @@ class Storage {
     try {
       console.log("Storage: Creating tenant with data:", tenantData);
       const tenantId = crypto.randomUUID();
-      
+
       const insertData = {
         id: tenantId,
         firstName: tenantData.firstName,
@@ -219,9 +220,9 @@ class Storage {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
+
       console.log("Storage: Insert data:", insertData);
-      
+
       const [tenant] = await db.insert(tenants).values(insertData).returning();
       console.log("Storage: Tenant created successfully:", tenant);
       return tenant;
@@ -245,12 +246,12 @@ class Storage {
       .set({ ...tenantData, updatedAt: new Date() })
       .where(eq(tenants.id, id))
       .returning();
-    
+
     // Auto-generate rent payment records if lease information is provided
     if (tenant && tenantData.leaseStart && tenantData.leaseEnd && tenantData.monthlyRent) {
       await this.generateRentPayments(tenant);
     }
-    
+
     return tenant || null;
   }
 
@@ -292,7 +293,7 @@ class Storage {
       }
 
       console.log("Creating", payments.length, "rent payment records");
-      
+
       if (payments.length > 0) {
         await db.insert(rentPayments).values(payments);
         console.log("Rent payments created successfully");
@@ -377,7 +378,7 @@ class Storage {
   async createRentPayment(paymentData: any): Promise<RentPayment> {
     try {
       console.log("Creating rent payment with data:", paymentData);
-      
+
       const insertData = {
         id: paymentData.id || crypto.randomUUID(),
         tenantId: paymentData.tenantId?.toString() || "",
@@ -391,9 +392,9 @@ class Storage {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
+
       console.log("Formatted rent payment data:", insertData);
-      
+
       const [payment] = await db.insert(rentPayments).values(insertData).returning();
       return payment;
     } catch (error) {
@@ -428,7 +429,7 @@ class Storage {
   async createMortgage(mortgageData: any): Promise<Mortgage> {
     try {
       console.log("Creating mortgage with data:", mortgageData);
-      
+
       const insertData = {
         id: mortgageData.id || crypto.randomUUID(),
         propertyId: mortgageData.propertyId,
@@ -447,9 +448,9 @@ class Storage {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
+
       console.log("Formatted mortgage data:", insertData);
-      
+
       const [mortgage] = await db.insert(mortgages).values(insertData).returning();
       return mortgage;
     } catch (error) {
@@ -512,6 +513,54 @@ class Storage {
     const result = await db.delete(tasks).where(eq(tasks.id, id));
     return result.rowCount > 0;
   }
+
+  async getTenantById(id: string): Promise<Tenant | null> {
+    const result = await db.select().from(tenants).where(eq(tenants.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async getUnitById(id: string): Promise<Unit | null> {
+    const result = await db.select().from(units).where(eq(units.id, id)).limit(1);
+    return result[0] || null;
+  }
+
+  async getPropertyById(id: string): Promise<Property | null> {
+    const result = await db.select().from(properties).where(eq(properties.id, id)).limit(1);
+    return result[0] || null;
+  }
 }
 
+// Email Service
+class EmailService {
+  private transporter: nodemailer.Transporter;
+
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+  }
+
+  async sendEmail(to: string, subject: string, html: string): Promise<void> {
+    try {
+      const info = await this.transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: to,
+        subject: subject,
+        html: html,
+      });
+      console.log("Message sent: %s", info.messageId);
+    } catch (error) {
+      console.error("Error sending email:", error);
+      throw error;
+    }
+  }
+}
+
+export const emailService = new EmailService();
 export const storage = new Storage();
