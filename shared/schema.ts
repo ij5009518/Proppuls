@@ -142,7 +142,9 @@ export const expenseSchema = z.object({
   accountNumber: z.string().optional(),
   policyEffectiveDate: z.date().optional(),
   policyExpirationDate: z.date().optional(),
-
+  meterReadingStart: z.string().optional(),
+  meterReadingEnd: z.string().optional(),
+  usageAmount: z.string().optional(),
   recurrencePeriod: z.enum(["monthly", "quarterly", "yearly"]).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),

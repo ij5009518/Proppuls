@@ -206,6 +206,9 @@ export default function Properties() {
       accountNumber: "",
       policyEffectiveDate: "",
       policyExpirationDate: "",
+      meterReadingStart: "",
+      meterReadingEnd: "",
+      usageAmount: "",
       recurrencePeriod: "monthly",
     },
   });
@@ -432,6 +435,9 @@ export default function Properties() {
       accountNumber: data.accountNumber || undefined,
       policyEffectiveDate: data.policyEffectiveDate ? new Date(data.policyEffectiveDate) : undefined,
       policyExpirationDate: data.policyExpirationDate ? new Date(data.policyExpirationDate) : undefined,
+      meterReadingStart: data.meterReadingStart || undefined,
+      meterReadingEnd: data.meterReadingEnd || undefined,
+      usageAmount: data.usageAmount || undefined,
       recurrencePeriod: data.recurrencePeriod || undefined,
     };
     createExpenseMutation.mutate(expenseData);
@@ -1292,6 +1298,99 @@ export default function Properties() {
                                       </FormItem>
                                     )}
                                   />
+                                </>
+                              )}
+
+                              {/* Utility-specific fields */}
+                              {(expenseForm.watch("category") === "utilities" || expenseForm.watch("category") === "water" || 
+                                expenseForm.watch("category") === "sewer" || expenseForm.watch("category") === "sanitation") && (
+                                <>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <FormField
+                                      control={expenseForm.control}
+                                      name="startDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Service Period Start</FormLabel>
+                                          <FormControl>
+                                            <Input type="date" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={expenseForm.control}
+                                      name="endDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Service Period End</FormLabel>
+                                          <FormControl>
+                                            <Input type="date" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  <FormField
+                                    control={expenseForm.control}
+                                    name="accountNumber"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Service Account Number</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="Utility account number" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  
+                                  {/* Meter readings for water, sewer utilities */}
+                                  {(expenseForm.watch("category") === "water" || expenseForm.watch("category") === "sewer") && (
+                                    <div className="grid grid-cols-3 gap-4">
+                                      <FormField
+                                        control={expenseForm.control}
+                                        name="meterReadingStart"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Starting Meter Reading</FormLabel>
+                                            <FormControl>
+                                              <Input placeholder="Previous reading" type="number" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      <FormField
+                                        control={expenseForm.control}
+                                        name="meterReadingEnd"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Ending Meter Reading</FormLabel>
+                                            <FormControl>
+                                              <Input placeholder="Current reading" type="number" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      <FormField
+                                        control={expenseForm.control}
+                                        name="usageAmount"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Usage Amount</FormLabel>
+                                            <FormControl>
+                                              <Input placeholder="Gallons/units used" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                    </div>
+                                  )}
                                 </>
                               )}
                               
