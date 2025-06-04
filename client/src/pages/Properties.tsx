@@ -318,7 +318,7 @@ export default function Properties() {
       // Snapshot the previous value
       const previousProperties = queryClient.getQueryData<Property[]>(["/api/properties"]);
 
-      // Optimistically update to the new value
+      // Optimistically update to the new value immediately
       queryClient.setQueryData(["/api/properties"], (old: Property[] = []) =>
         old.map(property => 
           property.id === id ? { ...property, ...data, updatedAt: new Date() } : property
@@ -329,6 +329,12 @@ export default function Properties() {
       return { previousProperties };
     },
     onSuccess: (updatedProperty) => {
+      // Update with server response but maintain order
+      queryClient.setQueryData(["/api/properties"], (old: Property[] = []) =>
+        old.map(property => 
+          property.id === updatedProperty.id ? updatedProperty : property
+        )
+      );
       setIsEditDialogOpen(false);
       setSelectedProperty(null);
       toast({ title: "Property updated successfully" });
@@ -339,15 +345,6 @@ export default function Properties() {
         queryClient.setQueryData(["/api/properties"], context.previousProperties);
       }
       toast({ title: "Failed to update property", description: error.message, variant: "destructive" });
-    },
-    onSettled: async () => {
-      // Delay background refetch to prevent visual disruption
-      setTimeout(() => {
-        queryClient.refetchQueries({ 
-          queryKey: ["/api/properties"],
-          type: 'inactive' // Only refetch if not currently being used
-        });
-      }, 100);
     },
   });
 
