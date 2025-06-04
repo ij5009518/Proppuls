@@ -705,61 +705,50 @@ export default function Expenses() {
             </div>
 
             {/* Dashboard Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Expenses</CardTitle>
+                  <div className="p-2 bg-blue-500 rounded-lg">
+                    <DollarSign className="h-4 w-4 text-white" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(totalExpenses)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {filteredExpenses.length} expense(s) this period
+                  <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{formatCurrency(totalExpenses)}</div>
+                  <p className="text-xs text-blue-600 dark:text-blue-400">
+                    {filteredExpenses.length} expense records
                   </p>
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
-                  <Wrench className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Monthly Recurring</CardTitle>
+                  <div className="p-2 bg-green-500 rounded-lg">
+                    <RotateCcw className="h-4 w-4 text-white" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(filteredExpenses.filter(e => e.category === 'maintenance').reduce((sum, e) => sum + parseFloat(e.amount.toString()), 0))}
+                  <div className="text-2xl font-bold text-green-900 dark:text-green-100">
+                    {formatCurrency(filteredExpenses.filter(e => e.isRecurring && e.recurrencePeriod === 'monthly').reduce((sum, e) => sum + parseFloat(e.amount.toString()), 0))}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {filteredExpenses.filter(e => e.category === 'maintenance').length} maintenance expenses
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    {filteredExpenses.filter(e => e.isRecurring && e.recurrencePeriod === 'monthly').length} monthly expenses
                   </p>
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Utilities</CardTitle>
-                  <Receipt className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Records</CardTitle>
+                  <div className="p-2 bg-purple-500 rounded-lg">
+                    <Receipt className="h-4 w-4 text-white" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(filteredExpenses.filter(e => e.category === 'utilities').reduce((sum, e) => sum + parseFloat(e.amount.toString()), 0))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {filteredExpenses.filter(e => e.category === 'utilities').length} utility bills
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Recurring</CardTitle>
-                  <RotateCcw className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(filteredExpenses.filter(e => e.isRecurring).reduce((sum, e) => sum + parseFloat(e.amount.toString()), 0))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {filteredExpenses.filter(e => e.isRecurring).length} recurring expenses
+                  <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{filteredExpenses.length}</div>
+                  <p className="text-xs text-purple-600 dark:text-purple-400">
+                    Across {properties.length} properties
                   </p>
                 </CardContent>
               </Card>
