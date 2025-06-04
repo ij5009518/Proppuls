@@ -88,11 +88,6 @@ const menuItems: MenuItem[] = [
     icon: Bot,
   },
   {
-    title: 'Email Manager',
-    url: '/email-manager',
-    icon: Mail,
-  },
-  {
     title: 'Settings',
     url: '/settings',
     icon: Settings,
