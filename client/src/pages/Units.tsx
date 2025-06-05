@@ -36,14 +36,20 @@ const taskSchema = z.object({
   assignedTo: z.string().optional(),
 });
 
+const assignTenantSchema = z.object({
+  tenantId: z.string().min(1, "Please select a tenant"),
+});
+
 type UnitFormData = z.infer<typeof unitSchema>;
 type TaskFormData = z.infer<typeof taskSchema>;
+type AssignTenantFormData = z.infer<typeof assignTenantSchema>;
 
 export default function Units() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [isAssignTenantDialogOpen, setIsAssignTenantDialogOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
@@ -99,6 +105,13 @@ export default function Units() {
     },
   });
 
+  const assignTenantForm = useForm<AssignTenantFormData>({
+    resolver: zodResolver(assignTenantSchema),
+    defaultValues: {
+      tenantId: "",
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: (data: InsertUnit) => apiRequest("POST", "/api/units", data),
     onSuccess: () => {
@@ -124,6 +137,22 @@ export default function Units() {
     },
     onError: () => {
       toast({ title: "Failed to update unit", variant: "destructive" });
+    },
+  });
+
+  const assignTenantMutation = useMutation({
+    mutationFn: ({ tenantId, unitId }: { tenantId: string; unitId: string }) =>
+      apiRequest("PATCH", `/api/tenants/${tenantId}`, { unitId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      setIsAssignTenantDialogOpen(false);
+      assignTenantForm.reset();
+      toast({ title: "Tenant assigned successfully" });
+    },
+    onError: (error: any) => {
+      console.error("Assign tenant error:", error);
+      toast({ title: "Failed to assign tenant", variant: "destructive" });
     },
   });
 
@@ -725,10 +754,7 @@ export default function Units() {
                           size="sm" 
                           variant="outline"
                           onClick={() => {
-                            toast({
-                              title: "Feature Coming Soon",
-                              description: "Tenant assignment interface will be available soon.",
-                            });
+                            setIsAssignTenantDialogOpen(true);
                           }}
                         >
                           <Plus className="h-4 w-4 mr-1" />
@@ -1007,6 +1033,65 @@ export default function Units() {
                 </Button>
                 <Button type="submit" disabled={createTaskMutation.isPending}>
                   {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Tenant Dialog */}
+      <Dialog open={isAssignTenantDialogOpen} onOpenChange={setIsAssignTenantDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign Tenant</DialogTitle>
+          </DialogHeader>
+          <Form {...assignTenantForm}>
+            <form
+              onSubmit={assignTenantForm.handleSubmit((data) => {
+                if (selectedUnit) {
+                  assignTenantMutation.mutate({
+                    tenantId: data.tenantId,
+                    unitId: selectedUnit.id,
+                  });
+                }
+              })}
+              className="space-y-4"
+            >
+              <FormField
+                control={assignTenantForm.control}
+                name="tenantId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Select Tenant</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose an available tenant" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {getAvailableTenants().map((tenant) => (
+                          <SelectItem key={tenant.id} value={tenant.id}>
+                            {tenant.firstName} {tenant.lastName} - {tenant.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAssignTenantDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={assignTenantMutation.isPending}>
+                  {assignTenantMutation.isPending ? "Assigning..." : "Assign Tenant"}
                 </Button>
               </div>
             </form>
