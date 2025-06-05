@@ -81,6 +81,7 @@ function AuthenticatedApp() {
         <Route path="/mortgages" component={Mortgages} />
         <Route path="/expenses/:category?" component={Expenses} />
         <Route path="/calendar" component={Calendar} />
+        <Route path="/advanced-features" component={AdvancedFeatures} />
         <Route path="/ai-assistant" component={AIAssistant} />
         <Route path="/email-manager" component={EmailManager} />
         <Route path="/settings" component={Settings} />
