@@ -29,6 +29,7 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import NotFound from '@/pages/not-found';
 import EmailManager from '@/pages/EmailManager';
+import AdvancedFeatures from '@/pages/AdvancedFeatures';
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
