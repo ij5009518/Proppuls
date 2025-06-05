@@ -14,102 +14,67 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
-import {
-  Plus,
-  Edit,
-  Trash2,
-  DollarSign,
-  Receipt,
-  Calendar,
-  RotateCcw,
-  Filter,
-  Building,
-  User,
-  Star
-} from "lucide-react";
-import {
-  Expense,
-  Vendor,
-  Property,
-  InsertExpense,
-  InsertVendor,
-  expenseSchema,
-  vendorSchema
-} from "../../../shared/schema";
+import { Plus, Edit, Trash2, DollarSign, Receipt, Calendar, Filter, Building } from "lucide-react";
 
-const expenseCategories = {
-  maintenance: "Maintenance & Repairs",
-  utilities: "Utilities",
-  water: "Water",
-  sewer: "Sewer",
-  sanitation: "Sanitation/Trash",
-  insurance: "Insurance",
-  taxes: "Property Taxes",
-  management: "Property Management",
-  legal: "Legal & Professional",
-  marketing: "Marketing & Advertising",
-  supplies: "Supplies & Materials",
-  landscaping: "Landscaping",
-  improvements: "Capital Improvements",
-  other: "Other"
-};
+// Schema
+const expenseSchema = z.object({
+  propertyId: z.string().min(1, "Property is required"),
+  category: z.string().min(1, "Category is required"),
+  description: z.string().min(1, "Description is required"),
+  amount: z.string().min(1, "Amount is required"),
+  date: z.string().min(1, "Date is required"),
+  isRecurring: z.boolean().default(false),
+  vendorName: z.string().optional(),
+  notes: z.string().optional(),
+});
 
 type ExpenseFormData = z.infer<typeof expenseSchema>;
+
+const vendorSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  specialty: z.string().min(1, "Specialty is required"),
+  phone: z.string().min(1, "Phone is required"),
+  email: z.string().email("Valid email required"),
+  rating: z.number().min(1).max(5),
+});
+
 type VendorFormData = z.infer<typeof vendorSchema>;
 
 export default function Expenses() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  // State for dialogs
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCreateVendorDialogOpen, setIsCreateVendorDialogOpen] = useState(false);
-  const [isEditVendorDialogOpen, setIsEditVendorDialogOpen] = useState(false);
-
-  // State for filters
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedProperty, setSelectedProperty] = useState("all");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [vendorSearchTerm, setVendorSearchTerm] = useState("");
-  const [selectedVendorCategory, setSelectedVendorCategory] = useState("all");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<any>(null);
 
-  // Queries
-  const { data: expenses } = useQuery({
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Data fetching
+  const { data: expenses = [] } = useQuery({
     queryKey: ["/api/expenses"],
   });
 
-  const { data: vendors } = useQuery({
+  const { data: vendors = [] } = useQuery({
     queryKey: ["/api/vendors"],
   });
 
-  const { data: properties } = useQuery({
+  const { data: properties = [] } = useQuery({
     queryKey: ["/api/properties"],
   });
 
   // Computed values
-  const totalExpenses = expenses?.reduce((sum: number, expense: any) => sum + parseFloat(expense.amount.toString()), 0) || 0;
+  const totalExpenses = Array.isArray(expenses) ? expenses.reduce((sum: number, expense: any) => sum + parseFloat(expense.amount.toString()), 0) : 0;
 
   // Filtered data
-  const filteredExpenses = expenses?.filter((expense: any) => {
-    const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredExpenses = Array.isArray(expenses) ? expenses.filter((expense: any) => {
+    const matchesSearch = expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          expense.vendorName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || expense.category === selectedCategory;
     const matchesProperty = selectedProperty === "all" || expense.propertyId === selectedProperty;
-    const matchesDateRange = (!startDate || new Date(expense.date) >= new Date(startDate)) &&
-                            (!endDate || new Date(expense.date) <= new Date(endDate));
-    return matchesSearch && matchesCategory && matchesProperty && matchesDateRange;
-  }) || [];
-
-  const filteredVendors = vendors?.filter((vendor: any) => {
-    const matchesSearch = vendor.name.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
-                         vendor.specialty?.toLowerCase().includes(vendorSearchTerm.toLowerCase());
-    const matchesCategory = selectedVendorCategory === "all" || 
-                           vendor.specialty?.toLowerCase().includes(selectedVendorCategory);
-    return matchesSearch && matchesCategory;
-  }) || [];
+    return matchesSearch && matchesCategory && matchesProperty;
+  }) : [];
 
   // Forms
   const createForm = useForm<ExpenseFormData>({
@@ -123,1066 +88,454 @@ export default function Expenses() {
       isRecurring: false,
       vendorName: "",
       notes: "",
-      accountNumber: "",
-      startDate: "",
-      endDate: "",
-      policyEffectiveDate: "",
-      policyExpirationDate: "",
-      meterReadingStart: "",
-      meterReadingEnd: "",
-      usageAmount: "",
-      recurrencePeriod: "monthly",
     },
   });
 
   const editForm = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: {
-      propertyId: "",
-      category: "",
-      description: "",
-      amount: "",
-      date: new Date().toISOString().split('T')[0],
-      isRecurring: false,
-      vendorName: "",
-      notes: "",
-      accountNumber: "",
-      startDate: "",
-      endDate: "",
-      policyEffectiveDate: "",
-      policyExpirationDate: "",
-      meterReadingStart: "",
-      meterReadingEnd: "",
-      usageAmount: "",
-      recurrencePeriod: "monthly",
-    },
   });
 
-  const createVendorForm = useForm<VendorFormData>({
+  const vendorForm = useForm<VendorFormData>({
     resolver: zodResolver(vendorSchema),
     defaultValues: {
       name: "",
-      email: "",
-      phone: "",
       specialty: "",
-      address: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      rating: "",
-      isActive: true,
-    },
-  });
-
-  const editVendorForm = useForm<VendorFormData>({
-    resolver: zodResolver(vendorSchema),
-    defaultValues: {
-      name: "",
-      email: "",
       phone: "",
-      specialty: "",
-      address: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      rating: "",
-      isActive: true,
+      email: "",
+      rating: 5,
     },
   });
 
   // Mutations
-  const createMutation = useMutation({
-    mutationFn: async (data: InsertExpense) => apiRequest("POST", "/api/expenses", data),
+  const createExpenseMutation = useMutation({
+    mutationFn: (data: ExpenseFormData) => apiRequest("POST", "/api/expenses", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
       setIsCreateDialogOpen(false);
       createForm.reset();
-      toast({ title: "Success", description: "Expense added successfully!" });
+      toast({ title: "Expense created successfully" });
     },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    onError: () => {
+      toast({ title: "Failed to create expense", variant: "destructive" });
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: InsertExpense }) =>
-      apiRequest("PUT", `/api/expenses/${id}`, data),
+  const updateExpenseMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ExpenseFormData }) => 
+      apiRequest("PATCH", `/api/expenses/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
       setIsEditDialogOpen(false);
-      toast({ title: "Success", description: "Expense updated successfully!" });
+      toast({ title: "Expense updated successfully" });
     },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    onError: () => {
+      toast({ title: "Failed to update expense", variant: "destructive" });
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => apiRequest("DELETE", `/api/expenses/${id}`),
+  const deleteExpenseMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/expenses/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
-      toast({ title: "Success", description: "Expense deleted successfully!" });
+      toast({ title: "Expense deleted successfully" });
     },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    onError: () => {
+      toast({ title: "Failed to delete expense", variant: "destructive" });
     },
   });
 
   const createVendorMutation = useMutation({
-    mutationFn: async (data: InsertVendor) => apiRequest("POST", "/api/vendors", data),
+    mutationFn: (data: VendorFormData) => apiRequest("POST", "/api/vendors", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
-      setIsCreateVendorDialogOpen(false);
-      createVendorForm.reset();
-      toast({ title: "Success", description: "Vendor added successfully!" });
+      vendorForm.reset();
+      toast({ title: "Vendor created successfully" });
     },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    onError: () => {
+      toast({ title: "Failed to create vendor", variant: "destructive" });
     },
   });
 
-  const updateVendorMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: InsertVendor }) =>
-      apiRequest("PUT", `/api/vendors/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
-      setIsEditVendorDialogOpen(false);
-      toast({ title: "Success", description: "Vendor updated successfully!" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const deleteVendorMutation = useMutation({
-    mutationFn: async (id: string) => apiRequest("DELETE", `/api/vendors/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
-      toast({ title: "Success", description: "Vendor deleted successfully!" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // Handlers
-  const onCreateSubmit = (data: ExpenseFormData) => {
-    const expenseData: InsertExpense = {
-      ...data,
-      amount: parseFloat(data.amount),
-      propertyId: data.propertyId,
-    };
-    createMutation.mutate(expenseData);
+  const handleCreateExpense = (data: ExpenseFormData) => {
+    createExpenseMutation.mutate(data);
   };
 
-  const onEditSubmit = (data: ExpenseFormData) => {
-    const expenseData: InsertExpense = {
-      ...data,
-      amount: parseFloat(data.amount),
-      propertyId: data.propertyId,
-    };
-    updateMutation.mutate({ id: editForm.getValues("id") || "", data: expenseData });
-  };
-
-  const handleEdit = (expense: Expense) => {
+  const handleEditExpense = (expense: any) => {
+    setEditingExpense(expense);
     editForm.reset({
-      ...expense,
+      propertyId: expense.propertyId,
+      category: expense.category,
+      description: expense.description,
       amount: expense.amount.toString(),
-      date: expense.date.toString(),
+      date: expense.date.split('T')[0],
+      isRecurring: expense.isRecurring,
+      vendorName: expense.vendorName || "",
+      notes: expense.notes || "",
     });
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleUpdateExpense = (data: ExpenseFormData) => {
+    if (editingExpense) {
+      updateExpenseMutation.mutate({ id: editingExpense.id, data });
+    }
+  };
+
+  const handleDeleteExpense = (id: string) => {
     if (confirm("Are you sure you want to delete this expense?")) {
-      deleteMutation.mutate(id);
+      deleteExpenseMutation.mutate(id);
     }
   };
 
-  const onCreateVendorSubmit = (data: VendorFormData) => {
-    const vendorData: InsertVendor = {
-      ...data,
-      rating: parseFloat(data.rating),
-    };
-    createVendorMutation.mutate(vendorData);
+  const handleCreateVendor = (data: VendorFormData) => {
+    createVendorMutation.mutate(data);
   };
 
-  const onEditVendorSubmit = (data: VendorFormData) => {
-    const vendorData: InsertVendor = {
-      ...data,
-      rating: parseFloat(data.rating),
-    };
-    updateVendorMutation.mutate({ id: editVendorForm.getValues("id") || "", data: vendorData });
-  };
-
-  const handleEditVendor = (vendor: Vendor) => {
-    editVendorForm.reset({
-      ...vendor,
-      rating: vendor.rating.toString(),
-    });
-    setIsEditVendorDialogOpen(true);
-  };
-
-  const handleDeleteVendor = (id: string) => {
-    if (confirm("Are you sure you want to delete this vendor?")) {
-      deleteVendorMutation.mutate(id);
-    }
-  };
+  const categories = [
+    "Maintenance & Repairs",
+    "Utilities",
+    "Insurance",
+    "Property Management",
+    "Legal & Professional",
+    "Marketing & Advertising",
+    "Supplies",
+    "Other"
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold">Expenses & Vendors</h1>
-        <p className="text-muted-foreground">
-          Track expenses and manage vendors in one place
-        </p>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Expenses</h1>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Expense
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New Expense</DialogTitle>
+            </DialogHeader>
+            <Form {...createForm}>
+              <form onSubmit={createForm.handleSubmit(handleCreateExpense)} className="space-y-4">
+                <FormField
+                  control={createForm.control}
+                  name="propertyId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Property</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select property" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Array.isArray(properties) && properties.map((property: any) => (
+                            <SelectItem key={property.id} value={property.id}>
+                              {property.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={createForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={createForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter description" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={createForm.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Amount</FormLabel>
+                      <FormControl>
+                        <Input placeholder="0.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={createForm.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={createExpenseMutation.isPending}>
+                    {createExpenseMutation.isPending ? "Creating..." : "Create Expense"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Tabs defaultValue="expenses" className="w-full">
-        <TabsList>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
-          <TabsTrigger value="vendors">Vendors</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="expenses">
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Expense Management</h2>
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Expense
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Add New Expense</DialogTitle>
-                  </DialogHeader>
-                  <Form {...createForm}>
-                    <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={createForm.control}
-                          name="propertyId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Property</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select property" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {properties?.map((property: any) => (
-                                    <SelectItem key={property.id} value={property.id}>
-                                      {property.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={createForm.control}
-                          name="category"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Category</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select category" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {Object.entries(expenseCategories).map(([key, label]) => (
-                                    <SelectItem key={key} value={key}>
-                                      {label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <FormField
-                        control={createForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Expense description" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={createForm.control}
-                          name="amount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Amount</FormLabel>
-                              <FormControl>
-                                <Input placeholder="0.00" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={createForm.control}
-                          name="date"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Date</FormLabel>
-                              <FormControl>
-                                <Input type="date" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(totalExpenses)}</div>
+          </CardContent>
+        </Card>
 
-                      <FormField
-                        control={createForm.control}
-                        name="vendorName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Vendor (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Vendor name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={createForm.control}
-                        name="notes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Notes (Optional)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Additional notes or details" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Conditional fields based on category */}
-                      {(createForm.watch("category") === "insurance" || createForm.watch("category") === "taxes") && (
-                        <>
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={createForm.control}
-                              name="policyEffectiveDate"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>
-                                    {createForm.watch("category") === "insurance" ? "Policy Effective Date" : "Tax Period Start"}
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input type="date" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={createForm.control}
-                              name="policyExpirationDate"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>
-                                    {createForm.watch("category") === "insurance" ? "Policy Expiration Date" : "Tax Period End"}
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input type="date" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <FormField
-                            control={createForm.control}
-                            name="accountNumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  {createForm.watch("category") === "insurance" ? "Policy Number" : "Tax Account Number"}
-                                </FormLabel>
-                                <FormControl>
-                                  <Input placeholder={createForm.watch("category") === "insurance" ? "Policy number" : "Tax account number"} {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </>
-                      )}
-
-                      {/* Utility-specific fields */}
-                      {(createForm.watch("category") === "utilities" || createForm.watch("category") === "water" || 
-                        createForm.watch("category") === "sewer" || createForm.watch("category") === "sanitation") && (
-                        <>
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={createForm.control}
-                              name="startDate"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Service Period Start</FormLabel>
-                                  <FormControl>
-                                    <Input type="date" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={createForm.control}
-                              name="endDate"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Service Period End</FormLabel>
-                                  <FormControl>
-                                    <Input type="date" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <FormField
-                            control={createForm.control}
-                            name="accountNumber"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Service Account Number</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Utility account number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          {/* Meter readings for water, sewer utilities */}
-                          {(createForm.watch("category") === "water" || createForm.watch("category") === "sewer") && (
-                            <div className="grid grid-cols-3 gap-4">
-                              <FormField
-                                control={createForm.control}
-                                name="meterReadingStart"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Starting Meter Reading</FormLabel>
-                                    <FormControl>
-                                      <Input placeholder="Previous reading" type="number" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={createForm.control}
-                                name="meterReadingEnd"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Ending Meter Reading</FormLabel>
-                                    <FormControl>
-                                      <Input placeholder="Current reading" type="number" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={createForm.control}
-                                name="usageAmount"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Usage Amount</FormLabel>
-                                    <FormControl>
-                                      <Input placeholder="Gallons/units used" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          )}
-                        </>
-                      )}
-
-                      {/* Recurring expense fields */}
-                      <FormField
-                        control={createForm.control}
-                        name="isRecurring"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base">Recurring Expense</FormLabel>
-                              <div className="text-sm text-muted-foreground">
-                                This expense repeats on a regular schedule
-                              </div>
-                            </div>
-                            <FormControl>
-                              <input
-                                type="checkbox"
-                                checked={field.value}
-                                onChange={field.onChange}
-                                className="rounded border border-input"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {createForm.watch("isRecurring") && (
-                        <div className="grid grid-cols-3 gap-4">
-                          <FormField
-                            control={createForm.control}
-                            name="recurrencePeriod"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Frequency</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select frequency" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="monthly">Monthly</SelectItem>
-                                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                                    <SelectItem value="yearly">Yearly</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={createForm.control}
-                            name="startDate"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Start Date</FormLabel>
-                                <FormControl>
-                                  <Input type="date" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={createForm.control}
-                            name="endDate"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>End Date (Optional)</FormLabel>
-                                <FormControl>
-                                  <Input type="date" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      )}
-
-                      <div className="flex justify-end space-x-2">
-                        <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button type="submit" disabled={createMutation.isPending}>
-                          {createMutation.isPending ? "Adding..." : "Add Expense"}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">This Month</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(
+                filteredExpenses
+                  .filter((expense: any) => {
+                    const expenseDate = new Date(expense.date);
+                    const now = new Date();
+                    return expenseDate.getMonth() === now.getMonth() && 
+                           expenseDate.getFullYear() === now.getFullYear();
+                  })
+                  .reduce((sum: number, expense: any) => sum + parseFloat(expense.amount.toString()), 0)
+              )}
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filters
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Search</label>
-                    <Input
-                      placeholder="Search expenses..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Category</label>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {Object.entries(expenseCategories).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Property</label>
-                    <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All properties" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Properties</SelectItem>
-                        {properties?.map((property: any) => (
-                          <SelectItem key={property.id} value={property.id}>
-                            {property.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Start Date</label>
-                    <Input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">End Date</label>
-                    <Input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Items</CardTitle>
+            <Receipt className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{filteredExpenses.length}</div>
+          </CardContent>
+        </Card>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <DollarSign className="h-8 w-8 text-green-600" />
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-muted-foreground">Total Expenses</p>
-                      <p className="text-2xl font-semibold">{formatCurrency(totalExpenses)}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <Receipt className="h-8 w-8 text-blue-600" />
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-muted-foreground">Expense Count</p>
-                      <p className="text-2xl font-semibold">{filteredExpenses.length}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <Calendar className="h-8 w-8 text-purple-600" />
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-muted-foreground">This Month</p>
-                      <p className="text-2xl font-semibold">
-                        {formatCurrency(
-                          filteredExpenses
-                            .filter((e: any) => new Date(e.date).getMonth() === new Date().getMonth())
-                            .reduce((sum: any, e: any) => sum + parseFloat(e.amount.toString()), 0)
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <RotateCcw className="h-8 w-8 text-orange-600" />
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-muted-foreground">Recurring</p>
-                      <p className="text-2xl font-semibold">
-                        {filteredExpenses.filter((e: any) => e.isRecurring).length}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Vendors</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{Array.isArray(vendors) ? vendors.length : 0}</div>
+          </CardContent>
+        </Card>
+      </div>
 
-            {/* Expenses Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Expenses</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-4">Property</th>
-                        <th className="text-left p-4">Category</th>
-                        <th className="text-left p-4">Description</th>
-                        <th className="text-left p-4">Amount</th>
-                        <th className="text-left p-4">Date</th>
-                        <th className="text-left p-4">Vendor</th>
-                        <th className="text-left p-4">Status</th>
-                        <th className="text-left p-4">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredExpenses.map((expense: any) => {
-                        const property = properties?.find((p: any) => p.id === expense.propertyId);
-                        return (
-                          <tr key={expense.id} className="border-b hover:bg-muted/50">
-                            <td className="p-4">{property?.name || 'Unknown Property'}</td>
-                            <td className="p-4">
-                              <Badge variant="outline">
-                                {expenseCategories[expense.category as keyof typeof expenseCategories] || expense.category}
-                              </Badge>
-                            </td>
-                            <td className="p-4">{expense.description}</td>
-                            <td className="p-4 font-semibold">{formatCurrency(expense.amount)}</td>
-                            <td className="p-4">{formatDate(expense.date)}</td>
-                            <td className="p-4">{expense.vendorName || '-'}</td>
-                            <td className="p-4">
-                              {expense.isRecurring ? (
-                                <Badge variant="secondary">
-                                  <RotateCcw className="h-3 w-3 mr-1" />
-                                  Recurring
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline">One-time</Badge>
-                              )}
-                            </td>
-                            <td className="p-4">
-                              <div className="flex space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                                  onClick={() => handleEdit(expense)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="border-red-200 text-red-600 hover:bg-red-50"
-                                  onClick={() => handleDelete(expense.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="vendors">
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Vendor Management</h2>
-              <Dialog open={isCreateVendorDialogOpen} onOpenChange={setIsCreateVendorDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Vendor
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Vendor</DialogTitle>
-                  </DialogHeader>
-                  <Form {...createVendorForm}>
-                    <form onSubmit={createVendorForm.handleSubmit(onCreateVendorSubmit)} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={createVendorForm.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Vendor name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={createVendorForm.control}
-                          name="specialty"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Specialty</FormLabel>
-                              <FormControl>
-                                <Input placeholder="e.g., Plumbing, Electrical" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={createVendorForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input type="email" placeholder="vendor@example.com" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={createVendorForm.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Phone</FormLabel>
-                              <FormControl>
-                                <Input placeholder="(555) 123-4567" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={createVendorForm.control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Address</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Street address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-3 gap-4">
-                        <FormField
-                          control={createVendorForm.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>City</FormLabel>
-                              <FormControl>
-                                <Input placeholder="City" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={createVendorForm.control}
-                          name="state"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>State</FormLabel>
-                              <FormControl>
-                                <Input placeholder="State" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={createVendorForm.control}
-                          name="zipCode"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Zip Code</FormLabel>
-                              <FormControl>
-                                <Input placeholder="12345" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={createVendorForm.control}
-                        name="rating"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Rating (1-5)</FormLabel>
-                            <FormControl>
-                              <Input type="number" min="1" max="5" placeholder="5" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex justify-end space-x-2">
-                        <Button type="button" variant="outline" onClick={() => setIsCreateVendorDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button type="submit" disabled={createVendorMutation.isPending}>
-                          {createVendorMutation.isPending ? "Adding..." : "Add Vendor"}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {/* Vendor Filters */}
-            <div className="flex space-x-4">
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
               <Input
-                placeholder="Search vendors..."
-                value={vendorSearchTerm}
-                onChange={(e) => setVendorSearchTerm(e.target.value)}
-                className="max-w-sm"
+                placeholder="Search expenses..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Select value={selectedVendorCategory} onValueChange={setSelectedVendorCategory}>
-                <SelectTrigger className="max-w-xs">
-                  <SelectValue placeholder="All specialties" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Specialties</SelectItem>
-                  <SelectItem value="plumbing">Plumbing</SelectItem>
-                  <SelectItem value="electrical">Electrical</SelectItem>
-                  <SelectItem value="hvac">HVAC</SelectItem>
-                  <SelectItem value="landscaping">Landscaping</SelectItem>
-                  <SelectItem value="cleaning">Cleaning</SelectItem>
-                  <SelectItem value="painting">Painting</SelectItem>
-                  <SelectItem value="general">General Contractor</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
-
-            {/* Vendors Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Vendors</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-4">Name</th>
-                        <th className="text-left p-4">Specialty</th>
-                        <th className="text-left p-4">Contact</th>
-                        <th className="text-left p-4">Location</th>
-                        <th className="text-left p-4">Rating</th>
-                        <th className="text-left p-4">Status</th>
-                        <th className="text-left p-4">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredVendors.map((vendor: any) => (
-                        <tr key={vendor.id} className="border-b hover:bg-muted/50">
-                          <td className="p-4 font-medium">{vendor.name}</td>
-                          <td className="p-4">
-                            <Badge variant="outline">{vendor.specialty}</Badge>
-                          </td>
-                          <td className="p-4">
-                            <div className="text-sm">
-                              <div>{vendor.email}</div>
-                              <div className="text-muted-foreground">{vendor.phone}</div>
-                            </div>
-                          </td>
-                          <td className="p-4 text-sm">
-                            {vendor.city}, {vendor.state} {vendor.zipCode}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center">
-                              <span className="mr-1">{vendor.rating}</span>
-                              <span className="text-yellow-500">★</span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <Badge variant={vendor.isActive ? "default" : "secondary"}>
-                              {vendor.isActive ? "Active" : "Inactive"}
-                            </Badge>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                                onClick={() => handleEditVendor(vendor)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-red-200 text-red-600 hover:bg-red-50"
-                                onClick={() => handleDeleteVendor(vendor.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="All Properties" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Properties</SelectItem>
+                {Array.isArray(properties) && properties.map((property: any) => (
+                  <SelectItem key={property.id} value={property.id}>
+                    {property.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Expenses List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Expenses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {filteredExpenses.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No expenses found. Add your first expense to get started.
+              </p>
+            ) : (
+              filteredExpenses.map((expense: any) => (
+                <div key={expense.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <h3 className="font-medium">{expense.description}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {expense.category} • {formatDate(expense.date)}
+                        </p>
+                        {expense.vendorName && (
+                          <p className="text-sm text-muted-foreground">
+                            Vendor: {expense.vendorName}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="font-semibold">{formatCurrency(parseFloat(expense.amount))}</div>
+                      {expense.isRecurring && (
+                        <Badge variant="secondary" className="text-xs">
+                          Recurring
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditExpense(expense)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteExpense(expense.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Expense</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleUpdateExpense)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter description" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-2">
+                <Button type="submit" disabled={updateExpenseMutation.isPending}>
+                  {updateExpenseMutation.isPending ? "Updating..." : "Update Expense"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
