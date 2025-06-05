@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'wouter';
 import {
@@ -163,17 +164,52 @@ export default function AppSidebar() {
                     >
                       <Link href={item.url} className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-muted to-muted/50 group-data-[active=true]:from-primary-foreground/20 group-data-[active=true]:to-primary-foreground/10 transition-all duration-200">
-                          <item.icon className="h-4 w-4" />
-                        </div>
-                        <span className="flex-1">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
+                        <item.icon className="h-4 w-4" />
+                      </div>
+                      <span className="flex-1">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
           </SidebarGroup>
         ))}
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+        
+        {/* Quick Stats Section */}
+        <div className="mt-6 rounded-xl bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 border border-border/30 p-4 shadow-sm">
+          <h4 className="mb-3 text-sm font-semibold text-foreground flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            Quick Overview
+          </h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground flex items-center gap-2">
+                <Building className="h-3 w-3" />
+                Active Properties
+              </span>
+              <span className="text-sm font-bold text-foreground">12</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground flex items-center gap-2">
+                <MapPin className="h-3 w-3" />
+                Total Units
+              </span>
+              <span className="text-sm font-bold text-foreground">48</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground flex items-center gap-2">
+                <UserCheck className="h-3 w-3" />
+                Occupancy Rate
+              </span>
+              <span className="text-sm font-bold text-green-600">94%</span>
+            </div>
+          </div>
+        </div>
       </SidebarContent>
     </Sidebar>
   );
