@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, Upload, FileText, DollarSign, Calendar, Clock, AlertTriangle, CheckSquare } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, Upload, FileText, DollarSign, Calendar, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -977,6 +977,92 @@ export default function Tenants() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Lease Documents & Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Lease Management</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Lease Information Card */}
+                  <div 
+                    className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer transition-colors"
+                    onClick={() => {
+                      // TODO: Open lease information management dialog
+                      console.log('Open lease information for tenant:', selectedTenant.id);
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400 mr-3" />
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Lease Information</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">View and manage lease details</p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          {selectedTenant.leaseStart ? 'Active lease' : 'No lease on file'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Documents Card */}
+                  <div 
+                    className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-green-500 dark:hover:border-green-400 cursor-pointer transition-colors"
+                    onClick={() => {
+                      // TODO: Open documents management dialog
+                      console.log('Open documents for tenant:', selectedTenant.id);
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <Upload className="h-8 w-8 text-green-600 dark:text-green-400 mr-3" />
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Documents</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Upload and manage documents</p>
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          Click to add documents
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Background Check Card */}
+                  <div 
+                    className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 dark:hover:border-purple-400 cursor-pointer transition-colors"
+                    onClick={() => {
+                      // TODO: Open background check dialog
+                      console.log('Open background check for tenant:', selectedTenant.id);
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <Shield className="h-8 w-8 text-purple-600 dark:text-purple-400 mr-3" />
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Background Check</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Manage screening information</p>
+                        <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                          View screening status
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Communication History Card */}
+                  <div 
+                    className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-orange-500 dark:hover:border-orange-400 cursor-pointer transition-colors"
+                    onClick={() => {
+                      // TODO: Open communication history dialog
+                      console.log('Open communication history for tenant:', selectedTenant.id);
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <MessageSquare className="h-8 w-8 text-orange-600 dark:text-orange-400 mr-3" />
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Communication</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">View message history</p>
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          Recent messages
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
