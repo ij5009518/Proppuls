@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export default function AdvancedFeatures() {
       description: "Digital lease creation, e-signatures, renewals, and automated rent escalations",
       icon: FileText,
       status: "Available",
+      route: "/lease-management",
       features: [
         "Digital lease creation with e-signature integration",
         "Automated lease renewals and notifications",
@@ -42,7 +44,8 @@ export default function AdvancedFeatures() {
       title: "Document Management Hub",
       description: "Centralized document storage with smart categorization and expiration tracking",
       icon: Building,
-      status: "Available", 
+      status: "Available",
+      route: "/document-management",
       features: [
         "Centralized document storage with cloud sync",
         "Smart categorization and tagging system",
@@ -59,6 +62,7 @@ export default function AdvancedFeatures() {
       description: "Tenant portals, messaging system, and automated notifications",
       icon: MessageSquare,
       status: "Available",
+      route: "/communication-hub",
       features: [
         "Tenant portal with self-service features",
         "Multi-channel messaging (email, SMS, in-app)",
@@ -75,6 +79,7 @@ export default function AdvancedFeatures() {
       description: "ROI tracking, market analysis, and comprehensive financial reporting",
       icon: BarChart3,
       status: "Available",
+      route: "/reporting-analytics",
       features: [
         "ROI and cash flow analysis",
         "Market rent analysis and recommendations",
@@ -91,6 +96,7 @@ export default function AdvancedFeatures() {
       description: "Inspection tools, photo documentation, and offline functionality",
       icon: Smartphone,
       status: "Coming Soon",
+      route: "/mobile-features",
       features: [
         "Mobile inspection tools with offline capability",
         "Photo documentation with automatic tagging",
@@ -107,6 +113,7 @@ export default function AdvancedFeatures() {
       description: "Payment processing, accounting software, and background check services",
       icon: Zap,
       status: "Available",
+      route: "/integrations",
       features: [
         "Stripe payment processing integration",
         "QuickBooks accounting synchronization",
@@ -123,6 +130,7 @@ export default function AdvancedFeatures() {
       description: "Permit tracking, eviction management, and regulatory compliance monitoring",
       icon: Scale,
       status: "Available",
+      route: "/compliance-legal",
       features: [
         "Permit and license tracking with renewals",
         "Eviction process management and documentation",
@@ -190,13 +198,17 @@ export default function AdvancedFeatures() {
                 </ul>
                 
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <Button 
-                    variant={category.status === "Available" ? "default" : "secondary"} 
-                    className="w-full"
-                    disabled={category.status !== "Available"}
-                  >
-                    {category.status === "Available" ? "Explore Features" : "Coming Soon"}
-                  </Button>
+                  {category.status === "Available" ? (
+                    <Link href={category.route} className="w-full">
+                      <Button variant="default" className="w-full">
+                        Explore Features
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button variant="secondary" className="w-full" disabled>
+                      Coming Soon
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
