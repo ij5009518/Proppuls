@@ -410,152 +410,49 @@ export default function Tenants() {
             return (
               <Card 
                 key={tenant.id} 
-                className="relative cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 group"
+                className="hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => {
                   setSelectedTenant(tenant);
                   setIsViewDialogOpen(true);
                 }}
               >
-                <CardHeader className="pb-4">
-                  <div className="flex justify-between items-start">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
                     <div className="flex-1">
-                      <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                        {tenant.firstName} {tenant.lastName}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">{tenant.email}</p>
-                      <p className="text-sm text-muted-foreground">{tenant.phone}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge className={getStatusColor(tenant.status)}>
-                        {tenant.status}
-                      </Badge>
-                      {(overduePayments.length > 0 || currentBalance > 0) && (
-                        <div className="flex gap-1">
-                          {overduePayments.length > 0 && (
-                            <AlertTriangle className="h-4 w-4 text-red-500" />
-                          )}
-                          {currentBalance > 0 && (
-                            <Clock className="h-4 w-4 text-yellow-500" />
-                          )}
+                      <div className="flex items-center space-x-4">
+                        <div>
+                          <h3 className="font-semibold">{tenant.firstName} {tenant.lastName}</h3>
+                          <p className="text-sm text-gray-600">{tenant.email}</p>
+                          <p className="text-sm text-gray-600">{tenant.phone}</p>
                         </div>
-                      )}
+                        <Badge className={getStatusColor(tenant.status)}>
+                          {tenant.status}
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Unit:</span>
-                      <span className="text-sm font-medium">{getUnitNumber(tenant.unitId)}</span>
-                    </div>
-                    
-                    {tenant.monthlyRent && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Monthly Rent:</span>
-                        <span className="text-sm font-medium">{formatCurrency(tenant.monthlyRent)}</span>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <p className="text-sm font-semibold">Unit: {getUnitNumber(tenant.unitId)}</p>
+                        {tenant.monthlyRent && (
+                          <p className="text-sm text-gray-600">{formatCurrency(tenant.monthlyRent)}</p>
+                        )}
+                        {(overduePayments.length > 0 || currentBalance > 0) && (
+                          <div className="flex items-center justify-end space-x-1 mt-1">
+                            {overduePayments.length > 0 && (
+                              <div className="flex items-center text-red-600">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                <span className="text-xs">{overduePayments.length} overdue</span>
+                              </div>
+                            )}
+                            {currentBalance > 0 && (
+                              <div className="flex items-center text-yellow-600">
+                                <Clock className="h-3 w-3 mr-1" />
+                                <span className="text-xs">{formatCurrency(currentBalance.toString())}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
-
-                    {currentBalance > 0 && (
-                      <div className="flex justify-between items-center p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded">
-                        <span className="text-sm text-yellow-700 dark:text-yellow-300">Balance:</span>
-                        <span className="text-sm font-bold text-yellow-700 dark:text-yellow-300">
-                          {formatCurrency(currentBalance.toString())}
-                        </span>
-                      </div>
-                    )}
-
-                    {overduePayments.length > 0 && (
-                      <div className="flex justify-between items-center p-2 bg-red-50 dark:bg-red-900/20 rounded">
-                        <span className="text-sm text-red-700 dark:text-red-300">Overdue:</span>
-                        <span className="text-sm font-bold text-red-700 dark:text-red-300">
-                          {overduePayments.length} payment(s)
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Quick Action Icons */}
-                    <div className="flex justify-between items-center pt-3 border-t">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCreateTask(tenant);
-                          }}
-                          title="Create Task"
-                          className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20"
-                        >
-                          <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedTenant(tenant);
-                            paymentForm.setValue("tenantId", tenant.id);
-                            paymentForm.setValue("unitId", tenant.unitId || "");
-                            paymentForm.setValue("amount", tenant.monthlyRent || "");
-                            setIsPaymentDialogOpen(true);
-                          }}
-                          title="Record Payment"
-                          className="h-8 w-8 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
-                        >
-                          <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedTenant(tenant);
-                            setIsViewDialogOpen(true);
-                          }}
-                          title="View Details"
-                          className="h-8 w-8 p-0 hover:bg-purple-100 dark:hover:bg-purple-900/20"
-                        >
-                          <Eye className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedTenant(tenant);
-                            form.reset({
-                              firstName: tenant.firstName,
-                              lastName: tenant.lastName,
-                              email: tenant.email,
-                              phone: tenant.phone,
-                              status: tenant.status,
-                              unitId: tenant.unitId,
-                              leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
-                              leaseEnd: tenant.leaseEnd ? new Date(tenant.leaseEnd) : undefined,
-                              monthlyRent: tenant.monthlyRent || "",
-                              deposit: tenant.deposit || "",
-                            });
-                            setIsEditDialogOpen(true);
-                          }}
-                          title="Edit Tenant"
-                          className="h-8 w-8 p-0 hover:bg-orange-100 dark:hover:bg-orange-900/20"
-                        >
-                          <Edit className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                        </Button>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteTenantMutation.mutate(tenant.id);
-                        }}
-                        title="Delete Tenant"
-                        className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
-                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -854,6 +751,342 @@ export default function Tenants() {
                 </Button>
                 <Button type="submit" disabled={createTaskMutation.isPending}>
                   {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tenant Details Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                {selectedTenant?.firstName} {selectedTenant?.lastName} - Tenant Details
+              </DialogTitle>
+              <div className="flex items-center gap-2 mr-8">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (selectedTenant) handleCreateTask(selectedTenant);
+                  }}
+                  title="Create Task"
+                >
+                  <CheckSquare className="h-4 w-4 mr-1" />
+                  Create Task
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (selectedTenant) {
+                      paymentForm.setValue("tenantId", selectedTenant.id);
+                      paymentForm.setValue("unitId", selectedTenant.unitId || "");
+                      paymentForm.setValue("amount", selectedTenant.monthlyRent || "");
+                      setIsPaymentDialogOpen(true);
+                    }
+                  }}
+                  title="Record Payment"
+                >
+                  <DollarSign className="h-4 w-4 mr-1" />
+                  Record Payment
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (selectedTenant) {
+                      form.reset({
+                        firstName: selectedTenant.firstName,
+                        lastName: selectedTenant.lastName,
+                        email: selectedTenant.email,
+                        phone: selectedTenant.phone,
+                        status: selectedTenant.status,
+                        unitId: selectedTenant.unitId,
+                        leaseStart: selectedTenant.leaseStart ? new Date(selectedTenant.leaseStart) : undefined,
+                        leaseEnd: selectedTenant.leaseEnd ? new Date(selectedTenant.leaseEnd) : undefined,
+                        monthlyRent: selectedTenant.monthlyRent || "",
+                        deposit: selectedTenant.deposit || "",
+                      });
+                      setIsEditDialogOpen(true);
+                    }
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (selectedTenant) {
+                      deleteTenantMutation.mutate(selectedTenant.id);
+                      setIsViewDialogOpen(false);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+          {selectedTenant && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Contact Information</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">Name:</span>
+                      <p className="text-sm">{selectedTenant.firstName} {selectedTenant.lastName}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">Email:</span>
+                      <p className="text-sm">{selectedTenant.email}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">Phone:</span>
+                      <p className="text-sm">{selectedTenant.phone}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">Status:</span>
+                      <Badge className={getStatusColor(selectedTenant.status)}>
+                        {selectedTenant.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Lease Information</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">Unit:</span>
+                      <p className="text-sm">{getUnitNumber(selectedTenant.unitId)}</p>
+                    </div>
+                    {selectedTenant.monthlyRent && (
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Monthly Rent:</span>
+                        <p className="text-sm">{formatCurrency(selectedTenant.monthlyRent)}</p>
+                      </div>
+                    )}
+                    {selectedTenant.deposit && (
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Security Deposit:</span>
+                        <p className="text-sm">{formatCurrency(selectedTenant.deposit)}</p>
+                      </div>
+                    )}
+                    {selectedTenant.leaseStart && (
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Lease Start:</span>
+                        <p className="text-sm">{formatDate(selectedTenant.leaseStart)}</p>
+                      </div>
+                    )}
+                    {selectedTenant.leaseEnd && (
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Lease End:</span>
+                        <p className="text-sm">{formatDate(selectedTenant.leaseEnd)}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Payment Status */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Payment Status</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {getCurrentMonthBalance(selectedTenant.id) > 0 && (
+                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                      <div className="flex items-center">
+                        <Clock className="h-5 w-5 text-yellow-600 mr-2" />
+                        <div>
+                          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Current Balance</p>
+                          <p className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
+                            {formatCurrency(getCurrentMonthBalance(selectedTenant.id).toString())}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {getOverduePayments(selectedTenant.id).length > 0 && (
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                      <div className="flex items-center">
+                        <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
+                        <div>
+                          <p className="text-sm font-medium text-red-800 dark:text-red-200">Overdue Payments</p>
+                          <p className="text-lg font-bold text-red-800 dark:text-red-200">
+                            {getOverduePayments(selectedTenant.id).length} payment(s)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Tenant</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="john.doe@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="unitId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select unit" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {units?.map((unit: any) => (
+                            <SelectItem key={unit.id} value={unit.id}>
+                              {unit.unitNumber}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="monthlyRent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Rent</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1200.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="deposit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Security Deposit</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1200.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateTenantMutation.isPending}>
+                  {updateTenantMutation.isPending ? "Updating..." : "Update Tenant"}
                 </Button>
               </div>
             </form>
