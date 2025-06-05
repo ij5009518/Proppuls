@@ -236,6 +236,30 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.patch("/api/tenants/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      console.log("=== API MIDDLEWARE HIT FOR", req.url, "===");
+      console.log("Method:", req.method);
+      console.log("Body:", JSON.stringify(req.body, null, 2));
+      
+      // Convert date strings to Date objects if they exist
+      const data = { ...req.body };
+      if (data.leaseStart && typeof data.leaseStart === 'string') {
+        data.leaseStart = new Date(data.leaseStart);
+      }
+      if (data.leaseEnd && typeof data.leaseEnd === 'string') {
+        data.leaseEnd = new Date(data.leaseEnd);
+      }
+      
+      const tenant = await storage.updateTenant(id, data);
+      res.json(tenant);
+    } catch (error) {
+      console.error("Error updating tenant:", error);
+      res.status(500).json({ message: "Failed to update tenant" });
+    }
+  });
+
   app.delete("/api/tenants/:id", async (req, res) => {
     try {
       const id = req.params.id;
