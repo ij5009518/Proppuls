@@ -30,6 +30,9 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import NotFound from '@/pages/not-found';
 import EmailManager from '@/pages/EmailManager';
 import AdvancedFeatures from '@/pages/AdvancedFeatures';
+import LeaseManagement from '@/pages/LeaseManagement';
+import DocumentManagement from '@/pages/DocumentManagement';
+import CommunicationHub from '@/pages/CommunicationHub';
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -82,6 +85,9 @@ function AuthenticatedApp() {
         <Route path="/expenses/:category?" component={Expenses} />
         <Route path="/calendar" component={Calendar} />
         <Route path="/advanced-features" component={AdvancedFeatures} />
+        <Route path="/lease-management" component={LeaseManagement} />
+        <Route path="/document-management" component={DocumentManagement} />
+        <Route path="/communication-hub" component={CommunicationHub} />
         <Route path="/ai-assistant" component={AIAssistant} />
         <Route path="/email-manager" component={EmailManager} />
         <Route path="/settings" component={Settings} />
