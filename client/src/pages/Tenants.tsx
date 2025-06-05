@@ -733,17 +733,38 @@ export default function Tenants() {
             const currentBalance = getCurrentMonthBalance(tenant.id);
             
             return (
-              <Card key={tenant.id} className="relative">
+              <Card 
+                key={tenant.id} 
+                className="relative cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 group"
+                onClick={() => {
+                  setSelectedTenant(tenant);
+                  setIsViewDialogOpen(true);
+                }}
+              >
                 <CardHeader className="pb-4">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{tenant.firstName} {tenant.lastName}</CardTitle>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                        {tenant.firstName} {tenant.lastName}
+                      </CardTitle>
                       <p className="text-sm text-muted-foreground">{tenant.email}</p>
                       <p className="text-sm text-muted-foreground">{tenant.phone}</p>
                     </div>
-                    <Badge className={getStatusColor(tenant.status)}>
-                      {tenant.status}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-2">
+                      <Badge className={getStatusColor(tenant.status)}>
+                        {tenant.status}
+                      </Badge>
+                      {(overduePayments.length > 0 || currentBalance > 0) && (
+                        <div className="flex gap-1">
+                          {overduePayments.length > 0 && (
+                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                          )}
+                          {currentBalance > 0 && (
+                            <Clock className="h-4 w-4 text-yellow-500" />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -761,81 +782,105 @@ export default function Tenants() {
                     )}
 
                     {currentBalance > 0 && (
-                      <div className="flex justify-between items-center p-2 bg-yellow-50 rounded">
-                        <span className="text-sm text-yellow-700">Current Balance:</span>
-                        <span className="text-sm font-bold text-yellow-700">{formatCurrency(currentBalance.toString())}</span>
+                      <div className="flex justify-between items-center p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded">
+                        <span className="text-sm text-yellow-700 dark:text-yellow-300">Balance:</span>
+                        <span className="text-sm font-bold text-yellow-700 dark:text-yellow-300">
+                          {formatCurrency(currentBalance.toString())}
+                        </span>
                       </div>
                     )}
 
                     {overduePayments.length > 0 && (
-                      <div className="flex items-center space-x-2 p-2 bg-red-50 rounded">
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                        <span className="text-sm text-red-700">{overduePayments.length} overdue payment(s)</span>
+                      <div className="flex justify-between items-center p-2 bg-red-50 dark:bg-red-900/20 rounded">
+                        <span className="text-sm text-red-700 dark:text-red-300">Overdue:</span>
+                        <span className="text-sm font-bold text-red-700 dark:text-red-300">
+                          {overduePayments.length} payment(s)
+                        </span>
                       </div>
                     )}
 
-                    <div className="flex space-x-2 pt-2">
+                    {/* Quick Action Icons */}
+                    <div className="flex justify-between items-center pt-3 border-t">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCreateTask(tenant);
+                          }}
+                          title="Create Task"
+                          className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                        >
+                          <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTenant(tenant);
+                            paymentForm.setValue("tenantId", tenant.id);
+                            paymentForm.setValue("unitId", tenant.unitId || 0);
+                            paymentForm.setValue("propertyId", getPropertyId(tenant.unitId) || 0);
+                            paymentForm.setValue("amount", tenant.monthlyRent || "");
+                            setIsPaymentDialogOpen(true);
+                          }}
+                          title="Record Payment"
+                          className="h-8 w-8 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
+                        >
+                          <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTenant(tenant);
+                            setIsViewDialogOpen(true);
+                          }}
+                          title="View Details"
+                          className="h-8 w-8 p-0 hover:bg-purple-100 dark:hover:bg-purple-900/20"
+                        >
+                          <Eye className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTenant(tenant);
+                            form.reset({
+                              firstName: tenant.firstName,
+                              lastName: tenant.lastName,
+                              email: tenant.email,
+                              phone: tenant.phone,
+                              status: tenant.status,
+                              unitId: tenant.unitId,
+                              leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
+                              leaseEnd: tenant.leaseEnd ? new Date(tenant.leaseEnd) : undefined,
+                              monthlyRent: tenant.monthlyRent || "",
+                              deposit: tenant.deposit || "",
+                            });
+                            setIsEditDialogOpen(true);
+                          }}
+                          title="Edit Tenant"
+                          className="h-8 w-8 p-0 hover:bg-orange-100 dark:hover:bg-orange-900/20"
+                        >
+                          <Edit className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                        </Button>
+                      </div>
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => handleCreateTask(tenant)}
-                        title="Create Task"
-                      >
-                        <CheckSquare className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedTenant(tenant);
-                          paymentForm.setValue("tenantId", tenant.id);
-                          paymentForm.setValue("unitId", tenant.unitId || 0);
-                          paymentForm.setValue("propertyId", getPropertyId(tenant.unitId) || 0);
-                          paymentForm.setValue("amount", tenant.monthlyRent || "");
-                          setIsPaymentDialogOpen(true);
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteTenantMutation.mutate(tenant.id);
                         }}
-                        title="Record Payment"
+                        title="Delete Tenant"
+                        className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
                       >
-                        <DollarSign className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedTenant(tenant);
-                          setIsViewDialogOpen(true);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedTenant(tenant);
-                          form.reset({
-                            firstName: tenant.firstName,
-                            lastName: tenant.lastName,
-                            email: tenant.email,
-                            phone: tenant.phone,
-                            status: tenant.status,
-                            unitId: tenant.unitId,
-                            leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
-                            leaseEnd: tenant.leaseEnd ? new Date(tenant.leaseEnd) : undefined,
-                            monthlyRent: tenant.monthlyRent || "",
-                            deposit: tenant.deposit || "",
-                          });
-                          setIsEditDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => deleteTenantMutation.mutate(tenant.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                       </Button>
                     </div>
                   </div>

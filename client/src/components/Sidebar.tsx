@@ -17,6 +17,8 @@ import {
   Bot,
   Settings,
   Mail,
+  Zap,
+  Sparkles,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -107,12 +109,12 @@ const menuSections: MenuSection[] = [
       {
         title: 'Advanced Features',
         url: '/advanced-features',
-        icon: Bot,
+        icon: Zap,
       },
       {
         title: 'AI Assistant',
         url: '/ai-assistant',
-        icon: Mail,
+        icon: Bot,
       },
     ]
   },
