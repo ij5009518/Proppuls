@@ -509,28 +509,16 @@ export default function Properties() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Enhanced Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Home className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Properties</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Manage your property portfolio with comprehensive tracking and analytics
-              </p>
-            </div>
-          </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 rounded-xl">
-                <Plus className="mr-2 h-5 w-5" />
-                Add Property
-              </Button>
-            </DialogTrigger>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Properties</h1>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Property
+            </Button>
+          </DialogTrigger>
             <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Property</DialogTitle>
@@ -693,11 +681,9 @@ export default function Properties() {
             </Form>
           </DialogContent>
         </Dialog>
-        </div>
       </div>
 
-      {/* Search and View Controls */}
-      <div className="flex justify-between items-center bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="flex justify-between items-center">
         <Input
           placeholder="Search properties..."
           value={searchTerm}
@@ -724,158 +710,73 @@ export default function Properties() {
 
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.map((property) => {
-            const stats = calculatePropertyStats(property.id);
-            return (
-              <Card 
-                key={property.id} 
-                className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 hover:scale-105"
-                onClick={() => handleView(property)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <Home className="h-6 w-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition-colors">
-                          {property.name}
-                        </CardTitle>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                          {property.propertyType}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge className={`${getStatusColor(property.status)} text-xs font-semibold px-3 py-1 shadow-sm`}>
-                      {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Location */}
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{property.address}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {property.city}, {property.state} {property.zipCode}
-                    </p>
-                  </div>
-
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
-                      <div className="flex items-center space-x-2">
-                        <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        <div>
-                          <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase">Units</p>
-                          <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                            {stats.occupiedUnits}/{stats.totalUnits}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-100 dark:border-green-800">
-                      <div className="flex items-center space-x-2">
-                        <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        <div>
-                          <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase">Monthly</p>
-                          <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                            {formatCurrency(stats.monthlyRent)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Purchase Info */}
-                  <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Purchase Price</span>
-                      <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                        {formatCurrency(property.purchasePrice)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center mt-1">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Occupancy</span>
-                      <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                        {stats.occupancyRate}%
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {filteredProperties.map((property) => (
+            <Card 
+              key={property.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleView(property)}
+            >
+              <CardHeader>
+                <CardTitle className="flex justify-between items-start">
+                  <span>{property.name}</span>
+                  <Badge className={getStatusColor(property.status)}>
+                    {property.status}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">{property.address}</p>
+                  <p className="text-sm text-gray-600">
+                    {property.city}, {property.state} {property.zipCode}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-semibold">Units:</span> {property.totalUnits}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-semibold">Type:</span> {property.propertyType}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-semibold">Purchase Price:</span> {formatCurrency(property.purchasePrice)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredProperties.map((property) => {
-            const stats = calculatePropertyStats(property.id);
-            return (
-              <Card 
-                key={property.id} 
-                className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 hover:scale-[1.02]"
-                onClick={() => handleView(property)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-6 flex-1">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                        <Home className="h-8 w-8 text-white" />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-4 mb-2">
-                          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition-colors">
-                            {property.name}
-                          </h3>
-                          <Badge className={`${getStatusColor(property.status)} text-xs font-semibold px-3 py-1 shadow-sm`}>
-                            {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
-                          </Badge>
-                          <span className="text-sm text-gray-500 dark:text-gray-400 capitalize bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                            {property.propertyType}
-                          </span>
-                        </div>
-                        <p className="text-gray-600 dark:text-gray-400 mb-3">
+          {filteredProperties.map((property) => (
+            <Card 
+              key={property.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleView(property)}
+            >
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-4">
+                      <div>
+                        <h3 className="font-semibold">{property.name}</h3>
+                        <p className="text-sm text-gray-600">
                           {property.address}, {property.city}, {property.state} {property.zipCode}
                         </p>
-                        
-                        <div className="flex items-center space-x-6">
-                          <div className="flex items-center space-x-2">
-                            <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              {stats.occupiedUnits}/{stats.totalUnits} Units
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                              {stats.occupancyRate}% Occupancy
-                            </span>
-                          </div>
-                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="text-right space-y-2">
-                      <div>
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Monthly Revenue</p>
-                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                          {formatCurrency(stats.monthlyRent)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Purchase Price</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                          {formatCurrency(property.purchasePrice)}
-                        </p>
-                      </div>
+                      <Badge className={getStatusColor(property.status)}>
+                        {property.status}
+                      </Badge>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <p className="text-sm font-semibold">{property.totalUnits} units</p>
+                      <p className="text-sm text-gray-600">{formatCurrency(property.purchasePrice)}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
