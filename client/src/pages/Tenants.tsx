@@ -416,44 +416,87 @@ export default function Tenants() {
                   setIsViewDialogOpen(true);
                 }}
               >
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4">
-                        <div>
-                          <h3 className="font-semibold">{tenant.firstName} {tenant.lastName}</h3>
-                          <p className="text-sm text-gray-600">{tenant.email}</p>
-                          <p className="text-sm text-gray-600">{tenant.phone}</p>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    {/* Header with name and status */}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {tenant.firstName} {tenant.lastName}
+                        </h3>
+                        <div className="mt-1">
+                          <Badge className={getStatusColor(tenant.status)}>
+                            {tenant.status}
+                          </Badge>
                         </div>
-                        <Badge className={getStatusColor(tenant.status)}>
-                          {tenant.status}
-                        </Badge>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Unit: {getUnitNumber(tenant.unitId)}
+                        </p>
+                        {tenant.monthlyRent && (
+                          <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                            {formatCurrency(tenant.monthlyRent)}/month
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="text-sm font-semibold">Unit: {getUnitNumber(tenant.unitId)}</p>
-                        {tenant.monthlyRent && (
-                          <p className="text-sm text-gray-600">{formatCurrency(tenant.monthlyRent)}</p>
+
+                    {/* Contact Information */}
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm">
+                        <span className="font-medium text-gray-600 dark:text-gray-400 w-16">Email:</span>
+                        <span className="text-gray-900 dark:text-white">{tenant.email}</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <span className="font-medium text-gray-600 dark:text-gray-400 w-16">Phone:</span>
+                        <span className="text-gray-900 dark:text-white">{tenant.phone}</span>
+                      </div>
+                    </div>
+
+                    {/* Lease Information */}
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                      {tenant.leaseStart && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600 dark:text-gray-400">Lease Start:</span>
+                          <p className="text-gray-900 dark:text-white">{formatDate(tenant.leaseStart)}</p>
+                        </div>
+                      )}
+                      {tenant.leaseEnd && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600 dark:text-gray-400">Lease End:</span>
+                          <p className="text-gray-900 dark:text-white">{formatDate(tenant.leaseEnd)}</p>
+                        </div>
+                      )}
+                      {tenant.deposit && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600 dark:text-gray-400">Security Deposit:</span>
+                          <p className="text-gray-900 dark:text-white">{formatCurrency(tenant.deposit)}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Payment Status Alerts */}
+                    {(overduePayments.length > 0 || currentBalance > 0) && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {overduePayments.length > 0 && (
+                          <div className="flex items-center px-3 py-1 bg-red-100 dark:bg-red-900/20 rounded-full">
+                            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 mr-2" />
+                            <span className="text-sm font-medium text-red-800 dark:text-red-300">
+                              {overduePayments.length} overdue payment{overduePayments.length > 1 ? 's' : ''}
+                            </span>
+                          </div>
                         )}
-                        {(overduePayments.length > 0 || currentBalance > 0) && (
-                          <div className="flex items-center justify-end space-x-1 mt-1">
-                            {overduePayments.length > 0 && (
-                              <div className="flex items-center text-red-600">
-                                <AlertTriangle className="h-3 w-3 mr-1" />
-                                <span className="text-xs">{overduePayments.length} overdue</span>
-                              </div>
-                            )}
-                            {currentBalance > 0 && (
-                              <div className="flex items-center text-yellow-600">
-                                <Clock className="h-3 w-3 mr-1" />
-                                <span className="text-xs">{formatCurrency(currentBalance.toString())}</span>
-                              </div>
-                            )}
+                        {currentBalance > 0 && (
+                          <div className="flex items-center px-3 py-1 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
+                            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mr-2" />
+                            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
+                              Balance: {formatCurrency(currentBalance.toString())}
+                            </span>
                           </div>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
