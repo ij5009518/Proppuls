@@ -1,4 +1,3 @@
-
 import nodemailer from 'nodemailer';
 
 interface EmailOptions {
@@ -28,14 +27,24 @@ class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
+    // Check if required environment variables are set
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.warn('SMTP credentials not configured. Email functionality will not work.');
+      console.warn('Please set SMTP_USER and SMTP_PASS environment variables.');
+    }
+
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
+      secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      // Add some additional options for better compatibility
+      tls: {
+        rejectUnauthorized: false
+      }
     });
   }
 
