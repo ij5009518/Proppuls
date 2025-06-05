@@ -144,9 +144,13 @@ export default function Units() {
     mutationFn: ({ tenantId, unitId }: { tenantId: string; unitId: string }) =>
       apiRequest("PATCH", `/api/tenants/${tenantId}`, { unitId }),
     onSuccess: () => {
+      // Force refresh all related data
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      queryClient.refetchQueries({ queryKey: ["/api/tenants"] });
+      queryClient.refetchQueries({ queryKey: ["/api/units"] });
       setIsAssignTenantDialogOpen(false);
+      setIsViewDialogOpen(false);
       assignTenantForm.reset();
       toast({ title: "Tenant assigned successfully" });
     },
