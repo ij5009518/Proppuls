@@ -888,184 +888,188 @@ export default function Tenants() {
             </div>
           </DialogHeader>
           {selectedTenant && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="lease">Lease</TabsTrigger>
+                <TabsTrigger value="payments">Payments</TabsTrigger>
+                <TabsTrigger value="screening">Screening</TabsTrigger>
+                <TabsTrigger value="communication">Communication</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="details" className="space-y-4">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Contact Information</h3>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Name:</span>
+                        <p className="text-sm">{selectedTenant.firstName} {selectedTenant.lastName}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Email:</span>
+                        <p className="text-sm">{selectedTenant.email}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Phone:</span>
+                        <p className="text-sm">{selectedTenant.phone}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Status:</span>
+                        <Badge className={getStatusColor(selectedTenant.status)}>
+                          {selectedTenant.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Unit Assignment</h3>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Unit:</span>
+                        <p className="text-sm">{getUnitNumber(selectedTenant.unitId)}</p>
+                      </div>
+                      {selectedTenant.monthlyRent && (
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground">Monthly Rent:</span>
+                          <p className="text-sm">{formatCurrency(selectedTenant.monthlyRent)}</p>
+                        </div>
+                      )}
+                      {selectedTenant.deposit && (
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground">Security Deposit:</span>
+                          <p className="text-sm">{formatCurrency(selectedTenant.deposit)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="lease" className="space-y-4">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Lease Details</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground">Lease Status:</span>
+                          <p className="text-sm">
+                            {selectedTenant.leaseStart ? 'Active' : 'No Active Lease'}
+                          </p>
+                        </div>
+                        {selectedTenant.leaseStart && (
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">Start Date:</span>
+                            <p className="text-sm">{formatDate(selectedTenant.leaseStart)}</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-3">
+                        {selectedTenant.leaseEnd && (
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">End Date:</span>
+                            <p className="text-sm">{formatDate(selectedTenant.leaseEnd)}</p>
+                          </div>
+                        )}
+                        {selectedTenant.monthlyRent && (
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">Monthly Rent:</span>
+                            <p className="text-sm">{formatCurrency(selectedTenant.monthlyRent)}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t">
+                    <Button variant="outline" size="sm">
+                      <FileText className="h-4 w-4 mr-2" />
+                      View Lease Agreement
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="payments" className="space-y-4">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Contact Information</h3>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">Name:</span>
-                      <p className="text-sm">{selectedTenant.firstName} {selectedTenant.lastName}</p>
+                  <h3 className="text-lg font-semibold">Payment Status</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {getCurrentMonthBalance(selectedTenant.id) > 0 && (
+                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <div className="flex items-center">
+                          <Clock className="h-5 w-5 text-yellow-600 mr-2" />
+                          <div>
+                            <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Current Balance</p>
+                            <p className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
+                              {formatCurrency(getCurrentMonthBalance(selectedTenant.id).toString())}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {getOverduePayments(selectedTenant.id).length > 0 && (
+                      <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <div className="flex items-center">
+                          <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
+                          <div>
+                            <p className="text-sm font-medium text-red-800 dark:text-red-200">Overdue Payments</p>
+                            <p className="text-lg font-bold text-red-800 dark:text-red-200">
+                              {getOverduePayments(selectedTenant.id).length} payment(s)
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="pt-4 border-t">
+                    <Button variant="outline" size="sm">
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      Add Payment
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="screening" className="space-y-4">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Background Screening</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-semibold mb-2">Credit Check</h4>
+                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300">
+                        Pending
+                      </Badge>
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">Email:</span>
-                      <p className="text-sm">{selectedTenant.email}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">Phone:</span>
-                      <p className="text-sm">{selectedTenant.phone}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">Status:</span>
-                      <Badge className={getStatusColor(selectedTenant.status)}>
-                        {selectedTenant.status}
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-semibold mb-2">Criminal Background</h4>
+                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300">
+                        Pending
                       </Badge>
                     </div>
                   </div>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Lease Information</h3>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-sm font-medium text-muted-foreground">Unit:</span>
-                      <p className="text-sm">{getUnitNumber(selectedTenant.unitId)}</p>
-                    </div>
-                    {selectedTenant.monthlyRent && (
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Monthly Rent:</span>
-                        <p className="text-sm">{formatCurrency(selectedTenant.monthlyRent)}</p>
-                      </div>
-                    )}
-                    {selectedTenant.deposit && (
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Security Deposit:</span>
-                        <p className="text-sm">{formatCurrency(selectedTenant.deposit)}</p>
-                      </div>
-                    )}
-                    {selectedTenant.leaseStart && (
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Lease Start:</span>
-                        <p className="text-sm">{formatDate(selectedTenant.leaseStart)}</p>
-                      </div>
-                    )}
-                    {selectedTenant.leaseEnd && (
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Lease End:</span>
-                        <p className="text-sm">{formatDate(selectedTenant.leaseEnd)}</p>
-                      </div>
-                    )}
+                  <div className="pt-4 border-t">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setIsBackgroundCheckDialogOpen(true)}
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Manage Screening
+                    </Button>
                   </div>
                 </div>
-              </div>
-              
-              {/* Payment Status */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Payment Status</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {getCurrentMonthBalance(selectedTenant.id) > 0 && (
-                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                      <div className="flex items-center">
-                        <Clock className="h-5 w-5 text-yellow-600 mr-2" />
-                        <div>
-                          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Current Balance</p>
-                          <p className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
-                            {formatCurrency(getCurrentMonthBalance(selectedTenant.id).toString())}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {getOverduePayments(selectedTenant.id).length > 0 && (
-                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                      <div className="flex items-center">
-                        <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
-                        <div>
-                          <p className="text-sm font-medium text-red-800 dark:text-red-200">Overdue Payments</p>
-                          <p className="text-lg font-bold text-red-800 dark:text-red-200">
-                            {getOverduePayments(selectedTenant.id).length} payment(s)
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+              </TabsContent>
+
+              <TabsContent value="communication" className="space-y-4">
+                <div className="text-center py-8">
+                  <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">No messages yet</p>
+                  <Button variant="outline">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Send Message
+                  </Button>
                 </div>
-              </div>
-
-              {/* Lease Documents & Information Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Lease Management</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Lease Information Card */}
-                  <div 
-                    className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer transition-colors"
-                    onClick={() => {
-                      // TODO: Open lease information management dialog
-                      console.log('Open lease information for tenant:', selectedTenant.id);
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400 mr-3" />
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">Lease Information</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">View and manage lease details</p>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                          {selectedTenant.leaseStart ? 'Active lease' : 'No lease on file'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Documents Card */}
-                  <div 
-                    className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-green-500 dark:hover:border-green-400 cursor-pointer transition-colors"
-                    onClick={() => {
-                      // TODO: Open documents management dialog
-                      console.log('Open documents for tenant:', selectedTenant.id);
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <Upload className="h-8 w-8 text-green-600 dark:text-green-400 mr-3" />
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">Documents</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Upload and manage documents</p>
-                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                          Click to add documents
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Background Check Card */}
-                  <div 
-                    className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 dark:hover:border-purple-400 cursor-pointer transition-colors"
-                    onClick={() => {
-                      setIsBackgroundCheckDialogOpen(true);
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <Shield className="h-8 w-8 text-purple-600 dark:text-purple-400 mr-3" />
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">Background Check</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Manage screening information</p>
-                        <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                          View screening status
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Communication History Card */}
-                  <div 
-                    className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-orange-500 dark:hover:border-orange-400 cursor-pointer transition-colors"
-                    onClick={() => {
-                      // TODO: Open communication history dialog
-                      console.log('Open communication history for tenant:', selectedTenant.id);
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <MessageSquare className="h-8 w-8 text-orange-600 dark:text-orange-400 mr-3" />
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">Communication</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">View message history</p>
-                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                          Recent messages
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           )}
         </DialogContent>
       </Dialog>
