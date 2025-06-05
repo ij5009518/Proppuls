@@ -68,6 +68,7 @@ export default function Tenants() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [isBackgroundCheckDialogOpen, setIsBackgroundCheckDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const { toast } = useToast();
 
@@ -1028,8 +1029,7 @@ export default function Tenants() {
                   <div 
                     className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 dark:hover:border-purple-400 cursor-pointer transition-colors"
                     onClick={() => {
-                      // TODO: Open background check dialog
-                      console.log('Open background check for tenant:', selectedTenant.id);
+                      setIsBackgroundCheckDialogOpen(true);
                     }}
                   >
                     <div className="flex items-center">
@@ -1224,6 +1224,135 @@ export default function Tenants() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Background Check Dialog */}
+      <Dialog open={isBackgroundCheckDialogOpen} onOpenChange={setIsBackgroundCheckDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Background Check - {selectedTenant?.firstName} {selectedTenant?.lastName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Background Check Status */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Credit Check</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300">
+                      Pending
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Score:</span>
+                    <span className="text-sm font-medium">--</span>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Criminal Background</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300">
+                      Pending
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Clear:</span>
+                    <span className="text-sm font-medium">--</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Employment Verification */}
+            <div className="p-4 border rounded-lg">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Employment Verification</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Employer</label>
+                  <Input placeholder="Company name" className="mt-1" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
+                  <Input placeholder="Job title" className="mt-1" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Monthly Income</label>
+                  <Input placeholder="$0.00" className="mt-1" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Employment Length</label>
+                  <Input placeholder="2 years" className="mt-1" />
+                </div>
+              </div>
+            </div>
+
+            {/* References */}
+            <div className="p-4 border rounded-lg">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">References</h4>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Previous Landlord</label>
+                    <Input placeholder="Name" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
+                    <Input placeholder="(555) 123-4567" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                    <Select>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="verified">Verified</SelectItem>
+                        <SelectItem value="unable_to_reach">Unable to Reach</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="p-4 border rounded-lg">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Screening Notes</h4>
+              <Textarea 
+                placeholder="Add notes about the background check process, findings, or any special considerations..."
+                className="min-h-[100px]"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-between pt-4">
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm">
+                  Request Credit Report
+                </Button>
+                <Button variant="outline" size="sm">
+                  Run Background Check
+                </Button>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsBackgroundCheckDialogOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
