@@ -238,7 +238,7 @@ export default function Dashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Expense Breakdown</CardTitle>
-              <Button variant="link" size="sm" onClick={() => window.location.href = '/expenses'}>
+              <Button variant="link" size="sm">
                 View All
               </Button>
             </div>
@@ -258,7 +258,7 @@ export default function Dashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Recent Properties</CardTitle>
-              <Button variant="link" size="sm" onClick={() => window.location.href = '/properties'}>
+              <Button variant="link" size="sm">
                 View All
               </Button>
             </div>
@@ -545,7 +545,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
-                <Button variant="link" className="w-full" onClick={() => window.location.href = '/maintenance'}>
+                <Button variant="link" className="w-full">
                   View All Requests →
                 </Button>
               </div>

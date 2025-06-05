@@ -90,7 +90,6 @@ function AuthenticatedApp() {
         <Route path="/communication-hub" component={CommunicationHub} />
         <Route path="/ai-assistant" component={AIAssistant} />
         <Route path="/email-manager" component={EmailManager} />
-        <Route path="/vendors" component={Vendors} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
