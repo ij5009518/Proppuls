@@ -105,11 +105,11 @@ export default function LeaseManagement() {
     createLeaseMutation.mutate(data);
   };
 
-  const filteredLeases = leases.filter((lease: Lease) => {
+  const filteredLeases = Array.isArray(leases) ? leases.filter((lease: Lease) => {
     const matchesSearch = lease.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || lease.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, string> = {
@@ -165,7 +165,7 @@ export default function LeaseManagement() {
                       <SelectValue placeholder="Select tenant" />
                     </SelectTrigger>
                     <SelectContent>
-                      {tenants.map((tenant: any) => (
+                      {Array.isArray(tenants) && tenants.map((tenant: any) => (
                         <SelectItem key={tenant.id} value={tenant.id}>
                           {tenant.name}
                         </SelectItem>
@@ -180,7 +180,7 @@ export default function LeaseManagement() {
                       <SelectValue placeholder="Select unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      {units.map((unit: any) => (
+                      {Array.isArray(units) && units.map((unit: any) => (
                         <SelectItem key={unit.id} value={unit.id}>
                           {unit.unitNumber}
                         </SelectItem>
