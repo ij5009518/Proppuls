@@ -289,23 +289,7 @@ export default function Tenants() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Tenants</h1>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setViewMode("grid")}
-            className={viewMode === "grid" ? "bg-primary text-primary-foreground" : ""}
-          >
-            <Grid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setViewMode("list")}
-            className={viewMode === "list" ? "bg-primary text-primary-foreground" : ""}
-          >
-            <List className="h-4 w-4" />
-          </Button>
+        <div className="flex flex-col items-end space-y-3">
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -389,6 +373,26 @@ export default function Tenants() {
               </Form>
             </DialogContent>
           </Dialog>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className={viewMode === "grid" ? "bg-primary text-primary-foreground" : ""}
+            >
+              <Grid className="h-4 w-4 mr-1" />
+              List View
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className={viewMode === "list" ? "bg-primary text-primary-foreground" : ""}
+            >
+              <List className="h-4 w-4 mr-1" />
+              Table View
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -410,113 +414,88 @@ export default function Tenants() {
             return (
               <Card 
                 key={tenant.id} 
-                className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 bg-white dark:bg-gray-800 shadow-md hover:scale-[1.02]"
+                className="hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => {
                   setSelectedTenant(tenant);
                   setIsViewDialogOpen(true);
                 }}
               >
-                <CardContent className="p-8">
-                  <div className="space-y-6">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
                     {/* Header with name and status */}
                     <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                           {tenant.firstName} {tenant.lastName}
                         </h3>
-                        <Badge variant="outline" className={`${getStatusColor(tenant.status)} capitalize font-medium`}>
-                          {tenant.status}
-                        </Badge>
-                      </div>
-                      <div className="text-right space-y-1">
-                        <div className="inline-flex items-center px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                          <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">
-                            Unit {getUnitNumber(tenant.unitId)}
-                          </span>
+                        <div className="mt-1">
+                          <Badge className={getStatusColor(tenant.status)}>
+                            {tenant.status}
+                          </Badge>
                         </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Unit {getUnitNumber(tenant.unitId)}
+                        </p>
                         {tenant.monthlyRent && (
-                          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                            {formatCurrency(tenant.monthlyRent)}
-                            <span className="text-sm font-normal text-gray-500 dark:text-gray-400">/month</span>
+                          <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                            {formatCurrency(tenant.monthlyRent)}/month
                           </p>
                         )}
                       </div>
                     </div>
 
                     {/* Contact Information */}
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 space-y-3">
-                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Contact Information</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center">
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-14 uppercase tracking-wide">Email</span>
-                          <span className="text-sm text-gray-900 dark:text-white font-medium">{tenant.email}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-14 uppercase tracking-wide">Phone</span>
-                          <span className="text-sm text-gray-900 dark:text-white font-medium">{tenant.phone}</span>
-                        </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm">
+                        <span className="font-medium text-gray-600 dark:text-gray-400 w-16">Email:</span>
+                        <span className="text-gray-900 dark:text-white">{tenant.email}</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <span className="font-medium text-gray-600 dark:text-gray-400 w-16">Phone:</span>
+                        <span className="text-gray-900 dark:text-white">{tenant.phone}</span>
                       </div>
                     </div>
 
                     {/* Lease Information */}
-                    {(tenant.leaseStart || tenant.leaseEnd || tenant.deposit) && (
-                      <div className="grid grid-cols-1 gap-3">
-                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Lease Details</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          {tenant.leaseStart && (
-                            <div className="space-y-1">
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Start Date</span>
-                              <p className="text-sm text-gray-900 dark:text-white font-medium">{formatDate(tenant.leaseStart)}</p>
-                            </div>
-                          )}
-                          {tenant.leaseEnd && (
-                            <div className="space-y-1">
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">End Date</span>
-                              <p className="text-sm text-gray-900 dark:text-white font-medium">{formatDate(tenant.leaseEnd)}</p>
-                            </div>
-                          )}
-                          {tenant.deposit && (
-                            <div className="space-y-1 col-span-2">
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Security Deposit</span>
-                              <p className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(tenant.deposit)}</p>
-                            </div>
-                          )}
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                      {tenant.leaseStart && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600 dark:text-gray-400">Lease Start:</span>
+                          <p className="text-gray-900 dark:text-white">{formatDate(tenant.leaseStart)}</p>
                         </div>
-                      </div>
-                    )}
+                      )}
+                      {tenant.leaseEnd && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600 dark:text-gray-400">Lease End:</span>
+                          <p className="text-gray-900 dark:text-white">{formatDate(tenant.leaseEnd)}</p>
+                        </div>
+                      )}
+                      {tenant.deposit && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600 dark:text-gray-400">Security Deposit:</span>
+                          <p className="text-gray-900 dark:text-white">{formatCurrency(tenant.deposit)}</p>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Payment Status Alerts */}
                     {(overduePayments.length > 0 || currentBalance > 0) && (
-                      <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2 pt-2">
                         {overduePayments.length > 0 && (
-                          <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
-                            <div className="flex items-center">
-                              <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-lg mr-3">
-                                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-red-800 dark:text-red-200">Overdue Payments</p>
-                                <p className="text-xs text-red-600 dark:text-red-300">Action required</p>
-                              </div>
-                            </div>
-                            <span className="text-lg font-bold text-red-800 dark:text-red-200">
-                              {overduePayments.length}
+                          <div className="flex items-center px-3 py-1 bg-red-100 dark:bg-red-900/20 rounded-full">
+                            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 mr-2" />
+                            <span className="text-sm font-medium text-red-800 dark:text-red-300">
+                              {overduePayments.length} overdue payment{overduePayments.length > 1 ? 's' : ''}
                             </span>
                           </div>
                         )}
                         {currentBalance > 0 && (
-                          <div className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
-                            <div className="flex items-center">
-                              <div className="p-2 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg mr-3">
-                                <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">Outstanding Balance</p>
-                                <p className="text-xs text-yellow-600 dark:text-yellow-300">Pending payment</p>
-                              </div>
-                            </div>
-                            <span className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
-                              {formatCurrency(currentBalance.toString())}
+                          <div className="flex items-center px-3 py-1 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
+                            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mr-2" />
+                            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
+                              Balance: {formatCurrency(currentBalance.toString())}
                             </span>
                           </div>
                         )}
