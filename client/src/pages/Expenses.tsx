@@ -8,13 +8,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, DollarSign, Receipt, Calendar, Filter, Building } from "lucide-react";
+import { Plus, Edit, Trash2, DollarSign, Receipt, Calendar, Filter, Building, Download } from "lucide-react";
 
 // Schema
 const expenseSchema = z.object({
@@ -201,6 +213,37 @@ export default function Expenses() {
     "Supplies",
     "Other"
   ];
+
+  const handleBulkDownload = (category?: string) => {
+    const expensesToDownload = category 
+      ? filteredExpenses.filter(expense => expense.category === category)
+      : filteredExpenses;
+
+    if (expensesToDownload.length === 0) {
+      alert(`No ${category || ''} expenses found to download`);
+      return;
+    }
+
+    const csvContent = [
+      ['Date', 'Property', 'Category', 'Amount', 'Description', 'Vendor'].join(','),
+      ...expensesToDownload.map(expense => [
+        expense.date,
+        expense.propertyName || 'N/A',
+        expense.category,
+        expense.amount,
+        `"${expense.description}"`,
+        expense.vendor || 'N/A'
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${category ? category + '_' : ''}expenses_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6">
@@ -432,58 +475,95 @@ export default function Expenses() {
           <CardTitle>Recent Expenses</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              {filteredExpenses.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No expenses found. Add your first expense to get started.
+                </p>
+              ) : null}
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  Bulk Download
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleBulkDownload()}>
+                  All Expenses
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkDownload('insurance')}>
+                  Insurance Only
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkDownload('utilities')}>
+                  Utilities Only
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkDownload('maintenance')}>
+                  Maintenance Only
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkDownload('property-management')}>
+                  Property Management Only
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkDownload('legal')}>
+                  Legal & Professional Only
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkDownload('repairs')}>
+                  Repairs Only
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkDownload('other')}>
+                  Other Only
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <div className="space-y-4">
-            {filteredExpenses.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                No expenses found. Add your first expense to get started.
-              </p>
-            ) : (
-              filteredExpenses.map((expense: any) => (
-                <div key={expense.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <h3 className="font-medium">{expense.description}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {expense.category} • {formatDate(expense.date)}
-                        </p>
-                        {expense.vendorName && (
-                          <p className="text-sm text-muted-foreground">
-                            Vendor: {expense.vendorName}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+            {filteredExpenses.map((expense: any) => (
+              <div key={expense.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
                   <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="font-semibold">{formatCurrency(parseFloat(expense.amount))}</div>
-                      {expense.isRecurring && (
-                        <Badge variant="secondary" className="text-xs">
-                          Recurring
-                        </Badge>
+                    <div>
+                      <h3 className="font-medium">{expense.description}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {expense.category} • {formatDate(expense.date)}
+                      </p>
+                      {expense.vendorName && (
+                        <p className="text-sm text-muted-foreground">
+                          Vendor: {expense.vendorName}
+                        </p>
                       )}
-                    </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditExpense(expense)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteExpense(expense.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="font-semibold">{formatCurrency(parseFloat(expense.amount))}</div>
+                    {expense.isRecurring && (
+                      <Badge variant="secondary" className="text-xs">
+                        Recurring
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditExpense(expense)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteExpense(expense.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
