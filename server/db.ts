@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from "@neondatabase/serverless";
-import { pgTable, text, integer, timestamp, boolean, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, boolean, decimal, jsonb } from "drizzle-orm/pg-core";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
@@ -178,6 +178,318 @@ export const tasks = pgTable('tasks', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+// 1. Lease Management System
+export const leases = pgTable('leases', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull(),
+  unitId: text('unit_id').notNull(),
+  propertyId: text('property_id').notNull(),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  monthlyRent: decimal('monthly_rent').notNull(),
+  securityDeposit: decimal('security_deposit').notNull(),
+  status: text('status').notNull().default('draft'),
+  renewalDate: timestamp('renewal_date'),
+  escalationRate: decimal('escalation_rate'),
+  escalationFrequency: text('escalation_frequency'),
+  lateFeePolicyId: text('late_fee_policy_id'),
+  petDeposit: decimal('pet_deposit'),
+  parkingFee: decimal('parking_fee'),
+  utilitiesIncluded: jsonb('utilities_included').default([]),
+  terms: text('terms').notNull(),
+  signedDate: timestamp('signed_date'),
+  isDigitallySigned: boolean('is_digitally_signed').default(false),
+  documentPath: text('document_path'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const leaseRenewals = pgTable('lease_renewals', {
+  id: text('id').primaryKey(),
+  leaseId: text('lease_id').notNull(),
+  proposedStartDate: timestamp('proposed_start_date').notNull(),
+  proposedEndDate: timestamp('proposed_end_date').notNull(),
+  proposedRent: decimal('proposed_rent').notNull(),
+  status: text('status').notNull().default('pending'),
+  sentDate: timestamp('sent_date').notNull(),
+  responseDate: timestamp('response_date'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const securityDeposits = pgTable('security_deposits', {
+  id: text('id').primaryKey(),
+  leaseId: text('lease_id').notNull(),
+  amount: decimal('amount').notNull(),
+  dateReceived: timestamp('date_received').notNull(),
+  dateReturned: timestamp('date_returned'),
+  amountReturned: decimal('amount_returned'),
+  deductions: jsonb('deductions').default([]),
+  status: text('status').notNull().default('held'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// 2. Document Management System
+export const documents = pgTable('documents', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  type: text('type').notNull(),
+  filePath: text('file_path').notNull(),
+  fileSize: integer('file_size').notNull(),
+  mimeType: text('mime_type').notNull(),
+  propertyId: text('property_id'),
+  unitId: text('unit_id'),
+  tenantId: text('tenant_id'),
+  leaseId: text('lease_id'),
+  maintenanceRequestId: text('maintenance_request_id'),
+  uploadedBy: text('uploaded_by').notNull(),
+  description: text('description'),
+  expirationDate: timestamp('expiration_date'),
+  isArchived: boolean('is_archived').default(false),
+  tags: jsonb('tags').default([]),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const inspectionReports = pgTable('inspection_reports', {
+  id: text('id').primaryKey(),
+  propertyId: text('property_id').notNull(),
+  unitId: text('unit_id'),
+  inspectorId: text('inspector_id').notNull(),
+  type: text('type').notNull(),
+  scheduledDate: timestamp('scheduled_date').notNull(),
+  completedDate: timestamp('completed_date'),
+  status: text('status').notNull().default('scheduled'),
+  overallCondition: text('overall_condition'),
+  notes: text('notes'),
+  items: jsonb('items').default([]),
+  photos: jsonb('photos').default([]),
+  documentPath: text('document_path'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const insurancePolicies = pgTable('insurance_policies', {
+  id: text('id').primaryKey(),
+  propertyId: text('property_id').notNull(),
+  policyNumber: text('policy_number').notNull(),
+  provider: text('provider').notNull(),
+  type: text('type').notNull(),
+  coverageAmount: decimal('coverage_amount').notNull(),
+  premium: decimal('premium').notNull(),
+  deductible: decimal('deductible').notNull(),
+  effectiveDate: timestamp('effective_date').notNull(),
+  expirationDate: timestamp('expiration_date').notNull(),
+  agentName: text('agent_name'),
+  agentContact: text('agent_contact'),
+  autoRenewal: boolean('auto_renewal').default(false),
+  documentPath: text('document_path'),
+  status: text('status').notNull().default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// 3. Communication Hub
+export const messages = pgTable('messages', {
+  id: text('id').primaryKey(),
+  senderId: text('sender_id').notNull(),
+  recipientId: text('recipient_id').notNull(),
+  subject: text('subject').notNull(),
+  content: text('content').notNull(),
+  type: text('type').notNull().default('message'),
+  priority: text('priority').notNull().default('normal'),
+  status: text('status').notNull().default('sent'),
+  propertyId: text('property_id'),
+  unitId: text('unit_id'),
+  maintenanceRequestId: text('maintenance_request_id'),
+  attachments: jsonb('attachments').default([]),
+  readAt: timestamp('read_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const notifications = pgTable('notifications', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  type: text('type').notNull(),
+  category: text('category').notNull(),
+  isRead: boolean('is_read').default(false),
+  actionUrl: text('action_url'),
+  propertyId: text('property_id'),
+  scheduledFor: timestamp('scheduled_for'),
+  sentAt: timestamp('sent_at'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const communicationTemplates = pgTable('communication_templates', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  type: text('type').notNull(),
+  category: text('category').notNull(),
+  subject: text('subject'),
+  content: text('content').notNull(),
+  variables: jsonb('variables').default([]),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// 4. Advanced Reporting & Analytics
+export const reports = pgTable('reports', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  type: text('type').notNull(),
+  generatedBy: text('generated_by').notNull(),
+  parameters: jsonb('parameters').notNull(),
+  dataRange: jsonb('data_range').notNull(),
+  filePath: text('file_path').notNull(),
+  status: text('status').notNull().default('generating'),
+  propertyIds: jsonb('property_ids').default([]),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const marketAnalyses = pgTable('market_analyses', {
+  id: text('id').primaryKey(),
+  propertyId: text('property_id').notNull(),
+  analysisDate: timestamp('analysis_date').notNull(),
+  marketRent: decimal('market_rent').notNull(),
+  currentRent: decimal('current_rent').notNull(),
+  variance: decimal('variance').notNull(),
+  confidenceLevel: text('confidence_level').notNull(),
+  comparableProperties: jsonb('comparable_properties').default([]),
+  recommendations: text('recommendations'),
+  dataSource: text('data_source').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// 5. Payment Processing & Integration
+export const payments = pgTable('payments', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull(),
+  leaseId: text('lease_id').notNull(),
+  amount: decimal('amount').notNull(),
+  method: text('method').notNull(),
+  status: text('status').notNull().default('pending'),
+  type: text('type').notNull(),
+  dueDate: timestamp('due_date').notNull(),
+  paidDate: timestamp('paid_date'),
+  lateFee: decimal('late_fee'),
+  reference: text('reference'),
+  transactionId: text('transaction_id'),
+  processorFee: decimal('processor_fee'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const integrations = pgTable('integrations', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  type: text('type').notNull(),
+  provider: text('provider').notNull(),
+  apiKey: text('api_key').notNull(),
+  apiSecret: text('api_secret'),
+  webhookUrl: text('webhook_url'),
+  settings: jsonb('settings'),
+  isActive: boolean('is_active').default(true),
+  lastSync: timestamp('last_sync'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// 6. Background Checks & Credit Reports
+export const backgroundChecks = pgTable('background_checks', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull(),
+  applicationId: text('application_id'),
+  provider: text('provider').notNull(),
+  status: text('status').notNull().default('pending'),
+  score: integer('score'),
+  reportUrl: text('report_url'),
+  criminalHistory: boolean('criminal_history'),
+  evictionHistory: boolean('eviction_history'),
+  creditScore: integer('credit_score'),
+  monthlyIncome: decimal('monthly_income'),
+  employmentVerified: boolean('employment_verified'),
+  recommendation: text('recommendation'),
+  expirationDate: timestamp('expiration_date'),
+  cost: decimal('cost'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// 7. Compliance & Legal
+export const complianceItems = pgTable('compliance_items', {
+  id: text('id').primaryKey(),
+  propertyId: text('property_id').notNull(),
+  type: text('type').notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  requirement: text('requirement').notNull(),
+  status: text('status').notNull().default('pending_review'),
+  dueDate: timestamp('due_date'),
+  completedDate: timestamp('completed_date'),
+  authority: text('authority').notNull(),
+  documentPath: text('document_path'),
+  cost: decimal('cost'),
+  renewalFrequency: text('renewal_frequency'),
+  nextRenewalDate: timestamp('next_renewal_date'),
+  reminderDays: integer('reminder_days').default(30),
+  assignedTo: text('assigned_to'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const evictionProcesses = pgTable('eviction_processes', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull(),
+  leaseId: text('lease_id').notNull(),
+  reason: text('reason').notNull(),
+  startDate: timestamp('start_date').notNull(),
+  status: text('status').notNull().default('notice_served'),
+  noticeType: text('notice_type').notNull(),
+  noticeServedDate: timestamp('notice_served_date'),
+  courtFilingDate: timestamp('court_filing_date'),
+  hearingDate: timestamp('hearing_date'),
+  judgmentDate: timestamp('judgment_date'),
+  amountOwed: decimal('amount_owed'),
+  legalFees: decimal('legal_fees'),
+  attorney: text('attorney'),
+  documents: jsonb('documents').default([]),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const permits = pgTable('permits', {
+  id: text('id').primaryKey(),
+  propertyId: text('property_id').notNull(),
+  type: text('type').notNull(),
+  permitNumber: text('permit_number').notNull(),
+  issuer: text('issuer').notNull(),
+  description: text('description').notNull(),
+  issueDate: timestamp('issue_date').notNull(),
+  expirationDate: timestamp('expiration_date'),
+  cost: decimal('cost').notNull(),
+  status: text('status').notNull().default('pending'),
+  renewalRequired: boolean('renewal_required').default(false),
+  documentPath: text('document_path'),
+  contactPerson: text('contact_person'),
+  contactPhone: text('contact_phone'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 const sql = neon(process.env.DATABASE_URL);
 
 const schema = {
@@ -191,6 +503,24 @@ const schema = {
   rentPayments,
   mortgages,
   tasks,
+  // Advanced feature tables
+  leases,
+  leaseRenewals,
+  securityDeposits,
+  documents,
+  inspectionReports,
+  insurancePolicies,
+  messages,
+  notifications,
+  communicationTemplates,
+  reports,
+  marketAnalyses,
+  payments,
+  integrations,
+  backgroundChecks,
+  complianceItems,
+  evictionProcesses,
+  permits,
 };
 
 export const db = drizzle(sql, { schema });

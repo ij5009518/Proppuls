@@ -83,9 +83,14 @@ const menuItems: MenuItem[] = [
     icon: Building2,
   },
   {
+    title: 'Advanced Features',
+    url: '/advanced-features',
+    icon: Bot,
+  },
+  {
     title: 'AI Assistant',
     url: '/ai-assistant',
-    icon: Bot,
+    icon: Mail,
   },
   {
     title: 'Settings',
