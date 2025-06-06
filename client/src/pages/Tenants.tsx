@@ -501,12 +501,12 @@ export default function Tenants() {
                   setIsViewDialogOpen(true);
                 }}
               >
-                <CardContent className="p-6">
-                  <div className="space-y-4">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
                     {/* Header with name and status */}
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <h3 className="font-semibold text-gray-900 dark:text-white">
                           {tenant.firstName} {tenant.lastName}
                         </h3>
                         <div className="mt-1">
@@ -516,33 +516,25 @@ export default function Tenants() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="flex items-center justify-end space-x-2 mb-2">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Unit {getUnitNumber(tenant.unitId)}
-                          </p>
-                        </div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Unit {getUnitNumber(tenant.unitId)}
+                        </p>
                         {tenant.monthlyRent && (
-                          <p className="text-lg font-semibold text-green-600 dark:text-green-400">
-                            {formatCurrency(tenant.monthlyRent)}/month
+                          <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                            {formatCurrency(tenant.monthlyRent)}/mo
                           </p>
                         )}
                       </div>
                     </div>
 
                     {/* Contact Information */}
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm">
-                        <span className="font-medium text-gray-600 dark:text-gray-400 w-16">Email:</span>
-                        <span className="text-gray-900 dark:text-white">{tenant.email}</span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <span className="font-medium text-gray-600 dark:text-gray-400 w-16">Phone:</span>
-                        <span className="text-gray-900 dark:text-white">{tenant.phone}</span>
-                      </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.email}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.phone}</p>
                     </div>
 
                     {/* Lease Information */}
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                       {tenant.leaseStart && (
                         <div className="text-sm">
                           <span className="font-medium text-gray-600 dark:text-gray-400">Lease Start:</span>
