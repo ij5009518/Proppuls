@@ -115,6 +115,10 @@ export default function Landing() {
               </span>
             </div>
             <div className="flex items-center space-x-4">
+              <Button variant="ghost" onClick={() => window.location.href = '/tenant-portal'}>
+                <Home className="h-4 w-4 mr-2" />
+                Tenant Portal
+              </Button>
               <Button variant="ghost" onClick={() => window.location.href = '/login'}>
                 Login
               </Button>
