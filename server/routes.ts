@@ -283,6 +283,16 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/tenant-history", async (req, res) => {
+    try {
+      const history = await storage.createTenantHistory(req.body);
+      res.json(history);
+    } catch (error) {
+      console.error("Error creating tenant history:", error);
+      res.status(500).json({ message: "Failed to create tenant history" });
+    }
+  });
+
   // Rent Payments routes
   app.get("/api/rent-payments", async (req, res) => {
     try {
