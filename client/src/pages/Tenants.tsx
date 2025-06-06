@@ -577,14 +577,6 @@ export default function Tenants() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleCreateTask(tenant)}
-                          title="Create Task"
-                        >
-                          <CheckSquare className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
                           onClick={() => {
                             setSelectedTenant(tenant);
                             paymentForm.setValue("tenantId", tenant.id);
@@ -830,18 +822,6 @@ export default function Tenants() {
                 {selectedTenant?.firstName} {selectedTenant?.lastName} - Tenant Details
               </DialogTitle>
               <div className="flex items-center gap-2 mr-8">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (selectedTenant) handleCreateTask(selectedTenant);
-                  }}
-                  title="Create Task"
-                >
-                  <CheckSquare className="h-4 w-4 mr-1" />
-                  Create Task
-                </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 
