@@ -34,6 +34,7 @@ import LeaseManagement from '@/pages/LeaseManagement';
 import DocumentManagement from '@/pages/DocumentManagement';
 import CommunicationHub from '@/pages/CommunicationHub';
 import TenantPortal from '@/pages/TenantPortal';
+import MobileApp from '@/pages/MobileApp';
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -93,6 +94,7 @@ function AuthenticatedApp() {
         <Route path="/communication-hub" component={CommunicationHub} />
         <Route path="/ai-assistant" component={AIAssistant} />
         <Route path="/email-manager" component={EmailManager} />
+        <Route path="/mobile-app" component={MobileApp} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
