@@ -657,7 +657,7 @@ export default function Units() {
 
       {/* View Unit Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <div className="flex justify-between items-center">
               <DialogTitle>Unit Details</DialogTitle>
@@ -983,7 +983,7 @@ export default function Units() {
 
       {/* Edit Unit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Unit</DialogTitle>
           </DialogHeader>
@@ -1127,7 +1127,7 @@ export default function Units() {
 
       {/* Create Task Dialog */}
       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create Task for Unit {selectedUnit?.unitNumber}</DialogTitle>
           </DialogHeader>
