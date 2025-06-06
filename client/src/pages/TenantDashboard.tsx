@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import TenantPayment from "./TenantPayment";
 
 interface TenantDashboardProps {
   tenant: any;
@@ -46,6 +47,7 @@ type MaintenanceRequestFormData = z.infer<typeof maintenanceRequestSchema>;
 
 export default function TenantDashboard({ tenant, token, onLogout }: TenantDashboardProps) {
   const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -480,7 +482,36 @@ export default function TenantDashboard({ tenant, token, onLogout }: TenantDashb
           </TabsContent>
 
           <TabsContent value="payments" className="space-y-6">
-            <h2 className="text-2xl font-bold">Payment History</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Payment History</h2>
+              <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Make Payment
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Make a Payment</DialogTitle>
+                    <DialogDescription>
+                      Pay your rent securely using our online payment system.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <TenantPayment
+                    onSuccess={() => {
+                      setIsPaymentDialogOpen(false);
+                      queryClient.invalidateQueries({ queryKey: ['/api/tenant/rent-payments'] });
+                      toast({
+                        title: "Payment Successful",
+                        description: "Your payment has been processed successfully!",
+                      });
+                    }}
+                    onCancel={() => setIsPaymentDialogOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
             
             <div className="grid gap-4">
               {isLoadingPayments ? (
