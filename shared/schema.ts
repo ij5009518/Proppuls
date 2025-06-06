@@ -601,11 +601,38 @@ export const insertComplianceItemSchema = complianceItemSchema.omit({ id: true, 
 export const insertEvictionProcessSchema = evictionProcessSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPermitSchema = permitSchema.omit({ id: true, createdAt: true, updatedAt: true });
 
+// Tenant authentication schemas
+export const tenantSessionSchema = z.object({
+  id: z.string(),
+  tenantId: z.string(),
+  token: z.string(),
+  expiresAt: z.date(),
+  createdAt: z.date(),
+});
+
+export const tenantLoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+export const createTenantMaintenanceRequestSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  category: z.string().optional(),
+  photos: z.array(z.string()).optional(),
+});
+
+export const insertTenantSessionSchema = tenantSessionSchema.omit({ id: true, createdAt: true });
+
 // TypeScript types
 export type User = z.infer<typeof userSchema>;
 export type Property = z.infer<typeof propertySchema>;
 export type Unit = z.infer<typeof unitSchema>;
 export type Tenant = z.infer<typeof tenantSchema>;
+export type TenantSession = z.infer<typeof tenantSessionSchema>;
+export type TenantLogin = z.infer<typeof tenantLoginSchema>;
+export type CreateTenantMaintenanceRequest = z.infer<typeof createTenantMaintenanceRequestSchema>;
 export type TenantHistory = z.infer<typeof tenantHistorySchema>;
 export type MaintenanceRequest = z.infer<typeof maintenanceRequestSchema>;
 export type Vendor = z.infer<typeof vendorSchema>;

@@ -1,7 +1,8 @@
-import { User } from '../shared/schema';
-import { db, users, properties, expenses, units, tenants, tenantHistory, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
-import { eq, sql } from 'drizzle-orm';
+import { User, TenantSession, TenantLogin, CreateTenantMaintenanceRequest } from '../shared/schema';
+import { db, users, properties, expenses, units, tenants, tenantSessions, tenantHistory, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
+import { eq, sql, and, gt } from 'drizzle-orm';
 import crypto from "crypto";
+import bcrypt from 'bcrypt';
 import { Property, Expense, Unit, Tenant, TenantHistory, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
 import nodemailer from 'nodemailer';
 
@@ -233,6 +234,9 @@ class Storage {
         lastName: tenantData.lastName,
         email: tenantData.email,
         phone: tenantData.phone,
+        password: tenantData.password ? await bcrypt.hash(tenantData.password, 10) : null,
+        isLoginEnabled: tenantData.isLoginEnabled || false,
+        lastLogin: null,
         unitId: tenantData.unitId || null,
         leaseStart: tenantData.leaseStart ? new Date(tenantData.leaseStart) : null,
         leaseEnd: tenantData.leaseEnd ? new Date(tenantData.leaseEnd) : null,
@@ -328,6 +332,92 @@ class Storage {
   async deleteTenant(id: string): Promise<boolean> {
     const result = await db.delete(tenants).where(eq(tenants.id, id));
     return result.rowCount > 0;
+  }
+
+  // Tenant Authentication methods
+  async getTenantByEmail(email: string): Promise<Tenant | null> {
+    const result = await db.select().from(tenants).where(eq(tenants.email, email)).limit(1);
+    return result[0] || null;
+  }
+
+  async validateTenantLogin(email: string, password: string): Promise<Tenant | null> {
+    const tenant = await this.getTenantByEmail(email);
+    if (!tenant || !tenant.password || !tenant.isLoginEnabled) {
+      return null;
+    }
+
+    const isValidPassword = await bcrypt.compare(password, tenant.password);
+    if (!isValidPassword) {
+      return null;
+    }
+
+    // Update last login
+    await db.update(tenants)
+      .set({ lastLogin: new Date() })
+      .where(eq(tenants.id, tenant.id));
+
+    return tenant;
+  }
+
+  async createTenantSession(tenantId: string): Promise<string> {
+    const token = crypto.randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24); // 24 hour session
+
+    await db.insert(tenantSessions).values({
+      id: crypto.randomUUID(),
+      tenantId,
+      token,
+      expiresAt,
+    });
+
+    return token;
+  }
+
+  async getTenantBySession(token: string): Promise<Tenant | null> {
+    const sessionResult = await db.select()
+      .from(tenantSessions)
+      .where(and(eq(tenantSessions.token, token), gt(tenantSessions.expiresAt, new Date())))
+      .limit(1);
+
+    if (!sessionResult[0]) {
+      return null;
+    }
+
+    return await this.getTenantById(sessionResult[0].tenantId);
+  }
+
+  async deleteTenantSession(token: string): Promise<void> {
+    await db.delete(tenantSessions).where(eq(tenantSessions.token, token));
+  }
+
+  async createTenantMaintenanceRequest(tenantId: string, requestData: CreateTenantMaintenanceRequest): Promise<MaintenanceRequest> {
+    const tenant = await this.getTenantById(tenantId);
+    if (!tenant || !tenant.unitId) {
+      throw new Error('Tenant not found or not assigned to a unit');
+    }
+
+    const maintenanceRequest = await this.createMaintenanceRequest({
+      ...requestData,
+      unitId: tenant.unitId,
+      tenantId: tenantId,
+      status: 'open',
+      submittedDate: new Date(),
+    });
+
+    return maintenanceRequest;
+  }
+
+  async getTenantMaintenanceRequests(tenantId: string): Promise<MaintenanceRequest[]> {
+    return await db.select()
+      .from(maintenanceRequests)
+      .where(eq(maintenanceRequests.tenantId, tenantId));
+  }
+
+  async getTenantRentPayments(tenantId: string): Promise<RentPayment[]> {
+    return await db.select()
+      .from(rentPayments)
+      .where(eq(rentPayments.tenantId, tenantId));
   }
 
   // Maintenance Request methods

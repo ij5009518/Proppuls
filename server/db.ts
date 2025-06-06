@@ -55,6 +55,9 @@ export const tenants = pgTable('tenants', {
   lastName: text('last_name').notNull(),
   email: text('email').notNull(),
   phone: text('phone').notNull(),
+  password: text('password'),
+  isLoginEnabled: boolean('is_login_enabled').default(false),
+  lastLogin: timestamp('last_login'),
   unitId: text('unit_id'),
   leaseStart: timestamp('lease_start'),
   leaseEnd: timestamp('lease_end'),
@@ -63,6 +66,14 @@ export const tenants = pgTable('tenants', {
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const tenantSessions = pgTable('tenant_sessions', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull(),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export const tenantHistory = pgTable('tenant_history', {
