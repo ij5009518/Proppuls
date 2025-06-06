@@ -33,6 +33,7 @@ import AdvancedFeatures from '@/pages/AdvancedFeatures';
 import LeaseManagement from '@/pages/LeaseManagement';
 import DocumentManagement from '@/pages/DocumentManagement';
 import CommunicationHub from '@/pages/CommunicationHub';
+import TenantPortal from '@/pages/TenantPortal';
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();

@@ -22,6 +22,124 @@ export function registerRoutes(app: Express) {
     res.json({ status: "ok", message: "Server is running" });
   });
 
+  // Tenant Authentication routes
+  app.post("/api/tenant/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      const tenant = await storage.validateTenantLogin(email, password);
+      if (!tenant) {
+        return res.status(401).json({ message: "Invalid credentials or login not enabled" });
+      }
+
+      const token = await storage.createTenantSession(tenant.id);
+      
+      res.json({
+        success: true,
+        tenant: {
+          id: tenant.id,
+          firstName: tenant.firstName,
+          lastName: tenant.lastName,
+          email: tenant.email,
+          unitId: tenant.unitId,
+        },
+        token,
+      });
+    } catch (error) {
+      console.error("Tenant login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/tenant/logout", async (req, res) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (token) {
+        await storage.deleteTenantSession(token);
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Tenant logout error:", error);
+      res.status(500).json({ message: "Logout failed" });
+    }
+  });
+
+  // Tenant middleware for authentication
+  const authenticateTenant = async (req: any, res: any, next: any) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const tenant = await storage.getTenantBySession(token);
+      if (!tenant) {
+        return res.status(401).json({ message: "Invalid or expired session" });
+      }
+
+      req.tenant = tenant;
+      next();
+    } catch (error) {
+      console.error("Tenant authentication error:", error);
+      res.status(401).json({ message: "Authentication failed" });
+    }
+  };
+
+  // Tenant portal routes
+  app.get("/api/tenant/profile", authenticateTenant, async (req: any, res) => {
+    try {
+      const tenant = req.tenant;
+      res.json({
+        id: tenant.id,
+        firstName: tenant.firstName,
+        lastName: tenant.lastName,
+        email: tenant.email,
+        phone: tenant.phone,
+        unitId: tenant.unitId,
+        leaseStart: tenant.leaseStart,
+        leaseEnd: tenant.leaseEnd,
+        monthlyRent: tenant.monthlyRent,
+      });
+    } catch (error) {
+      console.error("Error fetching tenant profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  app.get("/api/tenant/maintenance-requests", authenticateTenant, async (req: any, res) => {
+    try {
+      const requests = await storage.getTenantMaintenanceRequests(req.tenant.id);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching tenant maintenance requests:", error);
+      res.status(500).json({ message: "Failed to fetch maintenance requests" });
+    }
+  });
+
+  app.post("/api/tenant/maintenance-requests", authenticateTenant, async (req: any, res) => {
+    try {
+      const request = await storage.createTenantMaintenanceRequest(req.tenant.id, req.body);
+      res.json(request);
+    } catch (error) {
+      console.error("Error creating tenant maintenance request:", error);
+      res.status(500).json({ message: "Failed to create maintenance request" });
+    }
+  });
+
+  app.get("/api/tenant/rent-payments", authenticateTenant, async (req: any, res) => {
+    try {
+      const payments = await storage.getTenantRentPayments(req.tenant.id);
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching tenant rent payments:", error);
+      res.status(500).json({ message: "Failed to fetch rent payments" });
+    }
+  });
+
   // Add other API routes here as needed
   app.get("/api/test", (req, res) => {
     res.json({ message: "API is working" });
