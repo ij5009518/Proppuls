@@ -1,8 +1,8 @@
 import { User } from '../shared/schema';
-import { db, users, properties, expenses, units, tenants, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
+import { db, users, properties, expenses, units, tenants, tenantHistory, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
 import { eq } from 'drizzle-orm';
 import crypto from "crypto";
-import { Property, Expense, Unit, Tenant, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
+import { Property, Expense, Unit, Tenant, TenantHistory, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
 import nodemailer from 'nodemailer';
 
 interface Session {
@@ -581,6 +581,21 @@ class EmailService {
       console.error("Error sending email:", error);
       throw error;
     }
+  }
+
+  // Tenant History methods
+  async getTenantHistoryByUnit(unitId: string): Promise<TenantHistory[]> {
+    return await db.select().from(tenantHistory).where(eq(tenantHistory.unitId, unitId));
+  }
+
+  async createTenantHistory(historyData: any): Promise<TenantHistory> {
+    const [history] = await db.insert(tenantHistory).values({
+      id: crypto.randomUUID(),
+      ...historyData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return history;
   }
 }
 
