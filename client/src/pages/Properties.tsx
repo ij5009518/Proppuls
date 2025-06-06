@@ -519,7 +519,7 @@ export default function Properties() {
               Add Property
             </Button>
           </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Property</DialogTitle>
             </DialogHeader>
@@ -782,7 +782,7 @@ export default function Properties() {
 
       {/* Enhanced Property Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2">
@@ -1636,7 +1636,7 @@ export default function Properties() {
 
       {/* Edit Property Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Property</DialogTitle>
           </DialogHeader>
@@ -2085,7 +2085,7 @@ export default function Properties() {
 
       {/* Unit Creation Dialog */}
       <Dialog open={isUnitDialogOpen} onOpenChange={setIsUnitDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add New Unit to {selectedProperty?.name}</DialogTitle>
           </DialogHeader>
@@ -2240,7 +2240,7 @@ export default function Properties() {
 
       {/* Task Creation Dialog */}
       <Dialog open={isCreateTaskDialogOpen} onOpenChange={setIsCreateTaskDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create Task for {selectedProperty?.name}</DialogTitle>
           </DialogHeader>
