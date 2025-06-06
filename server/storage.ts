@@ -330,6 +330,50 @@ class Storage {
     return result.rowCount > 0;
   }
 
+  // Tenant History methods
+  async createTenantHistory(historyData: any): Promise<TenantHistory> {
+    const [history] = await db.insert(tenantHistory).values({
+      id: historyData.id || crypto.randomUUID(),
+      unitId: historyData.unitId,
+      tenantId: historyData.tenantId,
+      tenantName: historyData.tenantName,
+      tenantEmail: historyData.tenantEmail,
+      tenantPhone: historyData.tenantPhone,
+      leaseStart: historyData.leaseStart ? new Date(historyData.leaseStart) : new Date(),
+      leaseEnd: historyData.leaseEnd ? new Date(historyData.leaseEnd) : null,
+      monthlyRent: historyData.monthlyRent?.toString() || null,
+      deposit: historyData.deposit?.toString() || null,
+      moveInDate: historyData.moveInDate ? new Date(historyData.moveInDate) : null,
+      moveOutDate: historyData.moveOutDate ? new Date(historyData.moveOutDate) : null,
+      reasonForLeaving: historyData.reasonForLeaving || null,
+      status: historyData.status || 'active',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return history;
+  }
+
+  async getTenantHistoryByUnitId(unitId: string): Promise<TenantHistory[]> {
+    return await db.select().from(tenantHistory).where(eq(tenantHistory.unitId, unitId));
+  }
+
+  async getAllTenantHistory(): Promise<TenantHistory[]> {
+    return await db.select().from(tenantHistory);
+  }
+
+  async updateTenantHistory(id: string, historyData: any): Promise<TenantHistory | null> {
+    const [history] = await db.update(tenantHistory)
+      .set({ ...historyData, updatedAt: new Date() })
+      .where(eq(tenantHistory.id, id))
+      .returning();
+    return history || null;
+  }
+
+  async deleteTenantHistory(id: string): Promise<boolean> {
+    const result = await db.delete(tenantHistory).where(eq(tenantHistory.id, id));
+    return result.rowCount > 0;
+  }
+
   // Maintenance Request methods
   async createMaintenanceRequest(requestData: any): Promise<MaintenanceRequest> {
     const [request] = await db.insert(maintenanceRequests).values({
