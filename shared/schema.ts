@@ -104,6 +104,28 @@ export const tenantSchema = z.object({
   updatedAt: z.date(),
 });
 
+export const tenantHistorySchema = z.object({
+  id: z.string(),
+  unitId: z.string(),
+  tenantId: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().email(),
+  phone: z.string(),
+  leaseStart: z.date(),
+  leaseEnd: z.date().nullable(),
+  monthlyRent: z.string().nullable(),
+  deposit: z.string().nullable(),
+  moveInDate: z.date(),
+  moveOutDate: z.date().nullable(),
+  reasonForLeaving: z.string().nullable(),
+  finalBalance: z.string().nullable(),
+  depositReturned: z.string().nullable(),
+  notes: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
 export const maintenanceRequestSchema = z.object({
   id: z.string(),
   unitId: z.string(),
