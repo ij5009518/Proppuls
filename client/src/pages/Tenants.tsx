@@ -115,6 +115,8 @@ export default function Tenants() {
       phone: "",
       status: "pending",
       unitId: "",
+      leaseStart: undefined,
+      leaseEnd: undefined,
       monthlyRent: "",
       deposit: "",
     },
@@ -442,6 +444,123 @@ export default function Tenants() {
                     />
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="unitId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Unit</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a unit" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {units?.map((unit: Unit) => (
+                                <SelectItem key={unit.id} value={unit.id}>
+                                  Unit {unit.unitNumber} - {getPropertyName(unit.propertyId)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="leaseStart"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Lease Start Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="leaseEnd"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Lease End Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="monthlyRent"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Monthly Rent</FormLabel>
+                          <FormControl>
+                            <Input placeholder="1500" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="deposit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Security Deposit</FormLabel>
+                          <FormControl>
+                            <Input placeholder="1500" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <div className="flex justify-end space-x-2">
                     <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
@@ -587,13 +706,14 @@ export default function Tenants() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Unit</TableHead>
-                <TableHead>Rent</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Balance</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="w-[180px]">Name</TableHead>
+                <TableHead className="w-[200px]">Contact</TableHead>
+                <TableHead className="w-[100px]">Unit</TableHead>
+                <TableHead className="w-[120px]">Rent</TableHead>
+                <TableHead className="w-[150px]">Lease Period</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead className="w-[120px]">Balance</TableHead>
+                <TableHead className="w-[150px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -634,6 +754,19 @@ export default function Tenants() {
                       </div>
                     </TableCell>
                     <TableCell>{tenant.monthlyRent ? formatCurrency(tenant.monthlyRent) : "N/A"}</TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {tenant.leaseStart && (
+                          <div>{formatDate(tenant.leaseStart)}</div>
+                        )}
+                        {tenant.leaseEnd && (
+                          <div className="text-muted-foreground">to {formatDate(tenant.leaseEnd)}</div>
+                        )}
+                        {!tenant.leaseStart && !tenant.leaseEnd && (
+                          <span className="text-muted-foreground">No lease dates</span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(tenant.status)}>
                         {tenant.status}
