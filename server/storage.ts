@@ -1,8 +1,8 @@
 import { User } from '../shared/schema';
-import { db, users, properties, expenses, units, tenants, tenantHistory, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
+import { db, users, properties, expenses, units, tenants, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
 import { eq } from 'drizzle-orm';
 import crypto from "crypto";
-import { Property, Expense, Unit, Tenant, TenantHistory, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
+import { Property, Expense, Unit, Tenant, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
 import nodemailer from 'nodemailer';
 
 interface Session {
