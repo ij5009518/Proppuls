@@ -338,6 +338,51 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.patch("/api/tenants/:id/status", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, moveOutDate, moveOutReason } = req.body;
+
+      const tenant = await storage.getTenantById(id);
+      if (!tenant) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+
+      // If status is changing to "moved", create historical record and update tenant
+      if (status === "moved" && tenant.status !== "moved") {
+        // Create tenant history record
+        const historyData = {
+          unitId: tenant.unitId,
+          tenantName: `${tenant.firstName} ${tenant.lastName}`,
+          moveInDate: tenant.leaseStart || new Date(),
+          moveOutDate: moveOutDate ? new Date(moveOutDate) : new Date(),
+          monthlyRent: tenant.monthlyRent || "0",
+          securityDeposit: tenant.securityDeposit || "0",
+          moveOutReason: moveOutReason || "tenant_moved",
+          notes: `Tenant moved out on ${moveOutDate || new Date().toISOString().split('T')[0]}`
+        };
+
+        await storage.createTenantHistory(historyData);
+
+        // Update tenant status and clear unit assignment
+        const updatedTenant = await storage.updateTenant(id, {
+          status,
+          unitId: null, // Remove unit assignment
+          leaseEnd: moveOutDate ? new Date(moveOutDate) : new Date()
+        });
+
+        res.json(updatedTenant);
+      } else {
+        // Regular status update
+        const updatedTenant = await storage.updateTenant(id, { status });
+        res.json(updatedTenant);
+      }
+    } catch (error) {
+      console.error("Error updating tenant status:", error);
+      res.status(500).json({ message: "Failed to update tenant status" });
+    }
+  });
+
   // Rent Payments routes
   app.get("/api/rent-payments", async (req, res) => {
     try {

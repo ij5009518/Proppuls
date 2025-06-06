@@ -331,6 +331,34 @@ export default function Units() {
     setIsTenantHistoryDialogOpen(true);
   };
 
+  const onAssignTenantSubmit = (data: AssignTenantFormData) => {
+    if (selectedUnit) {
+      assignTenantMutation.mutate({
+        tenantId: data.tenantId,
+        unitId: selectedUnit.id,
+      });
+    }
+  };
+
+  const onTenantStatusSubmit = (data: TenantStatusFormData) => {
+    if (editingTenant) {
+      updateTenantStatusMutation.mutate({
+        tenantId: editingTenant.id,
+        data,
+      });
+    }
+  };
+
+  const handleEditTenantStatus = (tenant: Tenant) => {
+    setEditingTenant(tenant);
+    tenantStatusForm.reset({
+      status: tenant.status,
+      moveOutDate: "",
+      moveOutReason: "",
+    });
+    setIsTenantStatusDialogOpen(true);
+  };
+
   const filteredUnits = units.filter(
     (unit) => {
       const tenant = getTenantForUnit(unit.id);
@@ -773,9 +801,15 @@ export default function Units() {
                             <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                               {tenant.firstName} {tenant.lastName}
                             </h5>
-                            <Badge className={`${getStatusColor(tenant.status)}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditTenantStatus(tenant)}
+                              className={`${getStatusColor(tenant.status)} hover:opacity-80 transition-opacity`}
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
                               {tenant.status}
-                            </Badge>
+                            </Button>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -1340,6 +1374,85 @@ export default function Units() {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tenant Status Edit Dialog */}
+      <Dialog open={isTenantStatusDialogOpen} onOpenChange={setIsTenantStatusDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Tenant Status</DialogTitle>
+          </DialogHeader>
+          <Form {...tenantStatusForm}>
+            <form onSubmit={tenantStatusForm.handleSubmit(onTenantStatusSubmit)} className="space-y-4">
+              <FormField
+                control={tenantStatusForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="moved">Moved</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {tenantStatusForm.watch("status") === "moved" && (
+                <>
+                  <FormField
+                    control={tenantStatusForm.control}
+                    name="moveOutDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Move-out Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={tenantStatusForm.control}
+                    name="moveOutReason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Move-out Reason</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Reason for moving out" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsTenantStatusDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateTenantStatusMutation.isPending}>
+                  {updateTenantStatusMutation.isPending ? "Updating..." : "Update Status"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
