@@ -519,7 +519,7 @@ export default function Properties() {
               Add Property
             </Button>
           </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Property</DialogTitle>
             </DialogHeader>
@@ -2240,7 +2240,7 @@ export default function Properties() {
 
       {/* Task Creation Dialog */}
       <Dialog open={isCreateTaskDialogOpen} onOpenChange={setIsCreateTaskDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Create Task for {selectedProperty?.name}</DialogTitle>
           </DialogHeader>
