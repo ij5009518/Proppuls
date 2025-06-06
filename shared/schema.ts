@@ -603,6 +603,7 @@ export type User = z.infer<typeof userSchema>;
 export type Property = z.infer<typeof propertySchema>;
 export type Unit = z.infer<typeof unitSchema>;
 export type Tenant = z.infer<typeof tenantSchema>;
+export type TenantHistory = z.infer<typeof tenantHistorySchema>;
 export type MaintenanceRequest = z.infer<typeof maintenanceRequestSchema>;
 export type Vendor = z.infer<typeof vendorSchema>;
 export type RentPayment = z.infer<typeof rentPaymentSchema>;
