@@ -184,7 +184,7 @@ export default function CommunicationHub() {
                 Send Message
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Send New Message</DialogTitle>
                 <DialogDescription>
@@ -267,7 +267,7 @@ export default function CommunicationHub() {
                 Create Notification
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Create Notification</DialogTitle>
                 <DialogDescription>
