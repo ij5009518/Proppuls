@@ -970,7 +970,7 @@ export default function Tenants() {
           {selectedTenant && (
             <Tabs defaultValue="details" className="w-full">
               <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="details">Basic</TabsTrigger>
                 <TabsTrigger value="lease">Lease</TabsTrigger>
                 <TabsTrigger value="payments">Payments</TabsTrigger>
                 <TabsTrigger value="screening">Screening</TabsTrigger>
@@ -996,10 +996,38 @@ export default function Tenants() {
                         <p className="text-sm">{selectedTenant.phone}</p>
                       </div>
                       <div>
+                        <span className="text-sm font-medium text-muted-foreground">Date of Birth:</span>
+                        <p className="text-sm">
+                          {selectedTenant.dateOfBirth 
+                            ? new Date(selectedTenant.dateOfBirth).toLocaleDateString() 
+                            : "Not provided"}
+                        </p>
+                      </div>
+                      <div>
                         <span className="text-sm font-medium text-muted-foreground">Status:</span>
-                        <Badge className={getStatusColor(selectedTenant.status)}>
+                        <Badge 
+                          className={`cursor-pointer ${getStatusColor(selectedTenant.status)}`}
+                          onClick={() => handleEditTenantStatus(selectedTenant)}
+                        >
                           {selectedTenant.status}
                         </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Emergency Contact</h3>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Contact Name:</span>
+                        <p className="text-sm">
+                          {selectedTenant.emergencyContactName || "Not provided"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground">Contact Phone:</span>
+                        <p className="text-sm">
+                          {selectedTenant.emergencyContactPhone || "Not provided"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1599,6 +1627,96 @@ export default function Tenants() {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tenant Status Edit Dialog */}
+      <Dialog open={isTenantStatusDialogOpen} onOpenChange={setIsTenantStatusDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Tenant Status</DialogTitle>
+          </DialogHeader>
+          <Form {...tenantStatusForm}>
+            <form onSubmit={tenantStatusForm.handleSubmit(onTenantStatusSubmit)} className="space-y-4">
+              <FormField
+                control={tenantStatusForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="moved">Moved Out</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {tenantStatusForm.watch("status") === "moved" && (
+                <>
+                  <FormField
+                    control={tenantStatusForm.control}
+                    name="moveOutDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Move Out Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={tenantStatusForm.control}
+                    name="moveOutReason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Move Out Reason</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select reason" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="lease_expired">Lease Expired</SelectItem>
+                            <SelectItem value="early_termination">Early Termination</SelectItem>
+                            <SelectItem value="eviction">Eviction</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsTenantStatusDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateTenantStatusMutation.isPending}>
+                  {updateTenantStatusMutation.isPending ? "Updating..." : "Update Status"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
