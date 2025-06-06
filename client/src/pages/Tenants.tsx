@@ -1093,15 +1093,23 @@ export default function Tenants() {
                     <div className="text-center py-8">
                       <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-muted-foreground mb-4">No tasks assigned to this tenant yet</p>
-                      <Button variant="outline">
+                      <Button variant="outline" onClick={() => setIsTaskDialogOpen(true)}>
                         <CheckSquare className="h-4 w-4 mr-2" />
                         Add Task
                       </Button>
                     </div>
                   ) : (
-                    <div className="grid gap-4">
-                      {tenantTasks.map((task) => (
-                        <Card key={task.id}>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-semibold">Tenant Tasks</h4>
+                        <Button size="sm" onClick={() => setIsTaskDialogOpen(true)}>
+                          <Plus className="h-4 w-4 mr-1" />
+                          Create Task
+                        </Button>
+                      </div>
+                      <div className="grid gap-4">
+                        {tenantTasks.map((task) => (
+                          <Card key={task.id}>
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
                               <div className="space-y-2">
@@ -1145,7 +1153,8 @@ export default function Tenants() {
                             </div>
                           </CardContent>
                         </Card>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   );
                 })()}
