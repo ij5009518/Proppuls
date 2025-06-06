@@ -60,15 +60,10 @@ export const tenants = pgTable('tenants', {
   leaseEnd: timestamp('lease_end'),
   monthlyRent: decimal('monthly_rent'),
   deposit: decimal('deposit'),
-  moveInDate: timestamp('move_in_date'),
-  moveOutDate: timestamp('move_out_date'),
-  reasonForLeaving: text('reason_for_leaving'),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
-
-
 
 export const expenses = pgTable('expenses', {
   id: text('id').primaryKey(),
