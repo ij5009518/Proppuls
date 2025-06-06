@@ -264,6 +264,8 @@ export default function Tenants() {
       ...data,
       leaseStart: data.leaseStart?.toISOString(),
       leaseEnd: data.leaseEnd?.toISOString(),
+      monthlyRent: data.monthlyRent === "" ? null : data.monthlyRent,
+      deposit: data.deposit === "" ? null : data.deposit,
     };
     updateTenantMutation.mutate({ id: selectedTenant.id, data: submitData });
   };
@@ -712,45 +714,75 @@ export default function Tenants() {
           })}
         </div>
       ) : (
-        <Card>
+        <Card className="border-0 shadow-sm">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 px-6 py-4 border-b">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tenant Directory</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{filteredTenants.length} tenants found</p>
+          </div>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[180px]">Name</TableHead>
-                <TableHead className="w-[200px]">Contact</TableHead>
-                <TableHead className="w-[100px]">Unit</TableHead>
-                <TableHead className="w-[120px]">Rent</TableHead>
-                <TableHead className="w-[150px]">Lease Period</TableHead>
-                <TableHead className="w-[100px]">Status</TableHead>
-                <TableHead className="w-[120px]">Balance</TableHead>
-                <TableHead className="w-[150px]">Actions</TableHead>
+              <TableRow className="bg-gray-50/50 dark:bg-gray-800/50 hover:bg-gray-50/80 dark:hover:bg-gray-800/80">
+                <TableHead className="w-[180px] font-semibold text-gray-700 dark:text-gray-300">Name</TableHead>
+                <TableHead className="w-[200px] font-semibold text-gray-700 dark:text-gray-300">Contact</TableHead>
+                <TableHead className="w-[100px] font-semibold text-gray-700 dark:text-gray-300">Unit</TableHead>
+                <TableHead className="w-[120px] font-semibold text-gray-700 dark:text-gray-300">Rent</TableHead>
+                <TableHead className="w-[150px] font-semibold text-gray-700 dark:text-gray-300">Lease Period</TableHead>
+                <TableHead className="w-[100px] font-semibold text-gray-700 dark:text-gray-300">Status</TableHead>
+                <TableHead className="w-[120px] font-semibold text-gray-700 dark:text-gray-300">Balance</TableHead>
+                <TableHead className="w-[150px] font-semibold text-gray-700 dark:text-gray-300">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTenants.map((tenant) => {
+              {filteredTenants.map((tenant, index) => {
                 const currentBalance = getCurrentMonthBalance(tenant.id);
                 const overduePayments = getOverduePayments(tenant.id);
                 
                 return (
-                  <TableRow key={tenant.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{tenant.firstName} {tenant.lastName}</div>
+                  <TableRow 
+                    key={tenant.id} 
+                    className={`transition-all duration-200 hover:bg-gray-50/80 dark:hover:bg-gray-800/50 group ${
+                      index % 2 === 0 ? 'bg-white dark:bg-gray-900/50' : 'bg-gray-50/30 dark:bg-gray-800/20'
+                    }`}
+                  >
+                    <TableCell className="py-4">
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-10 w-10 border-2 border-gray-100 dark:border-gray-700 shadow-sm">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+                            {tenant.firstName[0]}{tenant.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {tenant.firstName} {tenant.lastName}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            ID: {tenant.id.slice(0, 8)}...
+                          </div>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div>{tenant.email}</div>
-                        <div className="text-muted-foreground">{tenant.phone}</div>
+                    <TableCell className="py-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                          <Mail className="h-3.5 w-3.5 mr-2 text-blue-500" />
+                          <span className="truncate max-w-[160px]">{tenant.email}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                          <Phone className="h-3.5 w-3.5 mr-2 text-green-500" />
+                          {tenant.phone}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-4">
                       <div className="flex items-center space-x-2">
-                        <span>{getUnitNumber(tenant.unitId)}</span>
+                        <div className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg font-bold text-sm">
+                          {getUnitNumber(tenant.unitId)}
+                        </div>
                         {tenant.unitId && units && (
                           <Button
                             size="sm"
                             variant="ghost"
+                            className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                             onClick={(e) => {
                               e.stopPropagation();
                               const unit = units.find((u: Unit) => u.id === tenant.unitId);
@@ -758,45 +790,73 @@ export default function Tenants() {
                             }}
                             title="View Tenant History"
                           >
-                            <History className="h-4 w-4" />
+                            <History className="h-3.5 w-3.5 text-gray-500 hover:text-blue-600" />
                           </Button>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{tenant.monthlyRent ? formatCurrency(tenant.monthlyRent) : "N/A"}</TableCell>
-                    <TableCell>
+                    <TableCell className="py-4">
+                      <div className="text-right">
+                        <div className="font-bold text-lg text-gray-900 dark:text-white">
+                          {tenant.monthlyRent ? formatCurrency(tenant.monthlyRent) : "N/A"}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">per month</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
                       <div className="text-sm">
-                        {tenant.leaseStart && (
-                          <div>{formatDate(tenant.leaseStart)}</div>
-                        )}
-                        {tenant.leaseEnd && (
-                          <div className="text-muted-foreground">to {formatDate(tenant.leaseEnd)}</div>
-                        )}
-                        {!tenant.leaseStart && !tenant.leaseEnd && (
-                          <span className="text-muted-foreground">No lease dates</span>
+                        {tenant.leaseStart && tenant.leaseEnd ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                              <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                              {formatDate(tenant.leaseStart)}
+                            </div>
+                            <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                              <span className="w-2 h-2 bg-red-400 rounded-full mr-2"></span>
+                              {formatDate(tenant.leaseEnd)}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground italic">No lease dates</span>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(tenant.status)}>
+                    <TableCell className="py-4">
+                      <Badge className={`font-medium shadow-sm border-0 ${getStatusColor(tenant.status)}`}>
+                        <span className={`w-2 h-2 rounded-full mr-2 ${
+                          tenant.status === "active" ? "bg-emerald-500" : 
+                          tenant.status === "inactive" ? "bg-red-500" : "bg-amber-500"
+                        }`}></span>
                         {tenant.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
+                    <TableCell className="py-4">
+                      <div className="flex items-center justify-end space-x-2">
                         {currentBalance > 0 && (
-                          <span className="text-yellow-600">{formatCurrency(currentBalance.toString())}</span>
+                          <div className="text-right">
+                            <div className="font-bold text-amber-600 dark:text-amber-400">
+                              {formatCurrency(currentBalance.toString())}
+                            </div>
+                            <div className="text-xs text-gray-500">balance due</div>
+                          </div>
                         )}
                         {overduePayments.length > 0 && (
-                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                          <div className="flex items-center space-x-1 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-md">
+                            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                            <span className="text-xs font-medium text-red-600 dark:text-red-400">Overdue</span>
+                          </div>
+                        )}
+                        {currentBalance === 0 && overduePayments.length === 0 && (
+                          <div className="text-xs text-gray-500 italic">Up to date</div>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
+                    <TableCell className="py-4">
+                      <div className="flex items-center space-x-2 opacity-70 group-hover:opacity-100 transition-opacity">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 hover:bg-green-50 dark:hover:bg-green-900/20"
                           onClick={() => {
                             setSelectedTenant(tenant);
                             paymentForm.setValue("tenantId", tenant.id);
@@ -806,21 +866,24 @@ export default function Tenants() {
                           }}
                           title="Record Payment"
                         >
-                          <DollarSign className="h-4 w-4" />
+                          <DollarSign className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                           onClick={() => {
                             setSelectedTenant(tenant);
                             setIsViewDialogOpen(true);
                           }}
+                          title="View Details"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 hover:bg-purple-50 dark:hover:bg-purple-900/20"
                           onClick={() => {
                             setSelectedTenant(tenant);
                             form.reset({
@@ -837,15 +900,18 @@ export default function Tenants() {
                             });
                             setIsEditDialogOpen(true);
                           }}
+                          title="Edit Tenant"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20"
                           onClick={() => deleteTenantMutation.mutate(tenant.id)}
+                          title="Delete Tenant"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
                         </Button>
                       </div>
                     </TableCell>
