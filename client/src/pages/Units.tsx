@@ -906,7 +906,7 @@ export default function Units() {
                         </div>
                       )}
 
-                      {unitTenantHistory.length === 0 && (
+                      {unitTenants.length === 0 && (
                         <div className="text-center py-8">
                           <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                           <p className="text-muted-foreground mb-4">No tenant history available for this unit</p>
