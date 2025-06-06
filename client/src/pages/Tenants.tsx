@@ -463,9 +463,26 @@ export default function Tenants() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Unit {getUnitNumber(tenant.unitId)}
-                        </p>
+                        <div className="flex items-center justify-end space-x-2 mb-2">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Unit {getUnitNumber(tenant.unitId)}
+                          </p>
+                          {tenant.unitId && units && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const unit = units.find((u: Unit) => u.id === tenant.unitId);
+                                if (unit) handleViewTenantHistory(unit);
+                              }}
+                              title="View Tenant History"
+                              className="h-6 w-6 p-0"
+                            >
+                              <History className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
                         {tenant.monthlyRent && (
                           <p className="text-lg font-semibold text-green-600 dark:text-green-400">
                             {formatCurrency(tenant.monthlyRent)}/month
