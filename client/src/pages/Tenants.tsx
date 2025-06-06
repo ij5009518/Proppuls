@@ -969,13 +969,11 @@ export default function Tenants() {
           </DialogHeader>
           {selectedTenant && (
             <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="details">Basic</TabsTrigger>
-                <TabsTrigger value="lease">Lease</TabsTrigger>
+                <TabsTrigger value="lease">Lease & Screening</TabsTrigger>
                 <TabsTrigger value="payments">Payments</TabsTrigger>
-                <TabsTrigger value="screening">Screening</TabsTrigger>
-                <TabsTrigger value="communication">Communication</TabsTrigger>
-                <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                <TabsTrigger value="tasks">Tasks & Communication</TabsTrigger>
               </TabsList>
 
               <TabsContent value="details" className="space-y-4">
@@ -1091,10 +1089,65 @@ export default function Tenants() {
                     </div>
                   </div>
                   <div className="pt-4 border-t">
-                    <Button variant="outline" size="sm">
-                      <FileText className="h-4 w-4 mr-2" />
-                      View Lease Agreement
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Lease Agreement
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsBackgroundCheckDialogOpen(true)}
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        Background Check
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Screening Information */}
+                  <div className="pt-6 border-t space-y-4">
+                    <h3 className="text-lg font-semibold">Screening & Background</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h4 className="text-md font-medium">Application Status</h4>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">Application Date:</span>
+                            <p className="text-sm">{formatDate(selectedTenant.createdAt)}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">Credit Score:</span>
+                            <p className="text-sm">
+                              {selectedTenant.creditScore || "Not available"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">Income Verification:</span>
+                            <Badge variant={selectedTenant.incomeVerified ? "default" : "secondary"}>
+                              {selectedTenant.incomeVerified ? "Verified" : "Pending"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="text-md font-medium">Background Check</h4>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">Criminal Background:</span>
+                            <Badge variant={selectedTenant.backgroundCheckStatus === "clear" ? "default" : "destructive"}>
+                              {selectedTenant.backgroundCheckStatus || "Pending"}
+                            </Badge>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">References:</span>
+                            <p className="text-sm">
+                              {selectedTenant.referencesVerified ? "Verified" : "Pending verification"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
@@ -1179,27 +1232,29 @@ export default function Tenants() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="tasks" className="space-y-4">
-                {(() => {
-                  const tenantTasks = tasks?.filter(task => task.tenantId === selectedTenant.id) || [];
-                  return tenantTasks.length === 0 ? (
-                    <div className="text-center py-8">
-                      <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-muted-foreground mb-4">No tasks assigned to this tenant yet</p>
-                      <Button variant="outline" onClick={() => setIsTaskDialogOpen(true)}>
-                        <CheckSquare className="h-4 w-4 mr-2" />
-                        Add Task
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-semibold">Tenant Tasks</h4>
-                        <Button size="sm" onClick={() => setIsTaskDialogOpen(true)}>
-                          <Plus className="h-4 w-4 mr-1" />
-                          Create Task
+              <TabsContent value="tasks" className="space-y-6">
+                {/* Tasks Section */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Tasks</h3>
+                    <Button size="sm" onClick={() => setIsTaskDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Create Task
+                    </Button>
+                  </div>
+                  
+                  {(() => {
+                    const tenantTasks = tasks?.filter(task => task.tenantId === selectedTenant.id) || [];
+                    return tenantTasks.length === 0 ? (
+                      <div className="text-center py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                        <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-muted-foreground mb-4">No tasks assigned to this tenant yet</p>
+                        <Button variant="outline" onClick={() => setIsTaskDialogOpen(true)}>
+                          <CheckSquare className="h-4 w-4 mr-2" />
+                          Add Task
                         </Button>
                       </div>
+                    ) : (
                       <div className="grid gap-4">
                         {tenantTasks.map((task) => (
                           <Card key={task.id}>
@@ -1248,9 +1303,35 @@ export default function Tenants() {
                         </Card>
                         ))}
                       </div>
+                    );
+                  })()}
+                </div>
+                
+                {/* Communication Section */}
+                <div className="space-y-4 pt-6 border-t">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Communication</h3>
+                    <Button size="sm" variant="outline">
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      Send Message
+                    </Button>
+                  </div>
+                  
+                  <div className="text-center py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                    <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">No messages yet</p>
+                    <div className="flex gap-2 justify-center">
+                      <Button variant="outline" size="sm">
+                        <Mail className="h-4 w-4 mr-2" />
+                        Send Email
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Phone className="h-4 w-4 mr-2" />
+                        Call Tenant
+                      </Button>
                     </div>
-                  );
-                })()}
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
           )}
