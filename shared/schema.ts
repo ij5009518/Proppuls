@@ -99,29 +99,15 @@ export const tenantSchema = z.object({
   leaseEnd: z.date().nullable(),
   monthlyRent: z.string().nullable(),
   deposit: z.string().nullable(),
+  moveInDate: z.date().nullable(),
+  moveOutDate: z.date().nullable(),
+  reasonForLeaving: z.string().nullable(),
   status: z.enum(["active", "inactive", "pending"]),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
-export const tenantHistorySchema = z.object({
-  id: z.string(),
-  unitId: z.string(),
-  tenantId: z.string(),
-  tenantName: z.string(),
-  tenantEmail: z.string(),
-  tenantPhone: z.string(),
-  leaseStart: z.date(),
-  leaseEnd: z.date().nullable(),
-  monthlyRent: z.string().nullable(),
-  deposit: z.string().nullable(),
-  moveInDate: z.date().nullable(),
-  moveOutDate: z.date().nullable(),
-  reasonForLeaving: z.string().nullable(),
-  status: z.enum(["active", "moved_out", "evicted"]),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
+
 
 export const maintenanceRequestSchema = z.object({
   id: z.string(),
