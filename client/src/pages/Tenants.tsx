@@ -907,23 +907,7 @@ export default function Tenants() {
                 {selectedTenant?.firstName} {selectedTenant?.lastName} - Tenant Details
               </DialogTitle>
               <div className="flex items-center gap-2 mr-8">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (selectedTenant) {
-                      paymentForm.setValue("tenantId", selectedTenant.id);
-                      paymentForm.setValue("unitId", selectedTenant.unitId || "");
-                      paymentForm.setValue("amount", selectedTenant.monthlyRent || "");
-                      setIsPaymentDialogOpen(true);
-                    }
-                  }}
-                  title="Record Payment"
-                >
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  Record Payment
-                </Button>
+
                 <Button 
                   size="sm" 
                   variant="outline" 
