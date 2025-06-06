@@ -65,6 +65,25 @@ export const tenants = pgTable('tenants', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+export const tenantHistory = pgTable('tenant_history', {
+  id: text('id').primaryKey(),
+  unitId: text('unit_id').notNull(),
+  tenantId: text('tenant_id').notNull(),
+  tenantName: text('tenant_name').notNull(),
+  tenantEmail: text('tenant_email').notNull(),
+  tenantPhone: text('tenant_phone').notNull(),
+  leaseStart: timestamp('lease_start').notNull(),
+  leaseEnd: timestamp('lease_end'),
+  monthlyRent: decimal('monthly_rent'),
+  deposit: decimal('deposit'),
+  moveInDate: timestamp('move_in_date'),
+  moveOutDate: timestamp('move_out_date'),
+  reasonForLeaving: text('reason_for_leaving'),
+  status: text('status').notNull().default('active'), // active, moved_out, evicted
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const expenses = pgTable('expenses', {
   id: text('id').primaryKey(),
   propertyId: text('property_id').notNull(),
