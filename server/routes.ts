@@ -271,6 +271,18 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Tenant History routes
+  app.get("/api/tenant-history/:unitId", async (req, res) => {
+    try {
+      const unitId = req.params.unitId;
+      const tenantHistory = await storage.getTenantHistoryByUnit(unitId);
+      res.json(tenantHistory);
+    } catch (error) {
+      console.error("Error fetching tenant history:", error);
+      res.status(500).json({ message: "Failed to fetch tenant history" });
+    }
+  });
+
   // Rent Payments routes
   app.get("/api/rent-payments", async (req, res) => {
     try {
