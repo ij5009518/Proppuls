@@ -102,7 +102,7 @@ export const tenantSchema = z.object({
   moveInDate: z.date().nullable(),
   moveOutDate: z.date().nullable(),
   reasonForLeaving: z.string().nullable(),
-  status: z.enum(["active", "inactive", "pending"]),
+  status: z.enum(["active", "moved_out", "evicted", "pending"]),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -587,7 +587,7 @@ export type User = z.infer<typeof userSchema>;
 export type Property = z.infer<typeof propertySchema>;
 export type Unit = z.infer<typeof unitSchema>;
 export type Tenant = z.infer<typeof tenantSchema>;
-export type TenantHistory = z.infer<typeof tenantHistorySchema>;
+
 export type MaintenanceRequest = z.infer<typeof maintenanceRequestSchema>;
 export type Vendor = z.infer<typeof vendorSchema>;
 export type RentPayment = z.infer<typeof rentPaymentSchema>;
@@ -599,7 +599,7 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
 export type InsertUnit = z.infer<typeof insertUnitSchema>;
 export type InsertTenant = z.infer<typeof insertTenantSchema>;
-export type InsertTenantHistory = z.infer<typeof insertTenantHistorySchema>;
+
 export type InsertMaintenanceRequest = z.infer<typeof insertMaintenanceRequestSchema>;
 export type InsertVendor = z.infer<typeof insertVendorSchema>;
 export type InsertRentPayment = z.infer<typeof insertRentPaymentSchema>;
