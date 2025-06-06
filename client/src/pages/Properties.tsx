@@ -810,18 +810,6 @@ export default function Properties() {
                   variant="outline" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsCreateTaskDialogOpen(true);
-                  }}
-                  title="Add Task"
-                >
-                  <CheckSquare className="h-4 w-4 mr-1" />
-                  Add Task
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={(e) => {
-                    e.stopPropagation();
                     handleEdit(selectedProperty!);
                   }}
                 >

@@ -593,18 +593,6 @@ export default function Units() {
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsTaskDialogOpen(true);
-                    }}
-                    title="Add Task"
-                  >
-                    <CheckSquare className="h-4 w-4 mr-1" />
-                    Add Task
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
                       setIsViewDialogOpen(false);
                       handleEdit(selectedUnit);
                     }}
