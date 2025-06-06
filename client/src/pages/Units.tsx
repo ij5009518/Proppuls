@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, CheckSquare, Home, Bed, Bath, Maximize, DollarSign, Users, FileText, Wrench } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, CheckSquare, Home, Bed, Bath, Maximize, DollarSign, Users, FileText, Wrench, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +48,8 @@ type AssignTenantFormData = z.infer<typeof assignTenantSchema>;
 export default function Units() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isTenantHistoryDialogOpen, setIsTenantHistoryDialogOpen] = useState(false);
+  const [selectedUnitForHistory, setSelectedUnitForHistory] = useState<Unit | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isAssignTenantDialogOpen, setIsAssignTenantDialogOpen] = useState(false);
@@ -70,6 +72,11 @@ export default function Units() {
 
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
+  });
+
+  const { data: tenantHistory = [] } = useQuery({
+    queryKey: ["/api/tenant-history"],
+    enabled: isTenantHistoryDialogOpen,
   });
 
   const createForm = useForm<UnitFormData>({
@@ -282,6 +289,11 @@ export default function Units() {
   const getAvailableTenants = () => {
     // Get tenants that are not assigned to any unit or are inactive
     return tenants.filter(tenant => !tenant.unitId || tenant.status === "inactive");
+  };
+
+  const handleViewTenantHistory = (unit: Unit) => {
+    setSelectedUnitForHistory(unit);
+    setIsTenantHistoryDialogOpen(true);
   };
 
   const filteredUnits = units.filter(
@@ -726,9 +738,20 @@ export default function Units() {
                             <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                               {tenant.firstName} {tenant.lastName}
                             </h5>
-                            <Badge className={`${getStatusColor(tenant.status)}`}>
-                              {tenant.status}
-                            </Badge>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleViewTenantHistory(selectedUnit)}
+                                title="View Tenant History"
+                                className="h-8 w-8 p-0"
+                              >
+                                <History className="h-4 w-4" />
+                              </Button>
+                              <Badge className={`${getStatusColor(tenant.status)}`}>
+                                {tenant.status}
+                              </Badge>
+                            </div>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
