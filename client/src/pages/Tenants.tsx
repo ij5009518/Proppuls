@@ -727,44 +727,35 @@ export default function Tenants() {
               {filteredTenants.length} ACTIVE TENANTS
             </p>
           </div>
-          <Table className="tenant-table-enhanced">
-            <TableHeader>
-              <TableRow style={{ backgroundColor: '#dbeafe', borderBottom: '4px solid #3b82f6' }}>
-                <TableHead className="w-[180px] py-8 px-10" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  👤 NAME
-                </TableHead>
-                <TableHead className="w-[200px] py-8 px-10" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  📧 CONTACT
-                </TableHead>
-                <TableHead className="w-[100px] py-8 px-10 text-center" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  🏠 UNIT
-                </TableHead>
-                <TableHead className="w-[120px] py-8 px-10 text-right" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  💰 RENT
-                </TableHead>
-                <TableHead className="w-[150px] py-8 px-10" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  📅 LEASE
-                </TableHead>
-                <TableHead className="w-[100px] py-8 px-10" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  ✅ STATUS
-                </TableHead>
-                <TableHead className="w-[120px] py-8 px-10 text-right" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  💳 BALANCE
-                </TableHead>
-                <TableHead className="w-[150px] py-8 px-10 text-center" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  ⚙️ ACTIONS
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <div className="space-y-6">
+            {/* Modern Card-Based Layout */}
+            <div className="grid gap-6">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-xl shadow-lg">
+                <h3 className="text-2xl font-bold mb-2">Tenant Overview</h3>
+                <p className="text-blue-100">Detailed information for all active tenants</p>
+              </div>
+            </div>
+
+            {/* Table with New Layout */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-600">
+                    <TableHead className="py-4 px-6 text-left font-bold" style={{ fontSize: '1.1rem', color: '#374151' }}>
+                      TENANT & CONTACT
+                    </TableHead>
+                    <TableHead className="py-4 px-6 text-center font-bold" style={{ fontSize: '1.1rem', color: '#374151' }}>
+                      UNIT & PROPERTY
+                    </TableHead>
+                    <TableHead className="py-4 px-6 text-center font-bold" style={{ fontSize: '1.1rem', color: '#374151' }}>
+                      RENT & FINANCES
+                    </TableHead>
+                    <TableHead className="py-4 px-6 text-center font-bold" style={{ fontSize: '1.1rem', color: '#374151' }}>
+                      STATUS & ACTIONS
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
               {filteredTenants.map((tenant, index) => {
                 const currentBalance = getCurrentMonthBalance(tenant.id);
                 const overduePayments = getOverduePayments(tenant.id);
@@ -962,8 +953,10 @@ export default function Tenants() {
                   </TableRow>
                 );
               })}
-            </TableBody>
-          </Table>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </Card>
       )}
 
