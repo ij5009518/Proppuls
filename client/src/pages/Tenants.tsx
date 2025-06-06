@@ -719,17 +719,17 @@ export default function Tenants() {
             <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">📋 Tenant Directory</h2>
             <p className="text-base text-blue-800 dark:text-blue-200 mt-2 font-bold">{filteredTenants.length} active tenants</p>
           </div>
-          <Table className="text-lg">
+          <Table className="tenant-table-enhanced">
             <TableHeader>
-              <TableRow className="bg-gradient-to-r from-slate-200 via-blue-200 to-indigo-200 dark:from-slate-700 dark:via-blue-800 dark:to-indigo-800 border-b-4 border-blue-400 dark:border-blue-600">
-                <TableHead className="w-[180px] font-black text-xl text-slate-900 dark:text-white py-6 px-8 uppercase tracking-wide">👤 Name</TableHead>
-                <TableHead className="w-[200px] font-black text-xl text-slate-900 dark:text-white py-6 px-8 uppercase tracking-wide">📧 Contact</TableHead>
-                <TableHead className="w-[100px] font-black text-xl text-slate-900 dark:text-white py-6 px-8 text-center uppercase tracking-wide">🏠 Unit</TableHead>
-                <TableHead className="w-[120px] font-black text-xl text-slate-900 dark:text-white py-6 px-8 text-right uppercase tracking-wide">💰 Rent</TableHead>
-                <TableHead className="w-[150px] font-black text-xl text-slate-900 dark:text-white py-6 px-8 uppercase tracking-wide">📅 Lease</TableHead>
-                <TableHead className="w-[100px] font-black text-xl text-slate-900 dark:text-white py-6 px-8 uppercase tracking-wide">✅ Status</TableHead>
-                <TableHead className="w-[120px] font-black text-xl text-slate-900 dark:text-white py-6 px-8 text-right uppercase tracking-wide">💳 Balance</TableHead>
-                <TableHead className="w-[150px] font-black text-xl text-slate-900 dark:text-white py-6 px-8 text-center uppercase tracking-wide">⚙️ Actions</TableHead>
+              <TableRow className="tenant-table-header">
+                <TableHead className="w-[180px] tenant-table-header py-6 px-8">👤 Name</TableHead>
+                <TableHead className="w-[200px] tenant-table-header py-6 px-8">📧 Contact</TableHead>
+                <TableHead className="w-[100px] tenant-table-header py-6 px-8 text-center">🏠 Unit</TableHead>
+                <TableHead className="w-[120px] tenant-table-header py-6 px-8 text-right">💰 Rent</TableHead>
+                <TableHead className="w-[150px] tenant-table-header py-6 px-8">📅 Lease</TableHead>
+                <TableHead className="w-[100px] tenant-table-header py-6 px-8">✅ Status</TableHead>
+                <TableHead className="w-[120px] tenant-table-header py-6 px-8 text-right">💳 Balance</TableHead>
+                <TableHead className="w-[150px] tenant-table-header py-6 px-8 text-center">⚙️ Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -740,19 +740,19 @@ export default function Tenants() {
                 return (
                   <TableRow 
                     key={tenant.id} 
-                    className={`transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 hover:shadow-xl group border-b-2 border-blue-200 dark:border-blue-700 ${
+                    className={`tenant-row-enhanced transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 hover:shadow-xl group ${
                       index % 2 === 0 ? 'bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800' : 'bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-700'
                     }`}
                   >
-                    <TableCell className="py-8 px-8">
+                    <TableCell className="tenant-row-enhanced">
                       <div className="flex items-center space-x-6">
-                        <Avatar className="h-16 w-16 border-4 border-white dark:border-gray-800 shadow-2xl ring-4 ring-blue-200 dark:ring-blue-800">
-                          <AvatarFallback className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white font-black text-2xl">
+                        <Avatar className="tenant-avatar-large border-4 border-white dark:border-gray-800 shadow-2xl ring-4 ring-blue-200 dark:ring-blue-800">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white font-black">
                             {tenant.firstName[0]}{tenant.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-black text-2xl text-gray-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors tracking-tight">
+                          <div className="tenant-name-text group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors tracking-tight">
                             {tenant.firstName} {tenant.lastName}
                           </div>
                           <div className="text-lg text-gray-600 dark:text-gray-400 mt-2 font-bold font-mono bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg">
@@ -761,25 +761,25 @@ export default function Tenants() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="py-6 px-6">
+                    <TableCell className="tenant-row-enhanced">
                       <div className="space-y-3">
-                        <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
-                            <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <div className="flex items-center tenant-contact-text text-gray-700 dark:text-gray-300">
+                          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           </div>
-                          <span className="truncate max-w-[160px] font-medium">{tenant.email}</span>
+                          <span className="truncate max-w-[160px] font-bold">{tenant.email}</span>
                         </div>
-                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-3">
-                            <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        <div className="flex items-center tenant-contact-text text-gray-600 dark:text-gray-400">
+                          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <Phone className="h-5 w-5 text-green-600 dark:text-green-400" />
                           </div>
-                          <span className="font-medium">{tenant.phone}</span>
+                          <span className="font-bold">{tenant.phone}</span>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-6 px-6 text-center">
                       <div className="flex items-center justify-center space-x-2">
-                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 rounded-xl font-bold text-lg shadow-sm border border-blue-200 dark:border-blue-800">
+                        <div className="tenant-unit-badge bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800">
                           {getUnitNumber(tenant.unitId)}
                         </div>
                         {tenant.unitId && units && (
@@ -801,10 +801,10 @@ export default function Tenants() {
                     </TableCell>
                     <TableCell className="py-6 px-6 text-right">
                       <div className="bg-green-50 dark:bg-green-900/20 rounded-lg px-4 py-3 inline-block border border-green-200 dark:border-green-800">
-                        <div className="font-bold text-xl text-green-800 dark:text-green-300">
+                        <div className="tenant-rent-amount text-green-800 dark:text-green-300">
                           {tenant.monthlyRent ? formatCurrency(tenant.monthlyRent) : "N/A"}
                         </div>
-                        <div className="text-xs text-green-600 dark:text-green-400 font-medium">per month</div>
+                        <div className="text-sm text-green-600 dark:text-green-400 font-bold">per month</div>
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
