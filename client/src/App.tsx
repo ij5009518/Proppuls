@@ -56,6 +56,8 @@ function AuthenticatedApp() {
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/tenant" component={TenantPortal} />
+        <Route path="/tenant-portal" component={TenantPortal} />
         <Route>
           {() => {
             setLocation("/login");
