@@ -72,9 +72,7 @@ export default function Units() {
     queryKey: ["/api/tasks"],
   });
 
-  const { data: tenantHistory = [] } = useQuery<TenantHistory[]>({
-    queryKey: ["/api/tenant-history"],
-  });
+
 
   const createForm = useForm<UnitFormData>({
     resolver: zodResolver(unitSchema),
@@ -284,8 +282,8 @@ export default function Units() {
   };
 
   const getAvailableTenants = () => {
-    // Get tenants that are not assigned to any unit or are inactive
-    return tenants.filter(tenant => !tenant.unitId || tenant.status === "inactive");
+    // Get tenants that are not assigned to any unit or have moved out
+    return tenants.filter(tenant => !tenant.unitId || tenant.status === "moved_out");
   };
 
   const filteredUnits = units.filter(
@@ -794,11 +792,11 @@ export default function Units() {
 
               <TabsContent value="history" className="space-y-4">
                 {(() => {
-                  const unitTenantHistory = tenantHistory?.filter(history => history.unitId === selectedUnit.id) || [];
-                  const currentTenant = unitTenantHistory.find(history => history.status === 'active');
-                  const previousTenants = unitTenantHistory.filter(history => history.status === 'inactive').sort((a, b) => {
-                    const dateA = new Date(b.moveOutDate || b.leaseEnd);
-                    const dateB = new Date(a.moveOutDate || a.leaseEnd);
+                  const unitTenants = tenants?.filter(tenant => tenant.unitId === selectedUnit.id) || [];
+                  const currentTenant = unitTenants.find(tenant => tenant.status === 'active');
+                  const previousTenants = unitTenants.filter(tenant => tenant.status === 'moved_out' || tenant.status === 'evicted').sort((a, b) => {
+                    const dateA = new Date(b.moveOutDate || new Date());
+                    const dateB = new Date(a.moveOutDate || new Date());
                     return dateA.getTime() - dateB.getTime();
                   });
 
@@ -822,7 +820,7 @@ export default function Units() {
                                 <div className="flex-1 space-y-2">
                                   <div className="flex items-center justify-between">
                                     <h6 className="font-semibold text-gray-900 dark:text-gray-100">
-                                      {currentTenant.tenantName}
+                                      {currentTenant.firstName} {currentTenant.lastName}
                                     </h6>
                                     <Badge className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400">
                                       Current
@@ -831,19 +829,19 @@ export default function Units() {
                                   <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
                                       <p className="text-gray-500 dark:text-gray-400">Email</p>
-                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.tenantEmail}</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.email}</p>
                                     </div>
                                     <div>
                                       <p className="text-gray-500 dark:text-gray-400">Phone</p>
-                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.tenantPhone}</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.phone}</p>
                                     </div>
                                     <div>
                                       <p className="text-gray-500 dark:text-gray-400">Lease Start</p>
-                                      <p className="text-gray-900 dark:text-gray-100">{formatDate(currentTenant.leaseStart)}</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.leaseStart ? formatDate(currentTenant.leaseStart) : 'N/A'}</p>
                                     </div>
                                     <div>
                                       <p className="text-gray-500 dark:text-gray-400">Monthly Rent</p>
-                                      <p className="text-gray-900 dark:text-gray-100">{formatCurrency(currentTenant.monthlyRent)}</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.monthlyRent ? formatCurrency(parseFloat(currentTenant.monthlyRent)) : 'N/A'}</p>
                                     </div>
                                   </div>
                                 </div>
@@ -869,7 +867,7 @@ export default function Units() {
                                     <div className="flex-1 space-y-2">
                                       <div className="flex items-center justify-between">
                                         <h6 className="font-semibold text-gray-900 dark:text-gray-100">
-                                          {tenant.tenantName}
+                                          {tenant.firstName} {tenant.lastName}
                                         </h6>
                                         <Badge variant="secondary">
                                           Previous
@@ -879,12 +877,12 @@ export default function Units() {
                                         <div>
                                           <p className="text-gray-500 dark:text-gray-400">Lease Period</p>
                                           <p className="text-gray-900 dark:text-gray-100">
-                                            {formatDate(tenant.leaseStart)} - {tenant.leaseEnd ? formatDate(tenant.leaseEnd) : 'Ongoing'}
+                                            {tenant.leaseStart ? formatDate(tenant.leaseStart) : 'N/A'} - {tenant.leaseEnd ? formatDate(tenant.leaseEnd) : 'N/A'}
                                           </p>
                                         </div>
                                         <div>
                                           <p className="text-gray-500 dark:text-gray-400">Monthly Rent</p>
-                                          <p className="text-gray-900 dark:text-gray-100">{formatCurrency(tenant.monthlyRent)}</p>
+                                          <p className="text-gray-900 dark:text-gray-100">{tenant.monthlyRent ? formatCurrency(parseFloat(tenant.monthlyRent)) : 'N/A'}</p>
                                         </div>
                                         {tenant.moveOutDate && (
                                           <div>
