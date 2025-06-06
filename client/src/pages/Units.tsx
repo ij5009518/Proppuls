@@ -41,9 +41,16 @@ const assignTenantSchema = z.object({
   tenantId: z.string().min(1, "Please select a tenant"),
 });
 
+const tenantStatusSchema = z.object({
+  status: z.string().min(1, "Status is required"),
+  moveOutDate: z.string().optional(),
+  moveOutReason: z.string().optional(),
+});
+
 type UnitFormData = z.infer<typeof unitSchema>;
 type TaskFormData = z.infer<typeof taskSchema>;
 type AssignTenantFormData = z.infer<typeof assignTenantSchema>;
+type TenantStatusFormData = z.infer<typeof tenantStatusSchema>;
 
 export default function Units() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -53,7 +60,9 @@ export default function Units() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isAssignTenantDialogOpen, setIsAssignTenantDialogOpen] = useState(false);
+  const [isTenantStatusDialogOpen, setIsTenantStatusDialogOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
+  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
@@ -124,6 +133,15 @@ export default function Units() {
     },
   });
 
+  const tenantStatusForm = useForm<TenantStatusFormData>({
+    resolver: zodResolver(tenantStatusSchema),
+    defaultValues: {
+      status: "",
+      moveOutDate: "",
+      moveOutReason: "",
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: (data: InsertUnit) => apiRequest("POST", "/api/units", data),
     onSuccess: () => {
@@ -169,6 +187,23 @@ export default function Units() {
     onError: (error: any) => {
       console.error("Assign tenant error:", error);
       toast({ title: "Failed to assign tenant", variant: "destructive" });
+    },
+  });
+
+  const updateTenantStatusMutation = useMutation({
+    mutationFn: ({ tenantId, data }: { tenantId: string; data: TenantStatusFormData }) =>
+      apiRequest("PATCH", `/api/tenants/${tenantId}/status`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      setIsTenantStatusDialogOpen(false);
+      setEditingTenant(null);
+      tenantStatusForm.reset();
+      toast({ title: "Tenant status updated successfully" });
+    },
+    onError: (error: any) => {
+      console.error("Update tenant status error:", error);
+      toast({ title: "Failed to update tenant status", variant: "destructive" });
     },
   });
 
