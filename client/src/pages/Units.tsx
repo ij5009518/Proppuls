@@ -1238,6 +1238,73 @@ export default function Units() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Tenant History Dialog */}
+      <Dialog open={isTenantHistoryDialogOpen} onOpenChange={setIsTenantHistoryDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Tenant History - Unit {selectedUnitForHistory?.unitNumber}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {tenantHistory.length === 0 ? (
+              <div className="text-center py-8">
+                <History className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  No Tenant History
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No historical tenant data is available for this unit.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 dark:text-white">
+                  Previous Tenants ({tenantHistory.length})
+                </h4>
+                <div className="grid gap-4">
+                  {tenantHistory.map((history: any) => (
+                    <Card key={history.id} className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <h5 className="font-medium text-gray-900 dark:text-white">
+                            {history.tenantName}
+                          </h5>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="font-medium text-gray-600 dark:text-gray-400">Move-in Date:</span>
+                              <p className="text-gray-900 dark:text-white">{history.moveInDate}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600 dark:text-gray-400">Move-out Date:</span>
+                              <p className="text-gray-900 dark:text-white">{history.moveOutDate}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600 dark:text-gray-400">Monthly Rent:</span>
+                              <p className="text-gray-900 dark:text-white">{formatCurrency(history.monthlyRent)}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-600 dark:text-gray-400">Reason for Moving:</span>
+                              <p className="text-gray-900 dark:text-white">{history.moveOutReason}</p>
+                            </div>
+                          </div>
+                          {history.notes && (
+                            <div className="mt-2">
+                              <span className="font-medium text-gray-600 dark:text-gray-400">Notes:</span>
+                              <p className="text-gray-900 dark:text-white mt-1">{history.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
