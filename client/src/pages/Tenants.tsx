@@ -90,6 +90,11 @@ export default function Tenants() {
     queryKey: ["/api/tasks"],
   });
 
+  const { data: tenantHistory = [] } = useQuery<TenantHistory[]>({
+    queryKey: ["/api/tenant-history", selectedUnitForHistory?.id],
+    enabled: !!selectedUnitForHistory?.id,
+  });
+
   const form = useForm<z.infer<typeof tenantSchema>>({
     resolver: zodResolver(tenantSchema),
     defaultValues: {
@@ -249,6 +254,11 @@ export default function Tenants() {
     taskForm.setValue("tenantId", tenant.id);
     taskForm.setValue("unitId", tenant.unitId || "");
     setIsTaskDialogOpen(true);
+  };
+
+  const handleViewTenantHistory = (unit: Unit) => {
+    setSelectedUnitForHistory(unit);
+    setIsTenantHistoryDialogOpen(true);
   };
 
   const filteredTenants = tenants?.filter((tenant: Tenant) =>
@@ -557,7 +567,25 @@ export default function Tenants() {
                         <div className="text-muted-foreground">{tenant.phone}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{getUnitNumber(tenant.unitId)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <span>{getUnitNumber(tenant.unitId)}</span>
+                        {tenant.unitId && units && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const unit = units.find((u: Unit) => u.id === tenant.unitId);
+                              if (unit) handleViewTenantHistory(unit);
+                            }}
+                            title="View Tenant History"
+                          >
+                            <History className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{tenant.monthlyRent ? formatCurrency(tenant.monthlyRent) : "N/A"}</TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(tenant.status)}>
@@ -1428,6 +1456,93 @@ export default function Tenants() {
                 </Button>
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tenant History Dialog */}
+      <Dialog open={isTenantHistoryDialogOpen} onOpenChange={setIsTenantHistoryDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Tenant History - Unit {selectedUnitForHistory?.unitNumber}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {tenantHistory.length === 0 ? (
+              <div className="text-center py-8">
+                <History className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  No Tenant History
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No historical tenant data is available for this unit.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 dark:text-white">
+                  Previous Tenants ({tenantHistory.length})
+                </h4>
+                <div className="grid gap-4">
+                  {tenantHistory.map((history) => (
+                    <Card key={history.id} className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <h5 className="font-medium text-gray-900 dark:text-white">
+                            {history.tenantName}
+                          </h5>
+                          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                            <div className="flex items-center space-x-4">
+                              <span>
+                                <Calendar className="h-4 w-4 inline mr-1" />
+                                Move In: {formatDate(history.moveInDate)}
+                              </span>
+                              {history.moveOutDate && (
+                                <span>
+                                  <Calendar className="h-4 w-4 inline mr-1" />
+                                  Move Out: {formatDate(history.moveOutDate)}
+                                </span>
+                              )}
+                            </div>
+                            {history.monthlyRent && (
+                              <div>
+                                <DollarSign className="h-4 w-4 inline mr-1" />
+                                Monthly Rent: {formatCurrency(history.monthlyRent.toString())}
+                              </div>
+                            )}
+                            {history.securityDeposit && (
+                              <div>
+                                Security Deposit: {formatCurrency(history.securityDeposit.toString())}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge 
+                            className={
+                              history.moveOutReason === 'lease_expired' ? 'bg-green-100 text-green-800' :
+                              history.moveOutReason === 'eviction' ? 'bg-red-100 text-red-800' :
+                              history.moveOutReason === 'early_termination' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }
+                          >
+                            {history.moveOutReason ? history.moveOutReason.replace('_', ' ') : 'Current'}
+                          </Badge>
+                        </div>
+                      </div>
+                      {history.notes && (
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <strong>Notes:</strong> {history.notes}
+                          </p>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
