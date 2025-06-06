@@ -6,6 +6,12 @@ import crypto from "crypto";
 import multer from "multer";
 import { parse } from "csv-parse/sync";
 import { emailService } from "./email";
+import Stripe from "stripe";
+
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2024-06-20",
+});
 
 export function registerRoutes(app: Express) {
   // Create HTTP server
@@ -137,6 +143,72 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching tenant rent payments:", error);
       res.status(500).json({ message: "Failed to fetch rent payments" });
+    }
+  });
+
+  // Stripe payment routes for tenants
+  app.post("/api/tenant/create-payment-intent", authenticateTenant, async (req: any, res) => {
+    try {
+      const { amount, description } = req.body;
+      const tenant = req.tenant;
+
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid payment amount" });
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          tenantId: tenant.id,
+          tenantEmail: tenant.email,
+          description: description || "Rent Payment",
+        },
+      });
+
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      });
+    } catch (error) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: "Failed to create payment intent" });
+    }
+  });
+
+  app.post("/api/tenant/confirm-payment", authenticateTenant, async (req: any, res) => {
+    try {
+      const { paymentIntentId, amount, description } = req.body;
+      const tenant = req.tenant;
+
+      // Verify the payment intent was successful
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status === "succeeded") {
+        // Create a rent payment record
+        const rentPayment = await storage.createRentPayment({
+          tenantId: tenant.id,
+          unitId: tenant.unitId,
+          amount: amount.toString(),
+          dueDate: new Date(),
+          paidDate: new Date(),
+          status: "paid",
+          paymentMethod: "stripe",
+          stripePaymentId: paymentIntentId,
+          notes: description || "Online rent payment via Stripe"
+        });
+
+        res.json({ 
+          success: true, 
+          payment: rentPayment,
+          message: "Payment successful"
+        });
+      } else {
+        res.status(400).json({ message: "Payment was not successful" });
+      }
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      res.status(500).json({ message: "Failed to confirm payment" });
     }
   });
 
