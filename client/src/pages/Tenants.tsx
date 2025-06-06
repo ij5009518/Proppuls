@@ -93,6 +93,10 @@ export default function Tenants() {
     queryKey: ["/api/units"],
   });
 
+  const { data: properties } = useQuery({
+    queryKey: ["/api/properties"],
+  });
+
   const { data: rentPayments } = useQuery({
     queryKey: ["/api/rent-payments"],
   });
@@ -325,6 +329,12 @@ export default function Tenants() {
     if (!unitId || !units) return "N/A";
     const unit = units.find((u: Unit) => u.id === unitId);
     return unit?.unitNumber || "N/A";
+  };
+
+  const getPropertyName = (propertyId: string) => {
+    if (!propertyId || !properties) return "Unknown Property";
+    const property = properties.find((p: any) => p.id === propertyId);
+    return property?.name || "Unknown Property";
   };
 
   const getCurrentMonthBalance = (tenantId: string) => {
@@ -1556,6 +1566,45 @@ export default function Tenants() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="leaseStart"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lease Start Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="leaseEnd"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lease End Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
