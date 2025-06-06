@@ -271,59 +271,9 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Tenant History routes
-  app.get("/api/tenant-history", async (req, res) => {
-    try {
-      const history = await storage.getAllTenantHistory();
-      res.json(history);
-    } catch (error) {
-      console.error("Error fetching tenant history:", error);
-      res.status(500).json({ message: "Failed to fetch tenant history" });
-    }
-  });
 
-  app.get("/api/tenant-history/unit/:unitId", async (req, res) => {
-    try {
-      const unitId = req.params.unitId;
-      const history = await storage.getTenantHistoryByUnitId(unitId);
-      res.json(history);
-    } catch (error) {
-      console.error("Error fetching tenant history for unit:", error);
-      res.status(500).json({ message: "Failed to fetch tenant history for unit" });
-    }
-  });
 
-  app.post("/api/tenant-history", async (req, res) => {
-    try {
-      const history = await storage.createTenantHistory(req.body);
-      res.json(history);
-    } catch (error) {
-      console.error("Error creating tenant history:", error);
-      res.status(500).json({ message: "Failed to create tenant history" });
-    }
-  });
 
-  app.put("/api/tenant-history/:id", async (req, res) => {
-    try {
-      const id = req.params.id;
-      const history = await storage.updateTenantHistory(id, req.body);
-      res.json(history);
-    } catch (error) {
-      console.error("Error updating tenant history:", error);
-      res.status(500).json({ message: "Failed to update tenant history" });
-    }
-  });
-
-  app.delete("/api/tenant-history/:id", async (req, res) => {
-    try {
-      const id = req.params.id;
-      await storage.deleteTenantHistory(id);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting tenant history:", error);
-      res.status(500).json({ message: "Failed to delete tenant history" });
-    }
-  });
 
   // Rent Payments routes
   app.get("/api/rent-payments", async (req, res) => {
