@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Home, Eye, EyeOff } from "lucide-react";
@@ -55,7 +55,7 @@ export default function Register() {
       password: formData.get("password"),
       firstName: formData.get("firstName"),
       lastName: formData.get("lastName"),
-      role: formData.get("role"),
+      role: "tenant", // Default role
       phone: formData.get("phone"),
     };
     registerMutation.mutate(userData);
@@ -72,7 +72,7 @@ export default function Register() {
             Join PropertyFlow
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-muted-foreground">
-            Start managing your properties today
+            Create your account to get started
           </p>
         </div>
 
@@ -125,20 +125,6 @@ export default function Register() {
                   type="tel"
                   placeholder="+1 (555) 123-4567"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="role">Role</Label>
-                <Select name="role" defaultValue="tenant">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="tenant">Tenant</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div>
