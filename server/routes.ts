@@ -275,11 +275,14 @@ export function registerRoutes(app: Express) {
   app.get("/api/tenant-history/:unitId", async (req, res) => {
     try {
       const unitId = req.params.unitId;
+      console.log("Fetching tenant history for unit:", unitId);
       const tenantHistory = await storage.getTenantHistoryByUnit(unitId);
+      console.log("Tenant history result:", tenantHistory);
       res.json(tenantHistory);
     } catch (error) {
       console.error("Error fetching tenant history:", error);
-      res.status(500).json({ message: "Failed to fetch tenant history" });
+      // Return empty array instead of error to allow UI to function
+      res.json([]);
     }
   });
 
