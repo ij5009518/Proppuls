@@ -621,10 +621,9 @@ export default function Units() {
           </DialogHeader>
           {selectedUnit && (
             <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="tenant">Current Tenant</TabsTrigger>
-                <TabsTrigger value="history">Tenant History</TabsTrigger>
+                <TabsTrigger value="tenant">Tenant</TabsTrigger>
                 <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
                 <TabsTrigger value="tasks">Tasks</TabsTrigger>
@@ -787,116 +786,546 @@ export default function Units() {
                     </div>
                   );
                 })()}
-                </div>
-              </TabsContent>
 
-              <TabsContent value="history" className="space-y-4">
+                {/* Tenant History Section */}
                 {(() => {
                   const unitTenants = tenants?.filter(tenant => tenant.unitId === selectedUnit.id) || [];
-                  const currentTenant = unitTenants.find(tenant => tenant.status === 'active');
                   const previousTenants = unitTenants.filter(tenant => tenant.status === 'moved_out' || tenant.status === 'evicted').sort((a, b) => {
                     const dateA = new Date(b.moveOutDate || new Date());
                     const dateB = new Date(a.moveOutDate || new Date());
                     return dateA.getTime() - dateB.getTime();
                   });
 
-                  return (
-                    <div className="space-y-6">
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                        Tenant History
-                      </h4>
-                      
-                      {currentTenant && (
-                        <div className="space-y-4">
-                          <h5 className="text-lg font-semibold text-green-600 dark:text-green-400">Current Tenant</h5>
-                          <Card className="border-green-200 dark:border-green-800">
-                            <CardContent className="p-4">
+                  if (previousTenants.length > 0) {
+                    return (
+                      <div className="space-y-4 mt-6">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
+                          Previous Tenants
+                        </h4>
+                        <div className="space-y-3">
+                          {previousTenants.map((tenant) => (
+                            <div key={tenant.id} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                               <div className="flex items-start space-x-4">
                                 <div className="flex-shrink-0">
-                                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-                                    <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                  <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                    <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                                   </div>
                                 </div>
                                 <div className="flex-1 space-y-2">
                                   <div className="flex items-center justify-between">
-                                    <h6 className="font-semibold text-gray-900 dark:text-gray-100">
-                                      {currentTenant.firstName} {currentTenant.lastName}
+                                    <h6 className="font-medium text-gray-900 dark:text-gray-100">
+                                      {tenant.firstName} {tenant.lastName}
                                     </h6>
-                                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400">
-                                      Current
+                                    <Badge variant="secondary" className="text-xs">
+                                      {tenant.status === 'moved_out' ? 'Moved Out' : 'Evicted'}
                                     </Badge>
                                   </div>
                                   <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                      <p className="text-gray-500 dark:text-gray-400">Email</p>
-                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.email}</p>
+                                      <p className="text-gray-500 dark:text-gray-400 text-xs">Lease Period</p>
+                                      <p className="text-gray-900 dark:text-gray-100">
+                                        {tenant.leaseStart ? formatDate(tenant.leaseStart) : 'N/A'} - {tenant.leaseEnd ? formatDate(tenant.leaseEnd) : 'N/A'}
+                                      </p>
                                     </div>
                                     <div>
-                                      <p className="text-gray-500 dark:text-gray-400">Phone</p>
-                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.phone}</p>
+                                      <p className="text-gray-500 dark:text-gray-400 text-xs">Monthly Rent</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.monthlyRent ? formatCurrency(parseFloat(tenant.monthlyRent)) : 'N/A'}</p>
                                     </div>
-                                    <div>
-                                      <p className="text-gray-500 dark:text-gray-400">Lease Start</p>
-                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.leaseStart ? formatDate(currentTenant.leaseStart) : 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-gray-500 dark:text-gray-400">Monthly Rent</p>
-                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.monthlyRent ? formatCurrency(parseFloat(currentTenant.monthlyRent)) : 'N/A'}</p>
-                                    </div>
+                                    {tenant.moveOutDate && (
+                                      <div>
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Move Out Date</p>
+                                        <p className="text-gray-900 dark:text-gray-100">{formatDate(tenant.moveOutDate)}</p>
+                                      </div>
+                                    )}
+                                    {tenant.reasonForLeaving && (
+                                      <div>
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Reason for Leaving</p>
+                                        <p className="text-gray-900 dark:text-gray-100">{tenant.reasonForLeaving}</p>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
-                            </CardContent>
-                          </Card>
+                            </div>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+                </div>
+              </TabsContent>
 
-                      {previousTenants.length > 0 && (
-                        <div className="space-y-4">
-                          <h5 className="text-lg font-semibold text-gray-600 dark:text-gray-400">Previous Tenants</h5>
-                          <div className="space-y-3">
-                            {previousTenants.map((tenant) => (
-                              <Card key={tenant.id} className="border-gray-200 dark:border-gray-700">
-                                <CardContent className="p-4">
-                                  <div className="flex items-start space-x-4">
-                                    <div className="flex-shrink-0">
-                                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-900/40 rounded-full flex items-center justify-center">
-                                        <Users className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                                      </div>
-                                    </div>
-                                    <div className="flex-1 space-y-2">
-                                      <div className="flex items-center justify-between">
-                                        <h6 className="font-semibold text-gray-900 dark:text-gray-100">
-                                          {tenant.firstName} {tenant.lastName}
-                                        </h6>
-                                        <Badge variant="secondary">
-                                          Previous
-                                        </Badge>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                          <p className="text-gray-500 dark:text-gray-400">Lease Period</p>
-                                          <p className="text-gray-900 dark:text-gray-100">
-                                            {tenant.leaseStart ? formatDate(tenant.leaseStart) : 'N/A'} - {tenant.leaseEnd ? formatDate(tenant.leaseEnd) : 'N/A'}
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <p className="text-gray-500 dark:text-gray-400">Monthly Rent</p>
-                                          <p className="text-gray-900 dark:text-gray-100">{tenant.monthlyRent ? formatCurrency(parseFloat(tenant.monthlyRent)) : 'N/A'}</p>
-                                        </div>
-                                        {tenant.moveOutDate && (
-                                          <div>
-                                            <p className="text-gray-500 dark:text-gray-400">Move Out Date</p>
-                                            <p className="text-gray-900 dark:text-gray-100">{formatDate(tenant.moveOutDate)}</p>
-                                          </div>
-                                        )}
-                                        {tenant.reasonForLeaving && (
-                                          <div>
-                                            <p className="text-gray-500 dark:text-gray-400">Reason for Leaving</p>
-                                            <p className="text-gray-900 dark:text-gray-100">{tenant.reasonForLeaving}</p>
-                                          </div>
-                                        )}
-                                      </div>
+              <TabsContent value="tasks" className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
+                      Tasks for this Unit
+                    </h4>
+                    <Button
+                      size="sm"
+                      onClick={() => setIsTaskDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Task
+                    </Button>
+                  </div>
+                  
+                  {(() => {
+                    const unitTasks = tasks?.filter(task => task.unitId === selectedUnit.id) || [];
+                    return unitTasks.length > 0 ? (
+                      <div className="space-y-3">
+                        {unitTasks.map((task) => (
+                          <div key={task.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h5 className="font-medium text-gray-900 dark:text-gray-100">{task.title}</h5>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{task.description}</p>
+                                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                  <span>Due: {formatDate(task.dueDate)}</span>
+                                  <span>Priority: {task.priority}</span>
+                                </div>
+                              </div>
+                              <Badge className={task.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400'}>
+                                {task.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>No tasks for this unit</p>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Unit Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Unit</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="propertyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a property" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {properties?.map((property) => (
+                          <SelectItem key={property.id} value={property.id}>
+                            {property.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unitNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter unit number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="bedrooms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bedrooms</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Number of bedrooms" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="bathrooms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bathrooms</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Number of bathrooms" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="rentAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Rent</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Monthly rent amount" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="squareFootage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Square Footage</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Square footage" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="vacant">Vacant</SelectItem>
+                        <SelectItem value="occupied">Occupied</SelectItem>
+                        <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createUnitMutation.isPending}>
+                  {createUnitMutation.isPending ? "Creating..." : "Create Unit"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Unit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Unit</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="unitNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter unit number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="bedrooms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bedrooms</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Number of bedrooms" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="bathrooms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bathrooms</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Number of bathrooms" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="rentAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Rent</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Monthly rent amount" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="squareFootage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Square Footage</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Square footage" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={editForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="vacant">Vacant</SelectItem>
+                        <SelectItem value="occupied">Occupied</SelectItem>
+                        <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateUnitMutation.isPending}>
+                  {updateUnitMutation.isPending ? "Updating..." : "Update Unit"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Tenant Dialog */}
+      <Dialog open={isAssignTenantDialogOpen} onOpenChange={setIsAssignTenantDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Tenant to Unit</DialogTitle>
+          </DialogHeader>
+          <Form {...assignTenantForm}>
+            <form onSubmit={assignTenantForm.handleSubmit(onAssignTenantSubmit)} className="space-y-4">
+              <FormField
+                control={assignTenantForm.control}
+                name="tenantId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Select Tenant</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a tenant" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {availableTenants?.map((tenant) => (
+                          <SelectItem key={tenant.id} value={tenant.id}>
+                            {tenant.firstName} {tenant.lastName} - {tenant.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsAssignTenantDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={assignTenantMutation.isPending}>
+                  {assignTenantMutation.isPending ? "Assigning..." : "Assign Tenant"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Task Dialog */}
+      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Task for Unit</DialogTitle>
+          </DialogHeader>
+          <Form {...taskForm}>
+            <form onSubmit={taskForm.handleSubmit(onTaskSubmit)} className="space-y-4">
+              <FormField
+                control={taskForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Task Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter task title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={taskForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter task description" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={taskForm.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Priority</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select priority" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={taskForm.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Due Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsTaskDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createTaskMutation.isPending}>
+                  {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
                                     </div>
                                   </div>
                                 </CardContent>
