@@ -738,20 +738,9 @@ export default function Units() {
                             <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                               {tenant.firstName} {tenant.lastName}
                             </h5>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleViewTenantHistory(selectedUnit)}
-                                title="View Tenant History"
-                                className="h-8 w-8 p-0"
-                              >
-                                <History className="h-4 w-4" />
-                              </Button>
-                              <Badge className={`${getStatusColor(tenant.status)}`}>
-                                {tenant.status}
-                              </Badge>
-                            </div>
+                            <Badge className={`${getStatusColor(tenant.status)}`}>
+                              {tenant.status}
+                            </Badge>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -807,6 +796,19 @@ export default function Units() {
                     </div>
                   );
                 })()}
+
+                {/* Historical Tenant Information Button */}
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewTenantHistory(selectedUnit)}
+                    className="flex items-center space-x-2"
+                  >
+                    <History className="h-4 w-4" />
+                    <span>Historical Tenant Info</span>
+                  </Button>
+                </div>
                 </div>
               </TabsContent>
 
