@@ -159,6 +159,7 @@ export function registerRoutes(app: Express) {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: "usd",
+        payment_method_types: ["card"],
         metadata: {
           tenantId: tenant.id,
           tenantEmail: tenant.email,
@@ -170,9 +171,18 @@ export function registerRoutes(app: Express) {
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating payment intent:", error);
-      res.status(500).json({ message: "Failed to create payment intent" });
+      
+      // Provide specific guidance for Stripe configuration issues
+      if (error.code === 'parameter_invalid_empty' || error.message?.includes('payment method types')) {
+        res.status(400).json({ 
+          message: "Card payments need to be enabled in your Stripe dashboard. Please go to https://dashboard.stripe.com/settings/payment_methods and enable card payments.",
+          setupRequired: true
+        });
+      } else {
+        res.status(500).json({ message: "Failed to create payment intent" });
+      }
     }
   });
 
