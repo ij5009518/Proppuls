@@ -714,22 +714,22 @@ export default function Tenants() {
           })}
         </div>
       ) : (
-        <Card className="border-0 shadow-sm">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 px-6 py-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tenant Directory</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{filteredTenants.length} tenants found</p>
+        <Card className="border-0 shadow-lg rounded-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 px-6 py-5 border-b border-blue-200/50 dark:border-blue-800/50">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tenant Directory</h2>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1 font-medium">{filteredTenants.length} tenants found</p>
           </div>
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50/50 dark:bg-gray-800/50 hover:bg-gray-50/80 dark:hover:bg-gray-800/80">
-                <TableHead className="w-[180px] font-semibold text-gray-700 dark:text-gray-300">Name</TableHead>
-                <TableHead className="w-[200px] font-semibold text-gray-700 dark:text-gray-300">Contact</TableHead>
-                <TableHead className="w-[100px] font-semibold text-gray-700 dark:text-gray-300">Unit</TableHead>
-                <TableHead className="w-[120px] font-semibold text-gray-700 dark:text-gray-300">Rent</TableHead>
-                <TableHead className="w-[150px] font-semibold text-gray-700 dark:text-gray-300">Lease Period</TableHead>
-                <TableHead className="w-[100px] font-semibold text-gray-700 dark:text-gray-300">Status</TableHead>
-                <TableHead className="w-[120px] font-semibold text-gray-700 dark:text-gray-300">Balance</TableHead>
-                <TableHead className="w-[150px] font-semibold text-gray-700 dark:text-gray-300">Actions</TableHead>
+              <TableRow className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 border-b-2 border-gray-300 dark:border-gray-600">
+                <TableHead className="w-[180px] font-bold text-gray-800 dark:text-gray-200 py-4 px-6">Name</TableHead>
+                <TableHead className="w-[200px] font-bold text-gray-800 dark:text-gray-200 py-4 px-6">Contact</TableHead>
+                <TableHead className="w-[100px] font-bold text-gray-800 dark:text-gray-200 py-4 px-6 text-center">Unit</TableHead>
+                <TableHead className="w-[120px] font-bold text-gray-800 dark:text-gray-200 py-4 px-6 text-right">Rent</TableHead>
+                <TableHead className="w-[150px] font-bold text-gray-800 dark:text-gray-200 py-4 px-6">Lease Period</TableHead>
+                <TableHead className="w-[100px] font-bold text-gray-800 dark:text-gray-200 py-4 px-6">Status</TableHead>
+                <TableHead className="w-[120px] font-bold text-gray-800 dark:text-gray-200 py-4 px-6 text-right">Balance</TableHead>
+                <TableHead className="w-[150px] font-bold text-gray-800 dark:text-gray-200 py-4 px-6 text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -740,49 +740,53 @@ export default function Tenants() {
                 return (
                   <TableRow 
                     key={tenant.id} 
-                    className={`transition-all duration-200 hover:bg-gray-50/80 dark:hover:bg-gray-800/50 group ${
-                      index % 2 === 0 ? 'bg-white dark:bg-gray-900/50' : 'bg-gray-50/30 dark:bg-gray-800/20'
+                    className={`transition-all duration-300 hover:bg-blue-50/80 dark:hover:bg-blue-900/30 hover:shadow-md group border-b border-gray-200 dark:border-gray-700 ${
+                      index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/80 dark:bg-gray-800/40'
                     }`}
                   >
-                    <TableCell className="py-4">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-10 w-10 border-2 border-gray-100 dark:border-gray-700 shadow-sm">
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+                    <TableCell className="py-6 px-6">
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-12 w-12 border-3 border-white dark:border-gray-800 shadow-lg ring-2 ring-blue-100 dark:ring-blue-900/50">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 text-white font-bold text-base">
                             {tenant.firstName[0]}{tenant.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          <div className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {tenant.firstName} {tenant.lastName}
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-mono">
                             ID: {tenant.id.slice(0, 8)}...
                           </div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="py-4">
-                      <div className="space-y-2">
+                    <TableCell className="py-6 px-6">
+                      <div className="space-y-3">
                         <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                          <Mail className="h-3.5 w-3.5 mr-2 text-blue-500" />
-                          <span className="truncate max-w-[160px]">{tenant.email}</span>
+                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
+                            <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <span className="truncate max-w-[160px] font-medium">{tenant.email}</span>
                         </div>
                         <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                          <Phone className="h-3.5 w-3.5 mr-2 text-green-500" />
-                          {tenant.phone}
+                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-3">
+                            <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          </div>
+                          <span className="font-medium">{tenant.phone}</span>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="py-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg font-bold text-sm">
+                    <TableCell className="py-6 px-6 text-center">
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 rounded-xl font-bold text-lg shadow-sm border border-blue-200 dark:border-blue-800">
                           {getUnitNumber(tenant.unitId)}
                         </div>
                         {tenant.unitId && units && (
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
                             onClick={(e) => {
                               e.stopPropagation();
                               const unit = units.find((u: Unit) => u.id === tenant.unitId);
@@ -790,17 +794,17 @@ export default function Tenants() {
                             }}
                             title="View Tenant History"
                           >
-                            <History className="h-3.5 w-3.5 text-gray-500 hover:text-blue-600" />
+                            <History className="h-4 w-4 text-gray-500 hover:text-blue-600" />
                           </Button>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="py-4">
-                      <div className="text-right">
-                        <div className="font-bold text-lg text-gray-900 dark:text-white">
+                    <TableCell className="py-6 px-6 text-right">
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg px-4 py-3 inline-block border border-green-200 dark:border-green-800">
+                        <div className="font-bold text-xl text-green-800 dark:text-green-300">
                           {tenant.monthlyRent ? formatCurrency(tenant.monthlyRent) : "N/A"}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">per month</div>
+                        <div className="text-xs text-green-600 dark:text-green-400 font-medium">per month</div>
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
