@@ -555,7 +555,7 @@ export const insertUserSchema = userSchema.omit({ id: true, createdAt: true, upd
 export const insertPropertySchema = propertySchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertUnitSchema = unitSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTenantSchema = tenantSchema.omit({ id: true, createdAt: true, updatedAt: true });
-export const insertTenantHistorySchema = tenantHistorySchema.omit({ id: true, createdAt: true, updatedAt: true });
+
 export const insertMaintenanceRequestSchema = maintenanceRequestSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertVendorSchema = vendorSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertRentPaymentSchema = rentPaymentSchema.omit({ id: true, createdAt: true, updatedAt: true });
