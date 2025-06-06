@@ -213,14 +213,7 @@ export default function Properties() {
       isRecurring: false,
       vendorName: "",
       notes: "",
-      startDate: "",
-      endDate: "",
-      accountNumber: "",
-      policyEffectiveDate: "",
-      policyExpirationDate: "",
-      meterReadingStart: "",
-      meterReadingEnd: "",
-      usageAmount: "",
+
       recurrencePeriod: "monthly",
     },
   });
@@ -450,22 +443,14 @@ export default function Properties() {
 
   const onCreateExpenseSubmit = (data: ExpenseFormData) => {
     const expenseData: InsertExpense = {
-      propertyId: selectedProperty?.id?.toString(),
+      propertyId: selectedProperty?.id?.toString() || "",
       category: data.category,
       description: data.description,
-      amount: parseFloat(data.amount),
-      date: new Date(data.date),
+      amount: data.amount,
+      date: data.date,
       isRecurring: data.isRecurring,
       vendorName: data.vendorName || undefined,
       notes: data.notes || undefined,
-      startDate: data.startDate ? new Date(data.startDate) : undefined,
-      endDate: data.endDate ? new Date(data.endDate) : undefined,
-      accountNumber: data.accountNumber || undefined,
-      policyEffectiveDate: data.policyEffectiveDate ? new Date(data.policyEffectiveDate) : undefined,
-      policyExpirationDate: data.policyExpirationDate ? new Date(data.policyExpirationDate) : undefined,
-      meterReadingStart: data.meterReadingStart || undefined,
-      meterReadingEnd: data.meterReadingEnd || undefined,
-      usageAmount: data.usageAmount || undefined,
       recurrencePeriod: data.recurrencePeriod || undefined,
     };
     createExpenseMutation.mutate(expenseData);
