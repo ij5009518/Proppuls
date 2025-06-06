@@ -67,13 +67,13 @@ export default function Login() {
             Sign in to PropertyFlow
           </h2>
           <p className="mt-2 text-sm text-slate-600 dark:text-muted-foreground">
-            Manage your properties with ease
+            Welcome back to your property management dashboard
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Login to your account</CardTitle>
+            <CardTitle>Sign in to continue</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,23 +129,13 @@ export default function Login() {
                 )}
               </Button>
 
-              <div className="text-center space-y-2">
-                <div>
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm text-muted-foreground hover:text-primary"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <div>
-                  <Link
-                    to="/register"
-                    className="text-sm text-primary hover:text-primary/80"
-                  >
-                    Don't have an account? Sign up
-                  </Link>
-                </div>
+              <div className="text-center">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-muted-foreground hover:text-primary"
+                >
+                  Forgot your password?
+                </Link>
               </div>
             </form>
           </CardContent>
