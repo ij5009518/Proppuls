@@ -1,86 +1,102 @@
-
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, CheckSquare, Home, Bed, Bath, Maximize, DollarSign, Users, FileText, Wrench } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Home, Users, CheckSquare, Eye, Edit, Trash2, UserPlus, Building2, Calendar, Wrench, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Unit, InsertUnit, Property, Tenant, Task, InsertTask } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import type { Unit, Property, Tenant, Task, InsertUnit, InsertTask } from "@shared/schema";
 
+// Validation schemas
 const unitSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
   unitNumber: z.string().min(1, "Unit number is required"),
   bedrooms: z.number().min(0, "Bedrooms must be 0 or more"),
   bathrooms: z.string().min(1, "Bathrooms is required"),
   rentAmount: z.string().min(1, "Rent amount is required"),
-  status: z.string().min(1, "Status is required"),
+  status: z.enum(["vacant", "occupied", "maintenance"]),
   squareFootage: z.number().optional(),
 });
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  category: z.string().min(1, "Category is required"),
-  priority: z.string().min(1, "Priority is required"),
-  dueDate: z.string().optional(),
+  description: z.string().optional(),
+  category: z.enum(["general", "maintenance", "inspection", "lease", "payment", "vendor", "legal", "administrative"]),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  status: z.enum(["pending", "in_progress", "completed", "cancelled"]).default("pending"),
   assignedTo: z.string().optional(),
+  dueDate: z.string().optional(),
 });
 
 const assignTenantSchema = z.object({
-  tenantId: z.string().min(1, "Please select a tenant"),
+  tenantId: z.string().min(1, "Tenant selection is required"),
+  moveInDate: z.string().min(1, "Move-in date is required"),
+  monthlyRent: z.string().min(1, "Monthly rent is required"),
+  depositAmount: z.string().optional(),
+  leaseEndDate: z.string().optional(),
 });
 
 type UnitFormData = z.infer<typeof unitSchema>;
 type TaskFormData = z.infer<typeof taskSchema>;
 type AssignTenantFormData = z.infer<typeof assignTenantSchema>;
 
+function formatCurrency(amount: number | string) {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(numAmount);
+}
+
+function formatDate(date: string | Date) {
+  return new Date(date).toLocaleDateString();
+}
+
 export default function Units() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isAssignTenantDialogOpen, setIsAssignTenantDialogOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: units = [], isLoading } = useQuery<Unit[]>({
+  // Fetch data
+  const { data: units = [], isLoading: unitsLoading } = useQuery({
     queryKey: ["/api/units"],
   });
 
-  const { data: properties = [] } = useQuery<Property[]>({
+  const { data: properties = [] } = useQuery({
     queryKey: ["/api/properties"],
   });
 
-  const { data: tenants = [] } = useQuery<Tenant[]>({
+  const { data: tenants = [] } = useQuery({
     queryKey: ["/api/tenants"],
   });
 
-  const { data: tasks = [] } = useQuery<Task[]>({
+  const { data: tasks = [] } = useQuery({
     queryKey: ["/api/tasks"],
   });
 
-
-
-  const createForm = useForm<UnitFormData>({
+  // Forms
+  const form = useForm<UnitFormData>({
     resolver: zodResolver(unitSchema),
     defaultValues: {
       propertyId: "",
       unitNumber: "",
-      bedrooms: 1,
-      bathrooms: "1",
+      bedrooms: 0,
+      bathrooms: "",
       rentAmount: "",
       status: "vacant",
       squareFootage: undefined,
@@ -92,8 +108,8 @@ export default function Units() {
     defaultValues: {
       propertyId: "",
       unitNumber: "",
-      bedrooms: 1,
-      bathrooms: "1",
+      bedrooms: 0,
+      bathrooms: "",
       rentAmount: "",
       status: "vacant",
       squareFootage: undefined,
@@ -107,8 +123,9 @@ export default function Units() {
       description: "",
       category: "general",
       priority: "medium",
-      dueDate: "",
+      status: "pending",
       assignedTo: "",
+      dueDate: "",
     },
   });
 
@@ -116,65 +133,48 @@ export default function Units() {
     resolver: zodResolver(assignTenantSchema),
     defaultValues: {
       tenantId: "",
+      moveInDate: "",
+      monthlyRent: "",
+      depositAmount: "",
+      leaseEndDate: "",
     },
   });
 
-  const createMutation = useMutation({
+  // Mutations
+  const createUnitMutation = useMutation({
     mutationFn: (data: InsertUnit) => apiRequest("POST", "/api/units", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      toast({ title: "Success", description: "Unit created successfully" });
       setIsCreateDialogOpen(false);
-      createForm.reset();
-      toast({ title: "Unit created successfully" });
+      form.reset();
     },
-    onError: (error: any) => {
-      console.error("Create unit error:", error);
-      toast({ title: "Failed to create unit", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<InsertUnit> }) =>
+  const updateUnitMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Unit> }) =>
       apiRequest("PATCH", `/api/units/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      toast({ title: "Success", description: "Unit updated successfully" });
       setIsEditDialogOpen(false);
-      setSelectedUnit(null);
-      toast({ title: "Unit updated successfully" });
     },
-    onError: () => {
-      toast({ title: "Failed to update unit", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
-  const assignTenantMutation = useMutation({
-    mutationFn: ({ tenantId, unitId }: { tenantId: string; unitId: string }) =>
-      apiRequest("PATCH", `/api/tenants/${tenantId}`, { unitId }),
-    onSuccess: () => {
-      // Force refresh all related data
-      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
-      queryClient.refetchQueries({ queryKey: ["/api/tenants"] });
-      queryClient.refetchQueries({ queryKey: ["/api/units"] });
-      setIsAssignTenantDialogOpen(false);
-      setIsViewDialogOpen(false);
-      assignTenantForm.reset();
-      toast({ title: "Tenant assigned successfully" });
-    },
-    onError: (error: any) => {
-      console.error("Assign tenant error:", error);
-      toast({ title: "Failed to assign tenant", variant: "destructive" });
-    },
-  });
-
-  const deleteMutation = useMutation({
+  const deleteUnitMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/units/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
-      toast({ title: "Unit deleted successfully" });
+      toast({ title: "Success", description: "Unit deleted successfully" });
     },
-    onError: () => {
-      toast({ title: "Failed to delete unit", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -182,46 +182,69 @@ export default function Units() {
     mutationFn: async (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      toast({ title: "Task created successfully" });
+      toast({ title: "Success", description: "Task created successfully" });
+      setIsTaskDialogOpen(false);
+      taskForm.reset();
     },
     onError: (error: Error) => {
-      toast({ title: "Failed to create task", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      toast({ title: "Task deleted successfully" });
+      toast({ title: "Success", description: "Task deleted successfully" });
     },
     onError: (error: Error) => {
-      toast({ title: "Failed to delete task", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
+  const assignTenantMutation = useMutation({
+    mutationFn: async (data: { unitId: string; tenantData: any }) =>
+      apiRequest("POST", `/api/units/${data.unitId}/assign-tenant`, data.tenantData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      toast({ title: "Success", description: "Tenant assigned successfully" });
+      setIsAssignTenantDialogOpen(false);
+      assignTenantForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
 
-
+  // Event handlers
   const onCreateSubmit = (data: UnitFormData) => {
-    console.log("Unit form data being submitted:", data);
-    // Ensure proper data formatting for database
-    const formattedData = {
+    const unitData: InsertUnit = {
       propertyId: data.propertyId,
       unitNumber: data.unitNumber,
-      bedrooms: Number(data.bedrooms),
-      bathrooms: data.bathrooms.toString(),
-      rentAmount: data.rentAmount || null,
-      status: data.status as "vacant" | "occupied" | "maintenance",
-      squareFootage: data.squareFootage ? Number(data.squareFootage) : null,
+      bedrooms: data.bedrooms,
+      bathrooms: data.bathrooms,
+      rentAmount: data.rentAmount,
+      status: data.status,
+      squareFootage: data.squareFootage || null,
     };
-    console.log("Formatted unit data:", formattedData);
-    createMutation.mutate(formattedData);
+    createUnitMutation.mutate(unitData);
   };
 
   const onEditSubmit = (data: UnitFormData) => {
-    if (selectedUnit) {
-      updateMutation.mutate({ id: selectedUnit.id, data });
-    }
+    if (!selectedUnit) return;
+    updateUnitMutation.mutate({
+      id: selectedUnit.id,
+      data: {
+        propertyId: data.propertyId,
+        unitNumber: data.unitNumber,
+        bedrooms: data.bedrooms,
+        bathrooms: data.bathrooms,
+        rentAmount: data.rentAmount,
+        status: data.status,
+        squareFootage: data.squareFootage || null,
+      },
+    });
   };
 
   const handleEdit = (unit: Unit) => {
@@ -231,7 +254,7 @@ export default function Units() {
       unitNumber: unit.unitNumber,
       bedrooms: unit.bedrooms,
       bathrooms: unit.bathrooms,
-      rentAmount: unit.rentAmount,
+      rentAmount: unit.rentAmount || "",
       status: unit.status,
       squareFootage: unit.squareFootage || undefined,
     });
@@ -243,84 +266,85 @@ export default function Units() {
     setIsViewDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this unit?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
   const onTaskSubmit = (data: TaskFormData) => {
-    if (selectedUnit) {
-      const taskData: InsertTask = {
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        priority: data.priority as "low" | "medium" | "high" | "urgent",
-        status: "pending",
-        propertyId: selectedUnit.propertyId,
-        unitId: selectedUnit.id,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        assignedTo: data.assignedTo || null,
-        completedAt: null,
-        maintenanceRequestId: null,
-        expenseId: null,
-        tenantId: null,
-        vendorId: null,
-        rentPaymentId: null,
-      };
-      createTaskMutation.mutate(taskData);
-    }
+    if (!selectedUnit) return;
+    
+    const taskData: InsertTask = {
+      title: data.title,
+      description: data.description || "",
+      category: data.category,
+      priority: data.priority,
+      status: data.status,
+      assignedTo: data.assignedTo || null,
+      dueDate: data.dueDate ? new Date(data.dueDate) : null,
+      unitId: selectedUnit.id,
+      propertyId: selectedUnit.propertyId,
+    };
+    createTaskMutation.mutate(taskData);
   };
 
-  const getPropertyName = (propertyId: string) => {
-    const property = properties.find(p => p.id === propertyId);
-    return property?.name || "Unknown Property";
+  const onAssignTenantSubmit = (data: AssignTenantFormData) => {
+    if (!selectedUnit) return;
+    
+    assignTenantMutation.mutate({
+      unitId: selectedUnit.id,
+      tenantData: {
+        tenantId: data.tenantId,
+        moveInDate: new Date(data.moveInDate),
+        monthlyRent: parseFloat(data.monthlyRent),
+        depositAmount: data.depositAmount ? parseFloat(data.depositAmount) : null,
+        leaseEndDate: data.leaseEndDate ? new Date(data.leaseEndDate) : null,
+      },
+    });
   };
 
-  const getTenantForUnit = (unitId: string) => {
-    return tenants.find(tenant => tenant.unitId === unitId);
-  };
-
+  // Get available tenants (not currently assigned to any unit)
   const getAvailableTenants = () => {
-    // Get tenants that are not assigned to any unit or have moved out
-    return tenants.filter(tenant => !tenant.unitId || tenant.status === "moved_out");
+    const assignedTenantIds = units
+      .filter(unit => unit.status === "occupied")
+      .map(unit => {
+        const currentTenant = tenants.find(t => t.unitId === unit.id && !t.moveOutDate);
+        return currentTenant?.id;
+      })
+      .filter(Boolean);
+
+    return tenants.filter(tenant => !assignedTenantIds.includes(tenant.id));
   };
 
-  const filteredUnits = units.filter(
-    (unit) => {
-      const tenant = getTenantForUnit(unit.id);
-      const tenantName = tenant ? `${tenant.firstName} ${tenant.lastName}` : "";
+  const availableTenants = getAvailableTenants();
 
-      return unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             getPropertyName(unit.propertyId).toLowerCase().includes(searchTerm.toLowerCase()) ||
-             tenantName.toLowerCase().includes(searchTerm.toLowerCase());
-    }
-  );
-
-  if (isLoading) {
-    return <div className="flex justify-center items-center min-h-96">Loading units...</div>;
+  if (unitsLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Units</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Units</h1>
+          <p className="text-muted-foreground">Manage your rental units</p>
+        </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4 mr-2" />
               Add Unit
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Add New Unit</DialogTitle>
+              <DialogTitle>Create New Unit</DialogTitle>
+              <DialogDescription>Add a new rental unit to your property portfolio.</DialogDescription>
             </DialogHeader>
-            <Form {...createForm}>
-              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
-                    control={createForm.control}
+                    control={form.control}
                     name="propertyId"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
@@ -332,7 +356,7 @@ export default function Units() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {properties.map((property) => (
+                            {properties.map((property: Property) => (
                               <SelectItem key={property.id} value={property.id}>
                                 {property.name}
                               </SelectItem>
@@ -344,7 +368,7 @@ export default function Units() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={form.control}
                     name="unitNumber"
                     render={({ field }) => (
                       <FormItem>
@@ -357,7 +381,7 @@ export default function Units() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={form.control}
                     name="bedrooms"
                     render={({ field }) => (
                       <FormItem>
@@ -375,7 +399,7 @@ export default function Units() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={form.control}
                     name="bathrooms"
                     render={({ field }) => (
                       <FormItem>
@@ -388,7 +412,7 @@ export default function Units() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={form.control}
                     name="rentAmount"
                     render={({ field }) => (
                       <FormItem>
@@ -401,12 +425,12 @@ export default function Units() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={form.control}
                     name="status"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select status" />
@@ -423,7 +447,7 @@ export default function Units() {
                     )}
                   />
                   <FormField
-                    control={createForm.control}
+                    control={form.control}
                     name="squareFootage"
                     render={({ field }) => (
                       <FormItem>
@@ -445,8 +469,8 @@ export default function Units() {
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? "Creating..." : "Create Unit"}
+                  <Button type="submit" disabled={createUnitMutation.isPending}>
+                    {createUnitMutation.isPending ? "Creating..." : "Create Unit"}
                   </Button>
                 </div>
               </form>
@@ -455,877 +479,187 @@ export default function Units() {
         </Dialog>
       </div>
 
-      <div className="flex justify-between items-center">
-        <Input
-          placeholder="Search units, properties, or tenants..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={viewMode === "grid" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("grid")}
-          >
-            <Grid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUnits.map((unit) => (
-            <Card 
-              key={unit.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => handleView(unit)}
-            >
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {units.map((unit: Unit) => {
+          const property = properties.find((p: Property) => p.id === unit.propertyId);
+          const currentTenant = tenants.find((t: Tenant) => t.unitId === unit.id && !t.moveOutDate);
+          
+          return (
+            <Card key={unit.id} className="relative">
               <CardHeader>
-                <CardTitle className="flex justify-between items-start">
-                  <span>Unit {unit.unitNumber}</span>
-                  <Badge className={getStatusColor(unit.status)}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5" />
+                      Unit {unit.unitNumber}
+                    </CardTitle>
+                    <CardDescription>{property?.name}</CardDescription>
+                  </div>
+                  <Badge
+                    variant={
+                      unit.status === "occupied" ? "default" :
+                      unit.status === "vacant" ? "secondary" : "destructive"
+                    }
+                  >
                     {unit.status}
                   </Badge>
-                </CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-sm">
-                    <span className="font-semibold">Property:</span> {getPropertyName(unit.propertyId)}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-semibold">Bedrooms:</span> {unit.bedrooms}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-semibold">Bathrooms:</span> {unit.bathrooms}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-semibold">Rent:</span> {formatCurrency(unit.rentAmount)}
-                  </p>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Bedrooms/Bathrooms</span>
+                    <span className="text-sm font-medium">{unit.bedrooms}BR / {unit.bathrooms}BA</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Rent</span>
+                    <span className="text-sm font-medium">
+                      {unit.rentAmount ? formatCurrency(parseFloat(unit.rentAmount)) : 'N/A'}
+                    </span>
+                  </div>
                   {unit.squareFootage && (
-                    <p className="text-sm">
-                      <span className="font-semibold">Size:</span> {unit.squareFootage} sq ft
-                    </p>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Square Feet</span>
+                      <span className="text-sm font-medium">{unit.squareFootage} sq ft</span>
+                    </div>
                   )}
-                  {(() => {
-                    const tenant = getTenantForUnit(unit.id);
-                    return tenant ? (
-                      <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                          Current Tenant
-                        </p>
-                        <p className="text-sm">
-                          {tenant.firstName} {tenant.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{tenant.email}</p>
-                      </div>
-                    ) : (
-                      <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                        <p className="text-sm text-muted-foreground">No tenant assigned</p>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredUnits.map((unit) => (
-            <Card 
-              key={unit.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => handleView(unit)}
-            >
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <h3 className="font-semibold">Unit {unit.unitNumber}</h3>
-                        <p className="text-sm text-gray-600">{getPropertyName(unit.propertyId)}</p>
-                      </div>
-                      <Badge className={getStatusColor(unit.status)}>
-                        {unit.status}
-                      </Badge>
+                  {currentTenant && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Current Tenant</span>
+                      <span className="text-sm font-medium">{currentTenant.firstName} {currentTenant.lastName}</span>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">{unit.bedrooms} bed, {unit.bathrooms} bath</p>
-                      <p className="text-sm text-gray-600">{formatCurrency(unit.rentAmount)}</p>
-                      {(() => {
-                        const tenant = getTenantForUnit(unit.id);
-                        return tenant ? (
-                          <p className="text-xs text-blue-600">
-                            {tenant.firstName} {tenant.lastName}
-                          </p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground">No tenant</p>
-                        );
-                      })()}
-                    </div>
-                  </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* View Unit Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <div className="flex justify-between items-center">
-              <DialogTitle>Unit Details</DialogTitle>
-              {selectedUnit && (
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsViewDialogOpen(false);
-                      handleEdit(selectedUnit);
-                    }}
-                  >
+                <div className="flex gap-2 mt-4">
+                  <Button size="sm" variant="outline" onClick={() => handleView(unit)}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    View
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(unit)}>
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsViewDialogOpen(false);
-                      handleDelete(selectedUnit.id);
-                    }}
+                    onClick={() => deleteUnitMutation.mutate(unit.id)}
+                    className="text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete
                   </Button>
                 </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* View Unit Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Unit {selectedUnit?.unitNumber} Details
+            </DialogTitle>
           </DialogHeader>
           {selectedUnit && (
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="tenant">Tenant</TabsTrigger>
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="tenants">Tenant History</TabsTrigger>
                 <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
                 <TabsTrigger value="tasks">Tasks</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="details" className="space-y-4">
-                {/* Status Badge and Key Info */}
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
-                        <Home className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                      </div>
+              <TabsContent value="overview" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Unit Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Property</p>
+                      <p>{properties.find(p => p.id === selectedUnit.propertyId)?.name}</p>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Unit {selectedUnit.unitNumber}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{getPropertyName(selectedUnit.propertyId)}</p>
+                      <p className="text-sm font-medium text-muted-foreground">Unit Number</p>
+                      <p>{selectedUnit.unitNumber}</p>
                     </div>
-                  </div>
-                  <Badge className={`${getStatusColor(selectedUnit.status)} text-sm px-3 py-1`}>
-                    {selectedUnit.status.charAt(0).toUpperCase() + selectedUnit.status.slice(1)}
-                  </Badge>
-                </div>
-
-                {/* Unit Specifications */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                      Unit Specifications
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                          <Bed className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUnit.bedrooms} Bedroom{selectedUnit.bedrooms !== 1 ? 's' : ''}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Sleeping spaces</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                          <Bath className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUnit.bathrooms} Bathroom{selectedUnit.bathrooms !== '1' ? 's' : ''}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Full bathrooms</p>
-                        </div>
-                      </div>
-                      {selectedUnit.squareFootage && (
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                            <Maximize className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUnit.squareFootage} sq ft</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Living space</p>
-                          </div>
-                        </div>
-                      )}
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Bedrooms</p>
+                      <p>{selectedUnit.bedrooms}</p>
                     </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                      Financial Information
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-                          <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatCurrency(selectedUnit.rentAmount)}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Monthly rent</p>
-                        </div>
-                      </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Bathrooms</p>
+                      <p>{selectedUnit.bathrooms}</p>
                     </div>
-                  </div>
-                </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Rent Amount</p>
+                      <p>{selectedUnit.rentAmount ? formatCurrency(parseFloat(selectedUnit.rentAmount)) : 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Status</p>
+                      <Badge variant={
+                        selectedUnit.status === "occupied" ? "default" :
+                        selectedUnit.status === "vacant" ? "secondary" : "destructive"
+                      }>
+                        {selectedUnit.status}
+                      </Badge>
+                    </div>
+                    {selectedUnit.squareFootage && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Square Footage</p>
+                        <p>{selectedUnit.squareFootage} sq ft</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
 
-              <TabsContent value="tenant" className="space-y-4">
-
-              {/* Tenant Information Section */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                  Tenant Information
-                </h4>
+              <TabsContent value="tenants" className="space-y-4">
                 {(() => {
-                  const tenant = getTenantForUnit(selectedUnit.id);
-                  return tenant ? (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-start space-x-4">
-                        <div className="flex-shrink-0">
-                          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-                            <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
-                          </div>
-                        </div>
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                              {tenant.firstName} {tenant.lastName}
-                            </h5>
-                            <Badge className={`${getStatusColor(tenant.status)}`}>
-                              {tenant.status}
-                            </Badge>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div>
-                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Contact</p>
-                                <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.email}</p>
-                                <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.phone}</p>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              {tenant.leaseStart && tenant.leaseEnd && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Lease Period</p>
-                                  <p className="text-sm text-gray-900 dark:text-gray-100">
-                                    {formatDate(tenant.leaseStart)} - {formatDate(tenant.leaseEnd)}
-                                  </p>
-                                </div>
-                              )}
-                              {tenant.monthlyRent && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Monthly Rent</p>
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                    {formatCurrency(tenant.monthlyRent)}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800 dark:to-slate-800 p-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-center">
-                      <div className="flex flex-col items-center space-y-3">
-                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                          <Users className="h-6 w-6 text-gray-400" />
-                        </div>
+                  const unitTenants = tenants.filter(tenant => tenant.unitId === selectedUnit.id);
+                  const currentTenants = unitTenants.filter(tenant => !tenant.moveOutDate);
+                  const pastTenants = unitTenants.filter(tenant => tenant.moveOutDate);
+
+                  return (
+                    <div className="space-y-6">
+                      {/* Current Tenants */}
+                      {currentTenants.length > 0 && (
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">No Tenant Assigned</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This unit is currently vacant</p>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            setIsAssignTenantDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Assign Tenant
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Tenant History Section */}
-                {(() => {
-                  const unitTenants = tenants?.filter(tenant => tenant.unitId === selectedUnit.id) || [];
-                  const previousTenants = unitTenants.filter(tenant => tenant.status === 'moved_out' || tenant.status === 'evicted').sort((a, b) => {
-                    const dateA = new Date(b.moveOutDate || new Date());
-                    const dateB = new Date(a.moveOutDate || new Date());
-                    return dateA.getTime() - dateB.getTime();
-                  });
-
-                  if (previousTenants.length > 0) {
-                    return (
-                      <div className="space-y-4 mt-6">
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                          Previous Tenants
-                        </h4>
-                        <div className="space-y-3">
-                          {previousTenants.map((tenant) => (
-                            <div key={tenant.id} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                              <div className="flex items-start space-x-4">
-                                <div className="flex-shrink-0">
-                                  <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                                    <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                  </div>
-                                </div>
-                                <div className="flex-1 space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <h6 className="font-medium text-gray-900 dark:text-gray-100">
-                                      {tenant.firstName} {tenant.lastName}
-                                    </h6>
-                                    <Badge variant="secondary" className="text-xs">
-                                      {tenant.status === 'moved_out' ? 'Moved Out' : 'Evicted'}
-                                    </Badge>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-semibold text-lg">Current Tenant</h4>
+                          </div>
+                          <div className="grid gap-4">
+                            {currentTenants.map(tenant => (
+                              <Card key={tenant.id}>
+                                <CardContent className="p-4">
+                                  <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <p className="text-gray-500 dark:text-gray-400 text-xs">Lease Period</p>
-                                      <p className="text-gray-900 dark:text-gray-100">
-                                        {tenant.leaseStart ? formatDate(tenant.leaseStart) : 'N/A'} - {tenant.leaseEnd ? formatDate(tenant.leaseEnd) : 'N/A'}
-                                      </p>
+                                      <p className="text-gray-500 dark:text-gray-400">Name</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.firstName} {tenant.lastName}</p>
                                     </div>
                                     <div>
-                                      <p className="text-gray-500 dark:text-gray-400 text-xs">Monthly Rent</p>
+                                      <p className="text-gray-500 dark:text-gray-400">Email</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.email}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Phone</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.phone || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Move In Date</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.moveInDate ? formatDate(tenant.moveInDate) : 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Monthly Rent</p>
                                       <p className="text-gray-900 dark:text-gray-100">{tenant.monthlyRent ? formatCurrency(parseFloat(tenant.monthlyRent)) : 'N/A'}</p>
                                     </div>
-                                    {tenant.moveOutDate && (
-                                      <div>
-                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Move Out Date</p>
-                                        <p className="text-gray-900 dark:text-gray-100">{formatDate(tenant.moveOutDate)}</p>
-                                      </div>
-                                    )}
-                                    {tenant.reasonForLeaving && (
-                                      <div>
-                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Reason for Leaving</p>
-                                        <p className="text-gray-900 dark:text-gray-100">{tenant.reasonForLeaving}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="tasks" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
-                      Tasks for this Unit
-                    </h4>
-                    <Button
-                      size="sm"
-                      onClick={() => setIsTaskDialogOpen(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Task
-                    </Button>
-                  </div>
-                  
-                  {(() => {
-                    const unitTasks = tasks?.filter(task => task.unitId === selectedUnit.id) || [];
-                    return unitTasks.length > 0 ? (
-                      <div className="space-y-3">
-                        {unitTasks.map((task) => (
-                          <div key={task.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h5 className="font-medium text-gray-900 dark:text-gray-100">{task.title}</h5>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{task.description}</p>
-                                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                  <span>Due: {formatDate(task.dueDate)}</span>
-                                  <span>Priority: {task.priority}</span>
-                                </div>
-                              </div>
-                              <Badge className={task.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400'}>
-                                {task.status}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>No tasks for this unit</p>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </TabsContent>
-            </Tabs>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Unit Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Unit</DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="propertyId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Property</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a property" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {properties?.map((property) => (
-                          <SelectItem key={property.id} value={property.id}>
-                            {property.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="unitNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter unit number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="bedrooms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bedrooms</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Number of bedrooms" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="bathrooms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bathrooms</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Number of bathrooms" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="rentAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly Rent</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Monthly rent amount" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="squareFootage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Square Footage</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Square footage" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select unit status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="vacant">Vacant</SelectItem>
-                        <SelectItem value="occupied">Occupied</SelectItem>
-                        <SelectItem value="maintenance">Under Maintenance</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createUnitMutation.isPending}>
-                  {createUnitMutation.isPending ? "Creating..." : "Create Unit"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Unit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Unit</DialogTitle>
-          </DialogHeader>
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <FormField
-                control={editForm.control}
-                name="unitNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter unit number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="bedrooms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bedrooms</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Number of bedrooms" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={editForm.control}
-                  name="bathrooms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bathrooms</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Number of bathrooms" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="rentAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly Rent</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Monthly rent amount" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={editForm.control}
-                  name="squareFootage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Square Footage</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Square footage" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={editForm.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select unit status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="vacant">Vacant</SelectItem>
-                        <SelectItem value="occupied">Occupied</SelectItem>
-                        <SelectItem value="maintenance">Under Maintenance</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateUnitMutation.isPending}>
-                  {updateUnitMutation.isPending ? "Updating..." : "Update Unit"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Assign Tenant Dialog */}
-      <Dialog open={isAssignTenantDialogOpen} onOpenChange={setIsAssignTenantDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign Tenant to Unit</DialogTitle>
-          </DialogHeader>
-          <Form {...assignTenantForm}>
-            <form onSubmit={assignTenantForm.handleSubmit(onAssignTenantSubmit)} className="space-y-4">
-              <FormField
-                control={assignTenantForm.control}
-                name="tenantId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Tenant</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose a tenant" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {availableTenants?.map((tenant) => (
-                          <SelectItem key={tenant.id} value={tenant.id}>
-                            {tenant.firstName} {tenant.lastName} - {tenant.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsAssignTenantDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={assignTenantMutation.isPending}>
-                  {assignTenantMutation.isPending ? "Assigning..." : "Assign Tenant"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Task Dialog */}
-      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Task for Unit</DialogTitle>
-          </DialogHeader>
-          <Form {...taskForm}>
-            <form onSubmit={taskForm.handleSubmit(onTaskSubmit)} className="space-y-4">
-              <FormField
-                control={taskForm.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Task Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter task title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={taskForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter task description" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={taskForm.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={taskForm.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsTaskDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createTaskMutation.isPending}>
-                  {createTaskMutation.isPending ? "Creating..." : "Create Task"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Lease End Date</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.leaseEndDate ? formatDate(tenant.leaseEndDate) : 'N/A'}</p>
                                     </div>
                                   </div>
                                 </CardContent>
@@ -1335,6 +669,50 @@ export default function Units() {
                         </div>
                       )}
 
+                      {/* Past Tenants */}
+                      {pastTenants.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-lg mb-4">Tenant History</h4>
+                          <div className="grid gap-4">
+                            {pastTenants.map(tenant => (
+                              <Card key={tenant.id} className="opacity-75">
+                                <CardContent className="p-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Name</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.firstName} {tenant.lastName}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Email</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.email}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Move In Date</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.moveInDate ? formatDate(tenant.moveInDate) : 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Move Out Date</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.moveOutDate ? formatDate(tenant.moveOutDate) : 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Monthly Rent</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{tenant.monthlyRent ? formatCurrency(parseFloat(tenant.monthlyRent)) : 'N/A'}</p>
+                                    </div>
+                                    {tenant.reasonForLeaving && (
+                                      <div>
+                                        <p className="text-gray-500 dark:text-gray-400">Reason for Leaving</p>
+                                        <p className="text-gray-900 dark:text-gray-100">{tenant.reasonForLeaving}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* No tenants */}
                       {unitTenants.length === 0 && (
                         <div className="text-center py-8">
                           <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -1345,6 +723,19 @@ export default function Units() {
                           >
                             <Users className="h-4 w-4 mr-2" />
                             Assign First Tenant
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Assign tenant button for vacant units */}
+                      {currentTenants.length === 0 && unitTenants.length > 0 && (
+                        <div className="text-center pt-4">
+                          <Button 
+                            variant="outline"
+                            onClick={() => setIsAssignTenantDialogOpen(true)}
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Assign New Tenant
                           </Button>
                         </div>
                       )}
@@ -1360,17 +751,6 @@ export default function Units() {
                   <Button variant="outline">
                     <Wrench className="h-4 w-4 mr-2" />
                     Add Maintenance Request
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="documents" className="space-y-4">
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">No documents uploaded yet</p>
-                  <Button variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Upload Documents
                   </Button>
                 </div>
               </TabsContent>
@@ -1475,7 +855,7 @@ export default function Units() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {properties.map((property) => (
+                          {properties.map((property: Property) => (
                             <SelectItem key={property.id} value={property.id}>
                               {property.name}
                             </SelectItem>
@@ -1588,8 +968,8 @@ export default function Units() {
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? "Updating..." : "Update Unit"}
+                <Button type="submit" disabled={updateUnitMutation.isPending}>
+                  {updateUnitMutation.isPending ? "Updating..." : "Update Unit"}
                 </Button>
               </div>
             </form>
@@ -1701,9 +1081,9 @@ export default function Units() {
                   name="description"
                   render={({ field }) => (
                     <FormItem className="col-span-2">
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Description (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Detailed description of the task" {...field} />
+                        <Textarea placeholder="Additional details..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1725,52 +1105,92 @@ export default function Units() {
 
       {/* Assign Tenant Dialog */}
       <Dialog open={isAssignTenantDialogOpen} onOpenChange={setIsAssignTenantDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Assign Tenant</DialogTitle>
+            <DialogTitle>Assign Tenant to Unit {selectedUnit?.unitNumber}</DialogTitle>
           </DialogHeader>
           <Form {...assignTenantForm}>
-            <form
-              onSubmit={assignTenantForm.handleSubmit((data) => {
-                if (selectedUnit) {
-                  assignTenantMutation.mutate({
-                    tenantId: data.tenantId,
-                    unitId: selectedUnit.id,
-                  });
-                }
-              })}
-              className="space-y-4"
-            >
-              <FormField
-                control={assignTenantForm.control}
-                name="tenantId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Tenant</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <form onSubmit={assignTenantForm.handleSubmit(onAssignTenantSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={assignTenantForm.control}
+                  name="tenantId"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Select Tenant</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose available tenant" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {availableTenants.map((tenant: Tenant) => (
+                            <SelectItem key={tenant.id} value={tenant.id}>
+                              {tenant.firstName} {tenant.lastName} - {tenant.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={assignTenantForm.control}
+                  name="moveInDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Move-in Date</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose an available tenant" />
-                        </SelectTrigger>
+                        <Input type="date" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {getAvailableTenants().map((tenant) => (
-                          <SelectItem key={tenant.id} value={tenant.id}>
-                            {tenant.firstName} {tenant.lastName} - {tenant.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={assignTenantForm.control}
+                  name="monthlyRent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Rent</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1200" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={assignTenantForm.control}
+                  name="depositAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Security Deposit (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1200" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={assignTenantForm.control}
+                  name="leaseEndDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lease End Date (Optional)</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAssignTenantDialogOpen(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => setIsAssignTenantDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={assignTenantMutation.isPending}>
