@@ -1,44 +1,68 @@
-
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, CheckSquare, Home, Bed, Bath, Maximize, DollarSign, Users, FileText, Wrench } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Unit, InsertUnit, Property, Tenant, Task, InsertTask } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { Plus, Home, Users, Calendar, Building, Edit2, Trash2 } from "lucide-react";
+import type { Unit, Property, Tenant, Task, InsertUnit, InsertTask } from "@shared/schema";
 
+// Validation schemas
 const unitSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
   unitNumber: z.string().min(1, "Unit number is required"),
   bedrooms: z.number().min(0, "Bedrooms must be 0 or more"),
   bathrooms: z.string().min(1, "Bathrooms is required"),
   rentAmount: z.string().min(1, "Rent amount is required"),
-  status: z.string().min(1, "Status is required"),
+  status: z.enum(["vacant", "occupied", "maintenance"]),
   squareFootage: z.number().optional(),
 });
 
 const taskSchema = z.object({
+  unitId: z.string().min(1, "Unit is required"),
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
-  category: z.string().min(1, "Category is required"),
-  priority: z.string().min(1, "Priority is required"),
-  dueDate: z.string().optional(),
-  assignedTo: z.string().optional(),
+  priority: z.enum(["low", "medium", "high"]),
+  status: z.enum(["pending", "in_progress", "completed"]),
+  dueDate: z.date().optional(),
 });
 
 const assignTenantSchema = z.object({
-  tenantId: z.string().min(1, "Please select a tenant"),
+  tenantId: z.string().min(1, "Tenant is required"),
 });
 
 type UnitFormData = z.infer<typeof unitSchema>;
@@ -46,44 +70,44 @@ type TaskFormData = z.infer<typeof taskSchema>;
 type AssignTenantFormData = z.infer<typeof assignTenantSchema>;
 
 export default function Units() {
+  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isAssignTenantDialogOpen, setIsAssignTenantDialogOpen] = useState(false);
-  const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [searchTerm, setSearchTerm] = useState("");
-  const { toast } = useToast();
+  const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
 
-  const { data: units = [], isLoading } = useQuery<Unit[]>({
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Queries
+  const { data: units, isLoading: unitsLoading } = useQuery({
     queryKey: ["/api/units"],
   });
 
-  const { data: properties = [] } = useQuery<Property[]>({
+  const { data: properties } = useQuery({
     queryKey: ["/api/properties"],
   });
 
-  const { data: tenants = [] } = useQuery<Tenant[]>({
+  const { data: tenants } = useQuery({
     queryKey: ["/api/tenants"],
   });
 
-  const { data: tasks = [] } = useQuery<Task[]>({
+  const { data: tasks } = useQuery({
     queryKey: ["/api/tasks"],
   });
 
-
-
-  const createForm = useForm<UnitFormData>({
+  // Forms
+  const form = useForm<UnitFormData>({
     resolver: zodResolver(unitSchema),
     defaultValues: {
       propertyId: "",
       unitNumber: "",
-      bedrooms: 1,
-      bathrooms: "1",
+      bedrooms: 0,
+      bathrooms: "",
       rentAmount: "",
       status: "vacant",
-      squareFootage: undefined,
+      squareFootage: 0,
     },
   });
 
@@ -92,23 +116,22 @@ export default function Units() {
     defaultValues: {
       propertyId: "",
       unitNumber: "",
-      bedrooms: 1,
-      bathrooms: "1",
+      bedrooms: 0,
+      bathrooms: "",
       rentAmount: "",
       status: "vacant",
-      squareFootage: undefined,
+      squareFootage: 0,
     },
   });
 
   const taskForm = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
+      unitId: "",
       title: "",
       description: "",
-      category: "general",
       priority: "medium",
-      dueDate: "",
-      assignedTo: "",
+      status: "pending",
     },
   });
 
@@ -119,62 +142,46 @@ export default function Units() {
     },
   });
 
-  const createMutation = useMutation({
+  // Mutations
+  const createUnitMutation = useMutation({
     mutationFn: (data: InsertUnit) => apiRequest("POST", "/api/units", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
       setIsCreateDialogOpen(false);
-      createForm.reset();
-      toast({ title: "Unit created successfully" });
+      form.reset();
+      toast({
+        title: "Success",
+        description: "Unit created successfully",
+      });
     },
-    onError: (error: any) => {
-      console.error("Create unit error:", error);
-      toast({ title: "Failed to create unit", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<InsertUnit> }) =>
+  const updateUnitMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Unit> }) =>
       apiRequest("PATCH", `/api/units/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/units"] });
       setIsEditDialogOpen(false);
-      setSelectedUnit(null);
-      toast({ title: "Unit updated successfully" });
+      setEditingUnit(null);
+      editForm.reset();
+      toast({
+        title: "Success",
+        description: "Unit updated successfully",
+      });
     },
-    onError: () => {
-      toast({ title: "Failed to update unit", variant: "destructive" });
-    },
-  });
-
-  const assignTenantMutation = useMutation({
-    mutationFn: ({ tenantId, unitId }: { tenantId: string; unitId: string }) =>
-      apiRequest("PATCH", `/api/tenants/${tenantId}`, { unitId }),
-    onSuccess: () => {
-      // Force refresh all related data
-      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
-      queryClient.refetchQueries({ queryKey: ["/api/tenants"] });
-      queryClient.refetchQueries({ queryKey: ["/api/units"] });
-      setIsAssignTenantDialogOpen(false);
-      setIsViewDialogOpen(false);
-      assignTenantForm.reset();
-      toast({ title: "Tenant assigned successfully" });
-    },
-    onError: (error: any) => {
-      console.error("Assign tenant error:", error);
-      toast({ title: "Failed to assign tenant", variant: "destructive" });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("DELETE", `/api/units/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
-      toast({ title: "Unit deleted successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to delete unit", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -182,56 +189,159 @@ export default function Units() {
     mutationFn: async (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      toast({ title: "Task created successfully" });
+      setIsTaskDialogOpen(false);
+      taskForm.reset();
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      });
     },
     onError: (error: Error) => {
-      toast({ title: "Failed to create task", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      toast({ title: "Task deleted successfully" });
+      toast({
+        title: "Success",
+        description: "Task deleted successfully",
+      });
     },
     onError: (error: Error) => {
-      toast({ title: "Failed to delete task", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
+  const assignTenantMutation = useMutation({
+    mutationFn: ({ unitId, tenantId }: { unitId: string; tenantId: string }) =>
+      apiRequest("PATCH", `/api/tenants/${tenantId}`, { unitId, status: "active" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      setIsAssignTenantDialogOpen(false);
+      assignTenantForm.reset();
+      toast({
+        title: "Success",
+        description: "Tenant assigned successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
-
-  const onCreateSubmit = (data: UnitFormData) => {
-    console.log("Unit form data being submitted:", data);
-    // Ensure proper data formatting for database
-    const formattedData = {
-      propertyId: data.propertyId,
-      unitNumber: data.unitNumber,
-      bedrooms: Number(data.bedrooms),
-      bathrooms: data.bathrooms.toString(),
-      rentAmount: data.rentAmount || null,
-      status: data.status as "vacant" | "occupied" | "maintenance",
-      squareFootage: data.squareFootage ? Number(data.squareFootage) : null,
-    };
-    console.log("Formatted unit data:", formattedData);
-    createMutation.mutate(formattedData);
+  // Helper functions
+  const formatCurrency = (amount: number | string) => {
+    const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(numAmount);
   };
 
-  const onEditSubmit = (data: UnitFormData) => {
-    if (selectedUnit) {
-      updateMutation.mutate({ id: selectedUnit.id, data });
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString();
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "vacant":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+      case "occupied":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      case "maintenance":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      case "active":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      case "moved_out":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
+      case "evicted":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
     }
   };
 
+  const getPropertyName = (propertyId: string) => {
+    const property = properties?.find((p: Property) => p.id === propertyId);
+    return property?.name || "Unknown Property";
+  };
+
+  const getTenantForUnit = (unitId: string) => {
+    return tenants?.find((tenant: Tenant) => tenant.unitId === unitId && tenant.status === "active");
+  };
+
+  const getAvailableTenants = () => {
+    return tenants?.filter((tenant: Tenant) => !tenant.unitId || tenant.status !== "active") || [];
+  };
+
+  const getUnitTasks = (unitId: string) => {
+    return tasks?.filter((task: Task) => task.unitId === unitId) || [];
+  };
+
+  // Form handlers
+  const onCreateSubmit = (data: UnitFormData) => {
+    const unitData: InsertUnit = {
+      ...data,
+      rentAmount: data.rentAmount,
+      squareFootage: data.squareFootage || null,
+    };
+    createUnitMutation.mutate(unitData);
+  };
+
+  const onEditSubmit = (data: UnitFormData) => {
+    if (!editingUnit) return;
+    updateUnitMutation.mutate({
+      id: editingUnit.id,
+      data: {
+        ...data,
+        rentAmount: data.rentAmount,
+        squareFootage: data.squareFootage || null,
+      },
+    });
+  };
+
+  const onTaskSubmit = (data: TaskFormData) => {
+    if (!selectedUnit) return;
+    const taskData: InsertTask = {
+      ...data,
+      unitId: selectedUnit.id,
+      dueDate: data.dueDate || null,
+    };
+    createTaskMutation.mutate(taskData);
+  };
+
+  const onAssignTenantSubmit = (data: AssignTenantFormData) => {
+    if (!selectedUnit) return;
+    assignTenantMutation.mutate({
+      unitId: selectedUnit.id,
+      tenantId: data.tenantId,
+    });
+  };
+
   const handleEdit = (unit: Unit) => {
-    setSelectedUnit(unit);
+    setEditingUnit(unit);
     editForm.reset({
       propertyId: unit.propertyId,
       unitNumber: unit.unitNumber,
       bedrooms: unit.bedrooms,
       bathrooms: unit.bathrooms,
-      rentAmount: unit.rentAmount,
+      rentAmount: unit.rentAmount || "",
       status: unit.status,
       squareFootage: unit.squareFootage || undefined,
     });
@@ -240,679 +350,390 @@ export default function Units() {
 
   const handleView = (unit: Unit) => {
     setSelectedUnit(unit);
-    setIsViewDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this unit?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const onTaskSubmit = (data: TaskFormData) => {
-    if (selectedUnit) {
-      const taskData: InsertTask = {
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        priority: data.priority as "low" | "medium" | "high" | "urgent",
-        status: "pending",
-        propertyId: selectedUnit.propertyId,
-        unitId: selectedUnit.id,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        assignedTo: data.assignedTo || null,
-        completedAt: null,
-        maintenanceRequestId: null,
-        expenseId: null,
-        tenantId: null,
-        vendorId: null,
-        rentPaymentId: null,
-      };
-      createTaskMutation.mutate(taskData);
-    }
-  };
-
-  const getPropertyName = (propertyId: string) => {
-    const property = properties.find(p => p.id === propertyId);
-    return property?.name || "Unknown Property";
-  };
-
-  const getTenantForUnit = (unitId: string) => {
-    return tenants.find(tenant => tenant.unitId === unitId);
-  };
-
-  const getAvailableTenants = () => {
-    // Get tenants that are not assigned to any unit or have moved out
-    return tenants.filter(tenant => !tenant.unitId || tenant.status === "moved_out");
-  };
-
-  const filteredUnits = units.filter(
-    (unit) => {
-      const tenant = getTenantForUnit(unit.id);
-      const tenantName = tenant ? `${tenant.firstName} ${tenant.lastName}` : "";
-
-      return unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             getPropertyName(unit.propertyId).toLowerCase().includes(searchTerm.toLowerCase()) ||
-             tenantName.toLowerCase().includes(searchTerm.toLowerCase());
-    }
-  );
-
-  if (isLoading) {
-    return <div className="flex justify-center items-center min-h-96">Loading units...</div>;
+  if (unitsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Units</h1>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Unit
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add New Unit</DialogTitle>
-            </DialogHeader>
-            <Form {...createForm}>
-              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={createForm.control}
-                    name="propertyId"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>Property</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select property" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {properties.map((property) => (
-                              <SelectItem key={property.id} value={property.id}>
-                                {property.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={createForm.control}
-                    name="unitNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Unit Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="1A" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={createForm.control}
-                    name="bedrooms"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bedrooms</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="0"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={createForm.control}
-                    name="bathrooms"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bathrooms</FormLabel>
-                        <FormControl>
-                          <Input placeholder="1.5" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={createForm.control}
-                    name="rentAmount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Rent Amount</FormLabel>
-                        <FormControl>
-                          <Input placeholder="$1,200" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={createForm.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="vacant">Vacant</SelectItem>
-                            <SelectItem value="occupied">Occupied</SelectItem>
-                            <SelectItem value="maintenance">Maintenance</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={createForm.control}
-                    name="squareFootage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Square Footage (Optional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="850"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? "Creating..." : "Create Unit"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Units Management
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Manage your property units and tenants
+          </p>
+        </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Unit
+        </Button>
       </div>
 
-      <div className="flex justify-between items-center">
-        <Input
-          placeholder="Search units, properties, or tenants..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={viewMode === "grid" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("grid")}
-          >
-            <Grid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUnits.map((unit) => (
-            <Card 
-              key={unit.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => handleView(unit)}
-            >
-              <CardHeader>
-                <CardTitle className="flex justify-between items-start">
-                  <span>Unit {unit.unitNumber}</span>
-                  <Badge className={getStatusColor(unit.status)}>
-                    {unit.status}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="text-sm">
-                    <span className="font-semibold">Property:</span> {getPropertyName(unit.propertyId)}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-semibold">Bedrooms:</span> {unit.bedrooms}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-semibold">Bathrooms:</span> {unit.bathrooms}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-semibold">Rent:</span> {formatCurrency(unit.rentAmount)}
-                  </p>
-                  {unit.squareFootage && (
-                    <p className="text-sm">
-                      <span className="font-semibold">Size:</span> {unit.squareFootage} sq ft
-                    </p>
-                  )}
-                  {(() => {
-                    const tenant = getTenantForUnit(unit.id);
-                    return tenant ? (
-                      <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                          Current Tenant
-                        </p>
-                        <p className="text-sm">
-                          {tenant.firstName} {tenant.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{tenant.email}</p>
-                      </div>
-                    ) : (
-                      <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                        <p className="text-sm text-muted-foreground">No tenant assigned</p>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Units List */}
         <div className="space-y-4">
-          {filteredUnits.map((unit) => (
-            <Card 
-              key={unit.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => handleView(unit)}
-            >
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <h3 className="font-semibold">Unit {unit.unitNumber}</h3>
-                        <p className="text-sm text-gray-600">{getPropertyName(unit.propertyId)}</p>
-                      </div>
-                      <Badge className={getStatusColor(unit.status)}>
-                        {unit.status}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">{unit.bedrooms} bed, {unit.bathrooms} bath</p>
-                      <p className="text-sm text-gray-600">{formatCurrency(unit.rentAmount)}</p>
-                      {(() => {
-                        const tenant = getTenantForUnit(unit.id);
-                        return tenant ? (
-                          <p className="text-xs text-blue-600">
-                            {tenant.firstName} {tenant.lastName}
-                          </p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground">No tenant</p>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* View Unit Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <div className="flex justify-between items-center">
-              <DialogTitle>Unit Details</DialogTitle>
-              {selectedUnit && (
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsViewDialogOpen(false);
-                      handleEdit(selectedUnit);
-                    }}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsViewDialogOpen(false);
-                      handleDelete(selectedUnit.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
-                </div>
-              )}
-            </div>
-          </DialogHeader>
-          {selectedUnit && (
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="tenant">Tenant</TabsTrigger>
-                <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="tasks">Tasks</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="details" className="space-y-4">
-                {/* Status Badge and Key Info */}
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
-                        <Home className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Unit {selectedUnit.unitNumber}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{getPropertyName(selectedUnit.propertyId)}</p>
-                    </div>
-                  </div>
-                  <Badge className={`${getStatusColor(selectedUnit.status)} text-sm px-3 py-1`}>
-                    {selectedUnit.status.charAt(0).toUpperCase() + selectedUnit.status.slice(1)}
-                  </Badge>
-                </div>
-
-                {/* Unit Specifications */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                      Unit Specifications
-                    </h4>
-                    <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            All Units ({units?.length || 0})
+          </h2>
+          <div className="space-y-3">
+            {units?.map((unit: Unit) => {
+              const tenant = getTenantForUnit(unit.id);
+              return (
+                <Card
+                  key={unit.id}
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    selectedUnit?.id === unit.id
+                      ? "ring-2 ring-primary shadow-lg"
+                      : ""
+                  }`}
+                  onClick={() => handleView(unit)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                          <Bed className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUnit.bedrooms} Bedroom{selectedUnit.bedrooms !== 1 ? 's' : ''}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Sleeping spaces</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                          <Bath className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUnit.bathrooms} Bathroom{selectedUnit.bathrooms !== '1' ? 's' : ''}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Full bathrooms</p>
-                        </div>
-                      </div>
-                      {selectedUnit.squareFootage && (
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                            <Maximize className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUnit.squareFootage} sq ft</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Living space</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                      Financial Information
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-                          <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatCurrency(selectedUnit.rentAmount)}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Monthly rent</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="tenant" className="space-y-4">
-
-              {/* Tenant Information Section */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                  Tenant Information
-                </h4>
-                {(() => {
-                  const tenant = getTenantForUnit(selectedUnit.id);
-                  return tenant ? (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0">
-                          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-                            <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+                            <Home className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           </div>
-                        </div>
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                              {tenant.firstName} {tenant.lastName}
-                            </h5>
-                            <Badge className={`${getStatusColor(tenant.status)}`}>
-                              {tenant.status}
-                            </Badge>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div>
-                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Contact</p>
-                                <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.email}</p>
-                                <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.phone}</p>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              {tenant.leaseStart && tenant.leaseEnd && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Lease Period</p>
-                                  <p className="text-sm text-gray-900 dark:text-gray-100">
-                                    {formatDate(tenant.leaseStart)} - {formatDate(tenant.leaseEnd)}
-                                  </p>
-                                </div>
-                              )}
-                              {tenant.monthlyRent && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Monthly Rent</p>
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                    {formatCurrency(tenant.monthlyRent)}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800 dark:to-slate-800 p-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-center">
-                      <div className="flex flex-col items-center space-y-3">
-                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                          <Users className="h-6 w-6 text-gray-400" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">No Tenant Assigned</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This unit is currently vacant</p>
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                            Unit {unit.unitNumber}
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {getPropertyName(unit.propertyId)}
+                          </p>
+                          <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                            {formatCurrency(unit.rentAmount || 0)}
+                          </p>
                         </div>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            setIsAssignTenantDialogOpen(true);
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge className={getStatusColor(unit.status)}>
+                          {unit.status}
+                        </Badge>
+                        {tenant && (
+                          <Badge variant="outline" className="text-xs">
+                            {tenant.firstName} {tenant.lastName}
+                          </Badge>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(unit);
                           }}
                         >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Assign Tenant
+                          <Edit2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
-                  );
-                })()}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
 
-                {/* Tenant History Section */}
-                {(() => {
-                  const unitTenants = tenants?.filter(tenant => tenant.unitId === selectedUnit.id) || [];
-                  const previousTenants = unitTenants.filter(tenant => tenant.status === 'moved_out' || tenant.status === 'evicted').sort((a, b) => {
-                    const dateA = new Date(b.moveOutDate || new Date());
-                    const dateB = new Date(a.moveOutDate || new Date());
-                    return dateA.getTime() - dateB.getTime();
-                  });
+        {/* Unit Details */}
+        <div>
+          {selectedUnit ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Building className="h-5 w-5" />
+                  <span>Unit {selectedUnit.unitNumber}</span>
+                </CardTitle>
+                <CardDescription>
+                  {getPropertyName(selectedUnit.propertyId)}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="details" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="details">Details</TabsTrigger>
+                    <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                  </TabsList>
 
-                  if (previousTenants.length > 0) {
-                    return (
-                      <div className="space-y-4 mt-6">
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                          Previous Tenants
-                        </h4>
-                        <div className="space-y-3">
-                          {previousTenants.map((tenant) => (
-                            <div key={tenant.id} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                              <div className="flex items-start space-x-4">
-                                <div className="flex-shrink-0">
-                                  <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                                    <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                  </div>
-                                </div>
-                                <div className="flex-1 space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <h6 className="font-medium text-gray-900 dark:text-gray-100">
-                                      {tenant.firstName} {tenant.lastName}
-                                    </h6>
-                                    <Badge variant="secondary" className="text-xs">
-                                      {tenant.status === 'moved_out' ? 'Moved Out' : 'Evicted'}
-                                    </Badge>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                      <p className="text-gray-500 dark:text-gray-400 text-xs">Lease Period</p>
-                                      <p className="text-gray-900 dark:text-gray-100">
-                                        {tenant.leaseStart ? formatDate(tenant.leaseStart) : 'N/A'} - {tenant.leaseEnd ? formatDate(tenant.leaseEnd) : 'N/A'}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-gray-500 dark:text-gray-400 text-xs">Monthly Rent</p>
-                                      <p className="text-gray-900 dark:text-gray-100">{tenant.monthlyRent ? formatCurrency(parseFloat(tenant.monthlyRent)) : 'N/A'}</p>
-                                    </div>
-                                    {tenant.moveOutDate && (
-                                      <div>
-                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Move Out Date</p>
-                                        <p className="text-gray-900 dark:text-gray-100">{formatDate(tenant.moveOutDate)}</p>
-                                      </div>
-                                    )}
-                                    {tenant.reasonForLeaving && (
-                                      <div>
-                                        <p className="text-gray-500 dark:text-gray-400 text-xs">Reason for Leaving</p>
-                                        <p className="text-gray-900 dark:text-gray-100">{tenant.reasonForLeaving}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
+                  <TabsContent value="details" className="space-y-6">
+                    {/* Unit Information */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
+                        Unit Information
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Bedrooms</p>
+                          <p className="text-sm text-gray-900 dark:text-gray-100">{selectedUnit.bedrooms}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Bathrooms</p>
+                          <p className="text-sm text-gray-900 dark:text-gray-100">{selectedUnit.bathrooms}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Rent Amount</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            {formatCurrency(selectedUnit.rentAmount || 0)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Square Footage</p>
+                          <p className="text-sm text-gray-900 dark:text-gray-100">
+                            {selectedUnit.squareFootage ? `${selectedUnit.squareFootage} sq ft` : "N/A"}
+                          </p>
                         </div>
                       </div>
-                    );
-                  }
-                  return null;
-                })()}
-                </div>
-              </TabsContent>
+                    </div>
 
-              <TabsContent value="tasks" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
-                      Tasks for this Unit
-                    </h4>
-                    <Button
-                      size="sm"
-                      onClick={() => setIsTaskDialogOpen(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Task
-                    </Button>
-                  </div>
-                  
-                  {(() => {
-                    const unitTasks = tasks?.filter(task => task.unitId === selectedUnit.id) || [];
-                    return unitTasks.length > 0 ? (
-                      <div className="space-y-3">
-                        {unitTasks.map((task) => (
-                          <div key={task.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h5 className="font-medium text-gray-900 dark:text-gray-100">{task.title}</h5>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{task.description}</p>
-                                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                  <span>Due: {formatDate(task.dueDate)}</span>
-                                  <span>Priority: {task.priority}</span>
+                    {/* Current Tenant Information */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
+                        Current Tenant
+                      </h4>
+                      {(() => {
+                        const tenant = getTenantForUnit(selectedUnit.id);
+                        return tenant ? (
+                          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                            <div className="flex items-start space-x-4">
+                              <div className="flex-shrink-0">
+                                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
+                                  <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
                                 </div>
                               </div>
-                              <Badge className={task.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400'}>
-                                {task.status}
-                              </Badge>
+                              <div className="flex-1 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    {tenant.firstName} {tenant.lastName}
+                                  </h5>
+                                  <Badge className={getStatusColor(tenant.status)}>
+                                    {tenant.status}
+                                  </Badge>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <div>
+                                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Contact</p>
+                                      <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.email}</p>
+                                      <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.phone}</p>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {tenant.leaseStart && tenant.leaseEnd && (
+                                      <div>
+                                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Lease Period</p>
+                                        <p className="text-sm text-gray-900 dark:text-gray-100">
+                                          {formatDate(tenant.leaseStart)} - {formatDate(tenant.leaseEnd)}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {tenant.monthlyRent && (
+                                      <div>
+                                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Monthly Rent</p>
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                          {formatCurrency(tenant.monthlyRent)}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>No tasks for this unit</p>
-                      </div>
-                    );
-                  })()}
+                        ) : (
+                          <div className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800 dark:to-slate-800 p-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-center">
+                            <div className="flex flex-col items-center space-y-3">
+                              <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                <Users className="h-6 w-6 text-gray-400" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">No Tenant Assigned</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This unit is currently vacant</p>
+                              </div>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  setIsAssignTenantDialogOpen(true);
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Assign Tenant
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Previous Tenants Section */}
+                    {(() => {
+                      const unitTenants = tenants?.filter((tenant: Tenant) => tenant.unitId === selectedUnit.id) || [];
+                      const previousTenants = unitTenants.filter((tenant: Tenant) => 
+                        tenant.status === 'moved_out' || tenant.status === 'evicted'
+                      ).sort((a, b) => {
+                        const dateA = new Date(b.moveOutDate || new Date());
+                        const dateB = new Date(a.moveOutDate || new Date());
+                        return dateA.getTime() - dateB.getTime();
+                      });
+
+                      if (previousTenants.length > 0) {
+                        return (
+                          <div className="space-y-4">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
+                              Previous Tenants
+                            </h4>
+                            <div className="space-y-3">
+                              {previousTenants.map((tenant: Tenant) => (
+                                <div key={tenant.id} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                  <div className="flex items-start space-x-4">
+                                    <div className="flex-shrink-0">
+                                      <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                        <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                      </div>
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <h6 className="font-medium text-gray-900 dark:text-gray-100">
+                                          {tenant.firstName} {tenant.lastName}
+                                        </h6>
+                                        <Badge variant="secondary" className="text-xs">
+                                          {tenant.status === 'moved_out' ? 'Moved Out' : 'Evicted'}
+                                        </Badge>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                          <p className="text-gray-500 dark:text-gray-400 text-xs">Lease Period</p>
+                                          <p className="text-gray-900 dark:text-gray-100">
+                                            {tenant.leaseStart ? formatDate(tenant.leaseStart) : 'N/A'} - {tenant.leaseEnd ? formatDate(tenant.leaseEnd) : 'N/A'}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="text-gray-500 dark:text-gray-400 text-xs">Monthly Rent</p>
+                                          <p className="text-gray-900 dark:text-gray-100">{tenant.monthlyRent ? formatCurrency(parseFloat(tenant.monthlyRent)) : 'N/A'}</p>
+                                        </div>
+                                        {tenant.moveOutDate && (
+                                          <div>
+                                            <p className="text-gray-500 dark:text-gray-400 text-xs">Move Out Date</p>
+                                            <p className="text-gray-900 dark:text-gray-100">{formatDate(tenant.moveOutDate)}</p>
+                                          </div>
+                                        )}
+                                        {tenant.reasonForLeaving && (
+                                          <div>
+                                            <p className="text-gray-500 dark:text-gray-400 text-xs">Reason for Leaving</p>
+                                            <p className="text-gray-900 dark:text-gray-100">{tenant.reasonForLeaving}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </TabsContent>
+
+                  <TabsContent value="tasks" className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
+                        Tasks for Unit {selectedUnit.unitNumber}
+                      </h4>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          taskForm.setValue("unitId", selectedUnit.id);
+                          setIsTaskDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Task
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {getUnitTasks(selectedUnit.id).map((task: Task) => (
+                        <Card key={task.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h5 className="font-medium text-gray-900 dark:text-gray-100">
+                                  {task.title}
+                                </h5>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                  {task.description}
+                                </p>
+                                <div className="flex items-center space-x-2 mt-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {task.priority}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs">
+                                    {task.status}
+                                  </Badge>
+                                  {task.dueDate && (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                      Due: {formatDate(task.dueDate)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => deleteTaskMutation.mutate(task.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="flex flex-col items-center space-y-3">
+                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                    <Building className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                      Select a Unit
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Choose a unit from the list to view details
+                    </p>
+                  </div>
                 </div>
-              </TabsContent>
-            </Tabs>
+              </CardContent>
+            </Card>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
 
       {/* Create Unit Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Unit</DialogTitle>
+            <DialogTitle>Add New Unit</DialogTitle>
+            <DialogDescription>
+              Create a new unit for your property
+            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
@@ -929,7 +750,7 @@ export default function Units() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {properties?.map((property) => (
+                        {properties?.map((property: Property) => (
                           <SelectItem key={property.id} value={property.id}>
                             {property.name}
                           </SelectItem>
@@ -948,7 +769,7 @@ export default function Units() {
                   <FormItem>
                     <FormLabel>Unit Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter unit number" {...field} />
+                      <Input placeholder="e.g., 101, A1, etc." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -963,10 +784,9 @@ export default function Units() {
                     <FormItem>
                       <FormLabel>Bedrooms</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Number of bedrooms" 
-                          {...field} 
+                        <Input
+                          type="number"
+                          {...field}
                           onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                         />
                       </FormControl>
@@ -982,7 +802,7 @@ export default function Units() {
                     <FormItem>
                       <FormLabel>Bathrooms</FormLabel>
                       <FormControl>
-                        <Input placeholder="Number of bathrooms" {...field} />
+                        <Input placeholder="e.g., 1, 1.5, 2" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -990,40 +810,38 @@ export default function Units() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="rentAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly Rent</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Monthly rent amount" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="rentAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rent Amount</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 1200" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="squareFootage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Square Footage</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Square footage" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="squareFootage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Square Footage (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="e.g., 850"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -1034,13 +852,13 @@ export default function Units() {
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select unit status" />
+                          <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="vacant">Vacant</SelectItem>
                         <SelectItem value="occupied">Occupied</SelectItem>
-                        <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -1049,7 +867,11 @@ export default function Units() {
               />
 
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsCreateDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={createUnitMutation.isPending}>
@@ -1061,139 +883,14 @@ export default function Units() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Unit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Unit</DialogTitle>
-          </DialogHeader>
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <FormField
-                control={editForm.control}
-                name="unitNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter unit number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="bedrooms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bedrooms</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Number of bedrooms" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={editForm.control}
-                  name="bathrooms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bathrooms</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Number of bathrooms" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="rentAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly Rent</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Monthly rent amount" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={editForm.control}
-                  name="squareFootage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Square Footage</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Square footage" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={editForm.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select unit status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="vacant">Vacant</SelectItem>
-                        <SelectItem value="occupied">Occupied</SelectItem>
-                        <SelectItem value="maintenance">Under Maintenance</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateUnitMutation.isPending}>
-                  {updateUnitMutation.isPending ? "Updating..." : "Update Unit"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
       {/* Assign Tenant Dialog */}
       <Dialog open={isAssignTenantDialogOpen} onOpenChange={setIsAssignTenantDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assign Tenant to Unit</DialogTitle>
+            <DialogTitle>Assign Tenant</DialogTitle>
+            <DialogDescription>
+              Assign a tenant to Unit {selectedUnit?.unitNumber}
+            </DialogDescription>
           </DialogHeader>
           <Form {...assignTenantForm}>
             <form onSubmit={assignTenantForm.handleSubmit(onAssignTenantSubmit)} className="space-y-4">
@@ -1202,17 +899,17 @@ export default function Units() {
                 name="tenantId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select Tenant</FormLabel>
+                    <FormLabel>Tenant</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose a tenant" />
+                          <SelectValue placeholder="Select a tenant" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {availableTenants?.map((tenant) => (
+                        {getAvailableTenants().map((tenant: Tenant) => (
                           <SelectItem key={tenant.id} value={tenant.id}>
-                            {tenant.firstName} {tenant.lastName} - {tenant.email}
+                            {tenant.firstName} {tenant.lastName}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1222,549 +919,6 @@ export default function Units() {
                 )}
               />
 
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsAssignTenantDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={assignTenantMutation.isPending}>
-                  {assignTenantMutation.isPending ? "Assigning..." : "Assign Tenant"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Task Dialog */}
-      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Task for Unit</DialogTitle>
-          </DialogHeader>
-          <Form {...taskForm}>
-            <form onSubmit={taskForm.handleSubmit(onTaskSubmit)} className="space-y-4">
-              <FormField
-                control={taskForm.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Task Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter task title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={taskForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter task description" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={taskForm.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={taskForm.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsTaskDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createTaskMutation.isPending}>
-                  {createTaskMutation.isPending ? "Creating..." : "Create Task"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {unitTenants.length === 0 && (
-                        <div className="text-center py-8">
-                          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <p className="text-muted-foreground mb-4">No tenant history available for this unit</p>
-                          <Button 
-                            variant="outline"
-                            onClick={() => setIsAssignTenantDialogOpen(true)}
-                          >
-                            <Users className="h-4 w-4 mr-2" />
-                            Assign First Tenant
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-              </TabsContent>
-
-              <TabsContent value="maintenance" className="space-y-4">
-                <div className="text-center py-8">
-                  <Wrench className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">No maintenance requests yet</p>
-                  <Button variant="outline">
-                    <Wrench className="h-4 w-4 mr-2" />
-                    Add Maintenance Request
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="documents" className="space-y-4">
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">No documents uploaded yet</p>
-                  <Button variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Upload Documents
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="tasks" className="space-y-4">
-                {(() => {
-                  const unitTasks = tasks?.filter(task => task.unitId === selectedUnit.id) || [];
-                  return unitTasks.length === 0 ? (
-                    <div className="text-center py-8">
-                      <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-muted-foreground mb-4">No tasks assigned to this unit yet</p>
-                      <Button variant="outline" onClick={() => setIsTaskDialogOpen(true)}>
-                        <CheckSquare className="h-4 w-4 mr-2" />
-                        Add Task
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-semibold">Unit Tasks</h4>
-                        <Button size="sm" onClick={() => setIsTaskDialogOpen(true)}>
-                          <Plus className="h-4 w-4 mr-1" />
-                          Create Task
-                        </Button>
-                      </div>
-                      <div className="grid gap-4">
-                        {unitTasks.map((task) => (
-                          <Card key={task.id}>
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-semibold">{task.title}</h4>
-                                  <Badge className={
-                                    task.priority === "urgent" ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400" :
-                                    task.priority === "high" ? "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400" :
-                                    task.priority === "medium" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400" :
-                                    "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
-                                  }>
-                                    {task.priority}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-muted-foreground">{task.description}</p>
-                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                  <span className="capitalize">{task.category}</span>
-                                  {task.dueDate && (
-                                    <span>Due: {formatDate(task.dueDate)}</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge className={
-                                  task.status === "completed" ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" :
-                                  task.status === "in_progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400" :
-                                  task.status === "cancelled" ? "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400" :
-                                  "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                }>
-                                  {task.status.replace('_', ' ')}
-                                </Badge>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => deleteTaskMutation.mutate(task.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </TabsContent>
-            </Tabs>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Unit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Unit</DialogTitle>
-          </DialogHeader>
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="propertyId"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Property</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select property" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {properties.map((property) => (
-                            <SelectItem key={property.id} value={property.id}>
-                              {property.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="unitNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="1A" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="bedrooms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bedrooms</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="bathrooms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bathrooms</FormLabel>
-                      <FormControl>
-                        <Input placeholder="1.5" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="rentAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rent Amount</FormLabel>
-                      <FormControl>
-                        <Input placeholder="$1,200" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="vacant">Vacant</SelectItem>
-                          <SelectItem value="occupied">Occupied</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="squareFootage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Square Footage (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="850"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? "Updating..." : "Update Unit"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Task Dialog */}
-      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create Task for Unit {selectedUnit?.unitNumber}</DialogTitle>
-          </DialogHeader>
-          <Form {...taskForm}>
-            <form onSubmit={taskForm.handleSubmit(onTaskSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={taskForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Fix leaky faucet" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={taskForm.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                          <SelectItem value="inspection">Inspection</SelectItem>
-                          <SelectItem value="lease">Lease</SelectItem>
-                          <SelectItem value="payment">Payment</SelectItem>
-                          <SelectItem value="vendor">Vendor</SelectItem>
-                          <SelectItem value="legal">Legal</SelectItem>
-                          <SelectItem value="administrative">Administrative</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={taskForm.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={taskForm.control}
-                  name="assignedTo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Assigned To (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Person or vendor name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={taskForm.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date (Optional)</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={taskForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Detailed description of the task" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsTaskDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createTaskMutation.isPending}>
-                  {createTaskMutation.isPending ? "Creating..." : "Create Task"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Assign Tenant Dialog */}
-      <Dialog open={isAssignTenantDialogOpen} onOpenChange={setIsAssignTenantDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Assign Tenant</DialogTitle>
-          </DialogHeader>
-          <Form {...assignTenantForm}>
-            <form
-              onSubmit={assignTenantForm.handleSubmit((data) => {
-                if (selectedUnit) {
-                  assignTenantMutation.mutate({
-                    tenantId: data.tenantId,
-                    unitId: selectedUnit.id,
-                  });
-                }
-              })}
-              className="space-y-4"
-            >
-              <FormField
-                control={assignTenantForm.control}
-                name="tenantId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Tenant</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose an available tenant" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {getAvailableTenants().map((tenant) => (
-                          <SelectItem key={tenant.id} value={tenant.id}>
-                            {tenant.firstName} {tenant.lastName} - {tenant.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <div className="flex justify-end space-x-2">
                 <Button
                   type="button"
