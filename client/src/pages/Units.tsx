@@ -623,9 +623,10 @@ export default function Units() {
           </DialogHeader>
           {selectedUnit && (
             <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="tenant">Tenant</TabsTrigger>
+                <TabsTrigger value="tenant">Current Tenant</TabsTrigger>
+                <TabsTrigger value="history">Tenant History</TabsTrigger>
                 <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
                 <TabsTrigger value="tasks">Tasks</TabsTrigger>
@@ -789,6 +790,140 @@ export default function Units() {
                   );
                 })()}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="history" className="space-y-4">
+                {(() => {
+                  const unitTenantHistory = tenantHistory?.filter(history => history.unitId === selectedUnit.id) || [];
+                  const currentTenant = unitTenantHistory.find(history => history.status === 'active');
+                  const previousTenants = unitTenantHistory.filter(history => history.status === 'inactive').sort((a, b) => {
+                    const dateA = new Date(b.moveOutDate || b.leaseEnd);
+                    const dateB = new Date(a.moveOutDate || a.leaseEnd);
+                    return dateA.getTime() - dateB.getTime();
+                  });
+
+                  return (
+                    <div className="space-y-6">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
+                        Tenant History
+                      </h4>
+                      
+                      {currentTenant && (
+                        <div className="space-y-4">
+                          <h5 className="text-lg font-semibold text-green-600 dark:text-green-400">Current Tenant</h5>
+                          <Card className="border-green-200 dark:border-green-800">
+                            <CardContent className="p-4">
+                              <div className="flex items-start space-x-4">
+                                <div className="flex-shrink-0">
+                                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
+                                    <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                  </div>
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <h6 className="font-semibold text-gray-900 dark:text-gray-100">
+                                      {currentTenant.tenantName}
+                                    </h6>
+                                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400">
+                                      Current
+                                    </Badge>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Email</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.tenantEmail}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Phone</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{currentTenant.tenantPhone}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Lease Start</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{formatDate(currentTenant.leaseStart)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-gray-400">Monthly Rent</p>
+                                      <p className="text-gray-900 dark:text-gray-100">{formatCurrency(currentTenant.monthlyRent)}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      )}
+
+                      {previousTenants.length > 0 && (
+                        <div className="space-y-4">
+                          <h5 className="text-lg font-semibold text-gray-600 dark:text-gray-400">Previous Tenants</h5>
+                          <div className="space-y-3">
+                            {previousTenants.map((tenant) => (
+                              <Card key={tenant.id} className="border-gray-200 dark:border-gray-700">
+                                <CardContent className="p-4">
+                                  <div className="flex items-start space-x-4">
+                                    <div className="flex-shrink-0">
+                                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-900/40 rounded-full flex items-center justify-center">
+                                        <Users className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                                      </div>
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                      <div className="flex items-center justify-between">
+                                        <h6 className="font-semibold text-gray-900 dark:text-gray-100">
+                                          {tenant.tenantName}
+                                        </h6>
+                                        <Badge variant="secondary">
+                                          Previous
+                                        </Badge>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                          <p className="text-gray-500 dark:text-gray-400">Lease Period</p>
+                                          <p className="text-gray-900 dark:text-gray-100">
+                                            {formatDate(tenant.leaseStart)} - {tenant.leaseEnd ? formatDate(tenant.leaseEnd) : 'Ongoing'}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="text-gray-500 dark:text-gray-400">Monthly Rent</p>
+                                          <p className="text-gray-900 dark:text-gray-100">{formatCurrency(tenant.monthlyRent)}</p>
+                                        </div>
+                                        {tenant.moveOutDate && (
+                                          <div>
+                                            <p className="text-gray-500 dark:text-gray-400">Move Out Date</p>
+                                            <p className="text-gray-900 dark:text-gray-100">{formatDate(tenant.moveOutDate)}</p>
+                                          </div>
+                                        )}
+                                        {tenant.reasonForLeaving && (
+                                          <div>
+                                            <p className="text-gray-500 dark:text-gray-400">Reason for Leaving</p>
+                                            <p className="text-gray-900 dark:text-gray-100">{tenant.reasonForLeaving}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {unitTenantHistory.length === 0 && (
+                        <div className="text-center py-8">
+                          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-muted-foreground mb-4">No tenant history available for this unit</p>
+                          <Button 
+                            variant="outline"
+                            onClick={() => setIsAssignTenantDialogOpen(true)}
+                          >
+                            <Users className="h-4 w-4 mr-2" />
+                            Assign First Tenant
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </TabsContent>
 
               <TabsContent value="maintenance" className="space-y-4">
