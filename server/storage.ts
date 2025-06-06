@@ -330,8 +330,6 @@ class Storage {
     return result.rowCount > 0;
   }
 
-
-
   // Maintenance Request methods
   async createMaintenanceRequest(requestData: any): Promise<MaintenanceRequest> {
     const [request] = await db.insert(maintenanceRequests).values({

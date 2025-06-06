@@ -271,10 +271,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-
-
-
-
   // Rent Payments routes
   app.get("/api/rent-payments", async (req, res) => {
     try {

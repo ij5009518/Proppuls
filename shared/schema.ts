@@ -99,15 +99,10 @@ export const tenantSchema = z.object({
   leaseEnd: z.date().nullable(),
   monthlyRent: z.string().nullable(),
   deposit: z.string().nullable(),
-  moveInDate: z.date().nullable(),
-  moveOutDate: z.date().nullable(),
-  reasonForLeaving: z.string().nullable(),
-  status: z.enum(["active", "moved_out", "evicted", "pending"]),
+  status: z.enum(["active", "inactive", "pending"]),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
-
-
 
 export const maintenanceRequestSchema = z.object({
   id: z.string(),
@@ -555,7 +550,6 @@ export const insertUserSchema = userSchema.omit({ id: true, createdAt: true, upd
 export const insertPropertySchema = propertySchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertUnitSchema = unitSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTenantSchema = tenantSchema.omit({ id: true, createdAt: true, updatedAt: true });
-
 export const insertMaintenanceRequestSchema = maintenanceRequestSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertVendorSchema = vendorSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertRentPaymentSchema = rentPaymentSchema.omit({ id: true, createdAt: true, updatedAt: true });
@@ -587,7 +581,6 @@ export type User = z.infer<typeof userSchema>;
 export type Property = z.infer<typeof propertySchema>;
 export type Unit = z.infer<typeof unitSchema>;
 export type Tenant = z.infer<typeof tenantSchema>;
-
 export type MaintenanceRequest = z.infer<typeof maintenanceRequestSchema>;
 export type Vendor = z.infer<typeof vendorSchema>;
 export type RentPayment = z.infer<typeof rentPaymentSchema>;
@@ -599,7 +592,6 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
 export type InsertUnit = z.infer<typeof insertUnitSchema>;
 export type InsertTenant = z.infer<typeof insertTenantSchema>;
-
 export type InsertMaintenanceRequest = z.infer<typeof insertMaintenanceRequestSchema>;
 export type InsertVendor = z.infer<typeof insertVendorSchema>;
 export type InsertRentPayment = z.infer<typeof insertRentPaymentSchema>;
