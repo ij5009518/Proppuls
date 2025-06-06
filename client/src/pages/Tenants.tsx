@@ -714,22 +714,54 @@ export default function Tenants() {
           })}
         </div>
       ) : (
-        <Card className="border-2 border-blue-200 dark:border-blue-800 shadow-xl rounded-xl overflow-hidden bg-white dark:bg-gray-900">
-          <div className="bg-gradient-to-r from-blue-200 to-indigo-200 dark:from-blue-800 dark:to-indigo-800 px-8 py-6 border-b-4 border-blue-300 dark:border-blue-700">
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">📋 Tenant Directory</h2>
-            <p className="text-base text-blue-800 dark:text-blue-200 mt-2 font-bold">{filteredTenants.length} active tenants</p>
+        <Card className="border-4 border-blue-300 shadow-2xl rounded-2xl overflow-hidden bg-white dark:bg-gray-900" 
+              style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+          <div className="bg-gradient-to-r from-blue-300 to-indigo-300 dark:from-blue-700 dark:to-indigo-700 px-10 py-8 border-b-8 border-blue-400 dark:border-blue-600"
+               style={{ backgroundColor: '#93c5fd', borderBottom: '8px solid #3b82f6' }}>
+            <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight" 
+                style={{ fontSize: '2.5rem', fontWeight: '900', color: '#1f2937' }}>
+              📋 TENANT DIRECTORY
+            </h2>
+            <p className="text-xl text-blue-900 dark:text-blue-100 mt-3 font-black"
+               style={{ fontSize: '1.25rem', fontWeight: '900', color: '#1e3a8a' }}>
+              {filteredTenants.length} ACTIVE TENANTS
+            </p>
           </div>
           <Table className="tenant-table-enhanced">
             <TableHeader>
-              <TableRow className="tenant-table-header">
-                <TableHead className="w-[180px] tenant-table-header py-6 px-8">👤 Name</TableHead>
-                <TableHead className="w-[200px] tenant-table-header py-6 px-8">📧 Contact</TableHead>
-                <TableHead className="w-[100px] tenant-table-header py-6 px-8 text-center">🏠 Unit</TableHead>
-                <TableHead className="w-[120px] tenant-table-header py-6 px-8 text-right">💰 Rent</TableHead>
-                <TableHead className="w-[150px] tenant-table-header py-6 px-8">📅 Lease</TableHead>
-                <TableHead className="w-[100px] tenant-table-header py-6 px-8">✅ Status</TableHead>
-                <TableHead className="w-[120px] tenant-table-header py-6 px-8 text-right">💳 Balance</TableHead>
-                <TableHead className="w-[150px] tenant-table-header py-6 px-8 text-center">⚙️ Actions</TableHead>
+              <TableRow style={{ backgroundColor: '#dbeafe', borderBottom: '4px solid #3b82f6' }}>
+                <TableHead className="w-[180px] py-8 px-10" 
+                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  👤 NAME
+                </TableHead>
+                <TableHead className="w-[200px] py-8 px-10" 
+                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  📧 CONTACT
+                </TableHead>
+                <TableHead className="w-[100px] py-8 px-10 text-center" 
+                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  🏠 UNIT
+                </TableHead>
+                <TableHead className="w-[120px] py-8 px-10 text-right" 
+                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  💰 RENT
+                </TableHead>
+                <TableHead className="w-[150px] py-8 px-10" 
+                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  📅 LEASE
+                </TableHead>
+                <TableHead className="w-[100px] py-8 px-10" 
+                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ✅ STATUS
+                </TableHead>
+                <TableHead className="w-[120px] py-8 px-10 text-right" 
+                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  💳 BALANCE
+                </TableHead>
+                <TableHead className="w-[150px] py-8 px-10 text-center" 
+                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ⚙️ ACTIONS
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -752,7 +784,8 @@ export default function Tenants() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="tenant-name-text group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors tracking-tight">
+                          <div className="group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors tracking-tight"
+                               style={{ fontSize: '1.75rem', fontWeight: '900', color: '#1f2937', lineHeight: '1.2' }}>
                             {tenant.firstName} {tenant.lastName}
                           </div>
                           <div className="text-lg text-gray-600 dark:text-gray-400 mt-2 font-bold font-mono bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg">
@@ -763,23 +796,29 @@ export default function Tenants() {
                     </TableCell>
                     <TableCell className="tenant-row-enhanced">
                       <div className="space-y-3">
-                        <div className="flex items-center tenant-contact-text text-gray-700 dark:text-gray-300">
-                          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
-                            <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        <div className="flex items-center text-gray-700 dark:text-gray-300">
+                          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                           </div>
-                          <span className="truncate max-w-[160px] font-bold">{tenant.email}</span>
+                          <span className="truncate max-w-[160px]" 
+                                style={{ fontSize: '1.125rem', fontWeight: '700', color: '#374151' }}>
+                            {tenant.email}
+                          </span>
                         </div>
-                        <div className="flex items-center tenant-contact-text text-gray-600 dark:text-gray-400">
-                          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
-                            <Phone className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <div className="flex items-center text-gray-600 dark:text-gray-400">
+                          <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <Phone className="h-6 w-6 text-green-600 dark:text-green-400" />
                           </div>
-                          <span className="font-bold">{tenant.phone}</span>
+                          <span style={{ fontSize: '1.125rem', fontWeight: '700', color: '#374151' }}>
+                            {tenant.phone}
+                          </span>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-6 px-6 text-center">
                       <div className="flex items-center justify-center space-x-2">
-                        <div className="tenant-unit-badge bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800">
+                        <div className="bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 inline-flex items-center justify-center"
+                             style={{ width: '3.5rem', height: '3.5rem', fontSize: '1.25rem', fontWeight: '900' }}>
                           {getUnitNumber(tenant.unitId)}
                         </div>
                         {tenant.unitId && units && (
@@ -801,7 +840,8 @@ export default function Tenants() {
                     </TableCell>
                     <TableCell className="py-6 px-6 text-right">
                       <div className="bg-green-50 dark:bg-green-900/20 rounded-lg px-4 py-3 inline-block border border-green-200 dark:border-green-800">
-                        <div className="tenant-rent-amount text-green-800 dark:text-green-300">
+                        <div className="text-green-800 dark:text-green-300"
+                             style={{ fontSize: '1.5rem', fontWeight: '900', color: '#166534' }}>
                           {tenant.monthlyRent ? formatCurrency(tenant.monthlyRent) : "N/A"}
                         </div>
                         <div className="text-sm text-green-600 dark:text-green-400 font-bold">per month</div>
