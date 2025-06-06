@@ -16,7 +16,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Unit, InsertUnit, Property, Tenant, Task, InsertTask } from "@shared/schema";
+import type { Unit, InsertUnit, Property, Tenant, TenantHistory, Task, InsertTask } from "@shared/schema";
 
 const unitSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
@@ -70,6 +70,10 @@ export default function Units() {
 
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
+  });
+
+  const { data: tenantHistory = [] } = useQuery<TenantHistory[]>({
+    queryKey: ["/api/tenant-history"],
   });
 
   const createForm = useForm<UnitFormData>({
