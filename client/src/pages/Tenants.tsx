@@ -31,6 +31,15 @@ const tenantSchema = z.object({
   leaseEnd: z.date().optional(),
   monthlyRent: z.string().optional(),
   deposit: z.string().optional(),
+  dateOfBirth: z.date().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+});
+
+const tenantStatusSchema = z.object({
+  status: z.enum(["active", "pending", "moved"]),
+  moveOutDate: z.string().optional(),
+  moveOutReason: z.string().optional(),
 });
 
 const rentPaymentSchema = z.object({
@@ -70,8 +79,10 @@ export default function Tenants() {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isBackgroundCheckDialogOpen, setIsBackgroundCheckDialogOpen] = useState(false);
   const [isTenantHistoryDialogOpen, setIsTenantHistoryDialogOpen] = useState(false);
+  const [isTenantStatusDialogOpen, setIsTenantStatusDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [selectedUnitForHistory, setSelectedUnitForHistory] = useState<Unit | null>(null);
+  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const { toast } = useToast();
 
   const { data: tenants, isLoading: tenantsLoading } = useQuery({
@@ -132,6 +143,15 @@ export default function Tenants() {
       assignedTo: "",
       estimatedCost: "",
       actualCost: "",
+    },
+  });
+
+  const tenantStatusForm = useForm<z.infer<typeof tenantStatusSchema>>({
+    resolver: zodResolver(tenantStatusSchema),
+    defaultValues: {
+      status: "active",
+      moveOutDate: "",
+      moveOutReason: "",
     },
   });
 
@@ -209,6 +229,20 @@ export default function Tenants() {
     },
   });
 
+  const updateTenantStatusMutation = useMutation({
+    mutationFn: ({ tenantId, data }: { tenantId: string; data: z.infer<typeof tenantStatusSchema> }) =>
+      apiRequest("PATCH", `/api/tenants/${tenantId}/status`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      setIsTenantStatusDialogOpen(false);
+      tenantStatusForm.reset();
+      toast({ title: "Success", description: "Tenant status updated successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   const onSubmit = (data: z.infer<typeof tenantSchema>) => {
     const submitData = {
       ...data,
@@ -259,6 +293,25 @@ export default function Tenants() {
   const handleViewTenantHistory = (unit: Unit) => {
     setSelectedUnitForHistory(unit);
     setIsTenantHistoryDialogOpen(true);
+  };
+
+  const onTenantStatusSubmit = (data: z.infer<typeof tenantStatusSchema>) => {
+    if (editingTenant) {
+      updateTenantStatusMutation.mutate({
+        tenantId: editingTenant.id,
+        data,
+      });
+    }
+  };
+
+  const handleEditTenantStatus = (tenant: Tenant) => {
+    setEditingTenant(tenant);
+    tenantStatusForm.reset({
+      status: tenant.status,
+      moveOutDate: "",
+      moveOutReason: "",
+    });
+    setIsTenantStatusDialogOpen(true);
   };
 
   const filteredTenants = tenants?.filter((tenant: Tenant) =>
