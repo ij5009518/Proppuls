@@ -376,6 +376,17 @@ export default function Properties() {
     },
   });
 
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      toast({ title: "Task deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to delete task", description: error.message, variant: "destructive" });
+    },
+  });
+
   const onCreateSubmit = (data: PropertyFormData) => {
     console.log("Form data being submitted:", data);
     // Ensure proper data formatting for database

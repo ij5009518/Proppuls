@@ -68,6 +68,10 @@ export default function Units() {
     queryKey: ["/api/tenants"],
   });
 
+  const { data: tasks = [] } = useQuery<Task[]>({
+    queryKey: ["/api/tasks"],
+  });
+
   const createForm = useForm<UnitFormData>({
     resolver: zodResolver(unitSchema),
     defaultValues: {
@@ -173,17 +177,28 @@ export default function Units() {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
+    mutationFn: async (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      setIsTaskDialogOpen(false);
-      taskForm.reset();
       toast({ title: "Task created successfully" });
     },
-    onError: () => {
-      toast({ title: "Failed to create task", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Failed to create task", description: error.message, variant: "destructive" });
     },
   });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      toast({ title: "Task deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to delete task", description: error.message, variant: "destructive" });
+    },
+  });
+
+
 
   const onCreateSubmit = (data: UnitFormData) => {
     console.log("Unit form data being submitted:", data);
