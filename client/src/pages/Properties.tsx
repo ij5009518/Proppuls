@@ -120,6 +120,10 @@ export default function Properties() {
     queryKey: ["/api/properties"],
   });
 
+  const { data: tasks = [] } = useQuery<Task[]>({
+    queryKey: ["/api/tasks"],
+  });
+
   // Sync server data with local state on initial load
   useEffect(() => {
     if (properties.length > 0 && localProperties.length === 0) {
@@ -830,7 +834,7 @@ export default function Properties() {
           </DialogHeader>
           {selectedProperty && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <Home className="h-4 w-4" />
                   Overview
@@ -846,6 +850,10 @@ export default function Properties() {
                 <TabsTrigger value="taxes" className="flex items-center gap-2">
                   <Calculator className="h-4 w-4" />
                   Taxes & Expenses
+                </TabsTrigger>
+                <TabsTrigger value="tasks" className="flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4" />
+                  Tasks
                 </TabsTrigger>
               </TabsList>
 
@@ -1563,6 +1571,79 @@ export default function Properties() {
                     ))}
                   </div>
                 )}
+              </TabsContent>
+
+              {/* Tasks Tab */}
+              <TabsContent value="tasks" className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Property Tasks</h3>
+                  <Button size="sm" onClick={() => setIsCreateTaskDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Task
+                  </Button>
+                </div>
+                {(() => {
+                  const propertyTasks = tasks?.filter(task => task.propertyId === selectedProperty.id) || [];
+                  return propertyTasks.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-muted-foreground mb-4">No tasks assigned to this property yet</p>
+                      <Button variant="outline" onClick={() => setIsCreateTaskDialogOpen(true)}>
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        Create First Task
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {propertyTasks.map((task) => (
+                        <Card key={task.id}>
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-semibold">{task.title}</h4>
+                                  <Badge className={
+                                    task.priority === "urgent" ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400" :
+                                    task.priority === "high" ? "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400" :
+                                    task.priority === "medium" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400" :
+                                    "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                                  }>
+                                    {task.priority}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">{task.description}</p>
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                  <span className="capitalize">{task.category}</span>
+                                  {task.dueDate && (
+                                    <span>Due: {formatDate(task.dueDate)}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge className={
+                                  task.status === "completed" ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" :
+                                  task.status === "in_progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400" :
+                                  task.status === "cancelled" ? "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400" :
+                                  "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+                                }>
+                                  {task.status.replace('_', ' ')}
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => deleteTaskMutation.mutate(task.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  );
+                })()}
               </TabsContent>
             </Tabs>
           )}
