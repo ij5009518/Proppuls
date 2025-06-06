@@ -586,36 +586,54 @@ class EmailService {
   // Tenant History methods
   async getTenantHistoryByUnit(unitId: string): Promise<TenantHistory[]> {
     try {
-      // Return sample data for demonstration
-      const sampleHistory: TenantHistory[] = [
-        {
-          id: "hist-1",
-          unitId: unitId,
-          tenantName: "John Smith",
-          moveInDate: new Date("2022-01-15"),
-          moveOutDate: new Date("2023-12-31"),
-          monthlyRent: "1500",
-          securityDeposit: "1500",
-          moveOutReason: "lease_expired",
-          notes: "Good tenant, always paid on time. Left unit in excellent condition.",
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: "hist-2", 
-          unitId: unitId,
-          tenantName: "Sarah Johnson",
-          moveInDate: new Date("2020-06-01"),
-          moveOutDate: new Date("2021-12-15"),
-          monthlyRent: "1400",
-          securityDeposit: "1400", 
-          moveOutReason: "early_termination",
-          notes: "Moved for job relocation. Gave proper 30-day notice.",
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      ];
-      return sampleHistory;
+      // Return sample data for the first unit to demonstrate functionality
+      if (unitId === "99df1252-8827-4260-8832-583d8556e02c") {
+        const sampleHistory: TenantHistory[] = [
+          {
+            id: "hist-1",
+            unitId: unitId,
+            tenantName: "John Smith",
+            moveInDate: new Date("2022-01-15"),
+            moveOutDate: new Date("2023-12-31"),
+            monthlyRent: "1500",
+            securityDeposit: "1500",
+            moveOutReason: "lease_expired",
+            notes: "Good tenant, always paid on time. Left unit in excellent condition.",
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          {
+            id: "hist-2", 
+            unitId: unitId,
+            tenantName: "Sarah Johnson",
+            moveInDate: new Date("2020-06-01"),
+            moveOutDate: new Date("2021-12-15"),
+            monthlyRent: "1400",
+            securityDeposit: "1400", 
+            moveOutReason: "early_termination",
+            notes: "Moved for job relocation. Gave proper 30-day notice.",
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          {
+            id: "hist-3", 
+            unitId: unitId,
+            tenantName: "Michael Davis",
+            moveInDate: new Date("2018-03-01"),
+            moveOutDate: new Date("2020-05-15"),
+            monthlyRent: "1300",
+            securityDeposit: "1300", 
+            moveOutReason: "eviction",
+            notes: "Multiple late payments and property damage. Required legal action.",
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        ];
+        return sampleHistory;
+      }
+      
+      // Return empty array for other units
+      return [];
     } catch (error) {
       console.error("Error in getTenantHistoryByUnit:", error);
       return [];
