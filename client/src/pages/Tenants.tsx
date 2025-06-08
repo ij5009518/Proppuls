@@ -147,6 +147,7 @@ export default function Tenants() {
 
   // Handle ID document upload
   const handleIdDocumentUpload = async (file: File) => {
+    console.log("Starting ID document upload for file:", file.name);
     setIsUploadingId(true);
     try {
       const formData = new FormData();
@@ -158,23 +159,32 @@ export default function Tenants() {
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorText = await response.text();
+        console.error("Upload failed with response:", errorText);
+        throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
-      setUploadedIdDocument({
+      console.log("Upload successful, result:", result);
+      
+      const uploadedDoc = {
         url: result.url,
-        name: result.originalName
-      });
+        name: result.originalName || file.name
+      };
+      
+      setUploadedIdDocument(uploadedDoc);
+      console.log("Set uploaded document:", uploadedDoc);
 
       toast({
         title: "Success",
         description: "ID document uploaded successfully",
       });
     } catch (error) {
+      console.error("ID document upload error:", error);
+      setUploadedIdDocument(null);
       toast({
         title: "Error",
-        description: "Failed to upload ID document",
+        description: error instanceof Error ? error.message : "Failed to upload ID document",
         variant: "destructive",
       });
     } finally {
@@ -240,12 +250,8 @@ export default function Tenants() {
 
   const createTenantMutation = useMutation({
     mutationFn: (data: any) => {
-      const tenantData = {
-        ...data,
-        idDocumentUrl: uploadedIdDocument?.url,
-        idDocumentName: uploadedIdDocument?.name,
-      };
-      return apiRequest("POST", "/api/tenants", tenantData);
+      console.log("Creating tenant with data:", data);
+      return apiRequest("POST", "/api/tenants", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
@@ -335,11 +341,18 @@ export default function Tenants() {
   });
 
   const onSubmit = (data: z.infer<typeof tenantSchema>) => {
+    console.log("Form submission started with data:", data);
+    console.log("Uploaded ID document:", uploadedIdDocument);
+    
     const submitData = {
       ...data,
       leaseStart: data.leaseStart?.toISOString(),
       leaseEnd: data.leaseEnd?.toISOString(),
+      idDocumentUrl: uploadedIdDocument?.url || null,
+      idDocumentName: uploadedIdDocument?.name || null,
     };
+    
+    console.log("Final submit data:", submitData);
     createTenantMutation.mutate(submitData);
   };
 
@@ -822,8 +835,12 @@ export default function Tenants() {
                     <Button type="button" variant="outline" onClick={handleCloseAddDialog}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={createTenantMutation.isPending}>
-                      {createTenantMutation.isPending ? "Creating..." : "Create Tenant"}
+                    <Button 
+                      type="submit" 
+                      disabled={createTenantMutation.isPending || isUploadingId}
+                    >
+                      {isUploadingId ? "Uploading ID..." : 
+                       createTenantMutation.isPending ? "Creating..." : "Create Tenant"}
                     </Button>
                   </div>
                 </form>
