@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -718,7 +719,7 @@ export default function Tenants() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Unit {getUnitNumber(tenant.unitId)}
+                          {tenant.unitId ? `Unit ${getUnitNumber(tenant.unitId)} - ${getPropertyName(units?.find((u: Unit) => u.id === tenant.unitId)?.propertyId || "")}` : "No Unit Assigned"}
                         </p>
                         {tenant.monthlyRent && (
                           <p className="text-sm font-semibold text-green-600 dark:text-green-400">
@@ -1006,7 +1007,7 @@ export default function Tenants() {
                               email: tenant.email,
                               phone: tenant.phone,
                               status: tenant.status,
-                              unitId: tenant.unitId,
+                              unitId: tenant.unitId || "",
                               leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
                               leaseEnd: tenant.leaseEnd ? new Date(tenant.leaseEnd) : undefined,
                               monthlyRent: tenant.monthlyRent || "",
@@ -1706,17 +1707,17 @@ export default function Tenants() {
                   name="unitId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Unit</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormLabel>Assigned Unit</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select unit" />
+                            <SelectValue placeholder="Select a unit" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {units?.map((unit: any) => (
+                          {units?.map((unit: Unit) => (
                             <SelectItem key={unit.id} value={unit.id}>
-                              {unit.unitNumber}
+                              Unit {unit.unitNumber} - {getPropertyName(unit.propertyId)}
                             </SelectItem>
                           ))}
                         </SelectContent>
