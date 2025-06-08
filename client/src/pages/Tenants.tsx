@@ -1202,49 +1202,57 @@ export default function Tenants() {
 
               <TabsContent value="details" className="space-y-4">
                 <div className="p-8">
-                  <table className="w-full">
-                    <tbody>
-                      <tr>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700 w-1/4">First Name</td>
-                        <td className="py-4 text-sm text-gray-900 w-1/4">{selectedTenant.firstName}</td>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700 w-1/4">Last Name</td>
-                        <td className="py-4 text-sm text-gray-900 w-1/4">{selectedTenant.lastName}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700">Email</td>
-                        <td className="py-4 text-sm text-gray-900">{selectedTenant.email}</td>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700">Phone</td>
-                        <td className="py-4 text-sm text-gray-900">{selectedTenant.phone}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700">Date of Birth</td>
-                        <td className="py-4 text-sm text-gray-900">
+                  <div className="grid grid-cols-2 gap-8">
+                    <div>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">First Name</p>
+                        <p className="text-sm text-gray-900">{selectedTenant.firstName}</p>
+                      </div>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Email</p>
+                        <p className="text-sm text-gray-900">{selectedTenant.email}</p>
+                      </div>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Date of Birth</p>
+                        <p className="text-sm text-gray-900">
                           {selectedTenant.dateOfBirth 
                             ? new Date(selectedTenant.dateOfBirth).toLocaleDateString() 
                             : "Not provided"}
-                        </td>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700">Status</td>
-                        <td className="py-4">
-                          <Badge 
-                            className={`cursor-pointer ${getStatusColor(selectedTenant.status)}`}
-                            onClick={() => handleEditTenantStatus(selectedTenant)}
-                          >
-                            {selectedTenant.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700">Emergency Contact Name</td>
-                        <td className="py-4 text-sm text-gray-900">
+                        </p>
+                      </div>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</p>
+                        <p className="text-sm text-gray-900">
                           {selectedTenant.emergencyContactName || "Not provided"}
-                        </td>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700">Emergency Contact Phone</td>
-                        <td className="py-4 text-sm text-gray-900">
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Last Name</p>
+                        <p className="text-sm text-gray-900">{selectedTenant.lastName}</p>
+                      </div>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Phone</p>
+                        <p className="text-sm text-gray-900">{selectedTenant.phone}</p>
+                      </div>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Status</p>
+                        <Badge 
+                          className={`cursor-pointer ${getStatusColor(selectedTenant.status)}`}
+                          onClick={() => handleEditTenantStatus(selectedTenant)}
+                        >
+                          {selectedTenant.status}
+                        </Badge>
+                      </div>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Emergency Contact Phone</p>
+                        <p className="text-sm text-gray-900">
                           {selectedTenant.emergencyContactPhone || "Not provided"}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
 
