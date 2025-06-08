@@ -58,6 +58,10 @@ export const tenants = pgTable('tenants', {
   dateOfBirth: timestamp('date_of_birth'),
   emergencyContactName: text('emergency_contact_name'),
   emergencyContactPhone: text('emergency_contact_phone'),
+  idDocumentUrl: text('id_document_url'),
+  idDocumentName: text('id_document_name'),
+  tenantType: text('tenant_type').notNull().default('primary'), // primary, spouse, child, other
+  relationToPrimary: text('relation_to_primary'), // spouse, child, parent, other
   password: text('password'),
   isLoginEnabled: boolean('is_login_enabled').default(false),
   lastLogin: timestamp('last_login'),
