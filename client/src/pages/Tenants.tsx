@@ -1203,7 +1203,6 @@ export default function Tenants() {
               <TabsContent value="details" className="space-y-4">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-4 ml-[15px] mr-[15px] text-center">
-                    <h3 className="text-lg font-semibold">Contact Information</h3>
                     <div className="space-y-2">
                       <div>
                         <span className="text-sm font-medium text-muted-foreground">Name:</span>
@@ -1214,7 +1213,7 @@ export default function Tenants() {
                         <p className="text-sm">{selectedTenant.email}</p>
                       </div>
                       <div>
-                        <span className="text-sm font-medium text-muted-foreground">Phone:</span>
+                        <span className="text-sm text-muted-foreground font-bold">Phone:</span>
                         <p className="text-sm">{selectedTenant.phone}</p>
                       </div>
                       <div>
@@ -1236,23 +1235,7 @@ export default function Tenants() {
                       </div>
                     </div>
                   </div>
-                  <div className="space-y-4 ml-[15px] mr-[15px] text-center">
-                    <h3 className="text-lg font-semibold">Emergency Contact</h3>
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Contact Name:</span>
-                        <p className="text-sm">
-                          {selectedTenant.emergencyContactName || "Not provided"}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Contact Phone:</span>
-                        <p className="text-sm">
-                          {selectedTenant.emergencyContactPhone || "Not provided"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  
                   <div className="space-y-4 text-center ml-[15px] mr-[15px]">
                     <h3 className="text-lg font-semibold">Unit Assignment</h3>
                     <div className="space-y-2">
