@@ -118,6 +118,9 @@ export default function Tenants() {
       lastName: "",
       email: "",
       phone: "",
+      dateOfBirth: undefined,
+      emergencyContactName: "",
+      emergencyContactPhone: "",
       status: "pending",
       unitId: "",
       leaseStart: undefined,
@@ -394,6 +397,9 @@ export default function Tenants() {
                   lastName: "",
                   email: "",
                   phone: "",
+                  dateOfBirth: undefined,
+                  emergencyContactName: "",
+                  emergencyContactPhone: "",
                   status: "pending",
                   unitId: "",
                   leaseStart: undefined,
@@ -464,6 +470,53 @@ export default function Tenants() {
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
                             <Input placeholder="(555) 123-4567" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="dateOfBirth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date of Birth</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              {...field}
+                              value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Jane Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactPhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Phone</FormLabel>
+                          <FormControl>
+                            <Input placeholder="(555) 987-6543" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -747,6 +800,17 @@ export default function Tenants() {
                     <div className="space-y-1">
                       <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.email}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.phone}</p>
+                      {tenant.dateOfBirth && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          DOB: {new Date(tenant.dateOfBirth).toLocaleDateString()}
+                        </p>
+                      )}
+                      {tenant.emergencyContactName && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Emergency: {tenant.emergencyContactName}
+                          {tenant.emergencyContactPhone && ` - ${tenant.emergencyContactPhone}`}
+                        </p>
+                      )}
                     </div>
 
                     {/* Lease Information */}
@@ -1020,6 +1084,9 @@ export default function Tenants() {
                               lastName: tenant.lastName,
                               email: tenant.email,
                               phone: tenant.phone,
+                              dateOfBirth: tenant.dateOfBirth ? new Date(tenant.dateOfBirth) : undefined,
+                              emergencyContactName: tenant.emergencyContactName || "",
+                              emergencyContactPhone: tenant.emergencyContactPhone || "",
                               status: tenant.status,
                               unitId: tenant.unitId || "",
                               leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
@@ -1246,6 +1313,9 @@ export default function Tenants() {
                         lastName: selectedTenant.lastName,
                         email: selectedTenant.email,
                         phone: selectedTenant.phone,
+                        dateOfBirth: selectedTenant.dateOfBirth ? new Date(selectedTenant.dateOfBirth) : undefined,
+                        emergencyContactName: selectedTenant.emergencyContactName || "",
+                        emergencyContactPhone: selectedTenant.emergencyContactPhone || "",
                         status: selectedTenant.status,
                         unitId: selectedTenant.unitId,
                         leaseStart: selectedTenant.leaseStart ? new Date(selectedTenant.leaseStart) : undefined,
