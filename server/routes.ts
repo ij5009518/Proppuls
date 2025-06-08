@@ -28,6 +28,41 @@ export function registerRoutes(app: Express) {
     res.json({ status: "ok", message: "Server is running" });
   });
 
+  // File upload route for ID documents
+  app.post("/api/upload/id-document", upload.single("idDocument"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const file = req.file;
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+      
+      if (!allowedTypes.includes(file.mimetype)) {
+        return res.status(400).json({ message: "Only JPEG, PNG, and PDF files are allowed" });
+      }
+
+      // Generate unique filename
+      const fileExtension = file.originalname.split('.').pop();
+      const fileName = `id-document-${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
+      
+      // Convert file to base64 for storage (in a real app, you'd store this in a file system or cloud storage)
+      const base64Data = file.buffer.toString('base64');
+      const dataUrl = `data:${file.mimetype};base64,${base64Data}`;
+
+      res.json({
+        success: true,
+        fileName: fileName,
+        originalName: file.originalname,
+        url: dataUrl,
+        size: file.size
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
   // Tenant Authentication routes
   app.post("/api/tenant/login", async (req, res) => {
     try {

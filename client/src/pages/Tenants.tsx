@@ -35,6 +35,10 @@ const tenantSchema = z.object({
   dateOfBirth: z.date().optional(),
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
+  idDocumentUrl: z.string().optional(),
+  idDocumentName: z.string().optional(),
+  tenantType: z.enum(["primary", "spouse", "child", "other"]).default("primary"),
+  relationToPrimary: z.string().optional(),
 });
 
 const tenantStatusSchema = z.object({
@@ -84,6 +88,8 @@ export default function Tenants() {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [selectedUnitForHistory, setSelectedUnitForHistory] = useState<Unit | null>(null);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  const [uploadedIdDocument, setUploadedIdDocument] = useState<{url: string, name: string} | null>(null);
+  const [isUploadingId, setIsUploadingId] = useState(false);
   const { toast } = useToast();
 
   const { data: tenants, isLoading: tenantsLoading } = useQuery({
