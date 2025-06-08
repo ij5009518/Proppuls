@@ -1201,62 +1201,50 @@ export default function Tenants() {
               </TabsList>
 
               <TabsContent value="details" className="space-y-4">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-4 ml-[15px] mr-[15px] text-center">
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Name:</span>
-                        <p className="text-sm">{selectedTenant.firstName} {selectedTenant.lastName}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Email:</span>
-                        <p className="text-sm">{selectedTenant.email}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-muted-foreground font-medium">Phone:</span>
-                        <p className="text-sm">{selectedTenant.phone}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Date of Birth:</span>
-                        <p className="text-sm">
+                <div className="border border-red-200 rounded-lg p-4">
+                  <table className="w-full">
+                    <tbody>
+                      <tr className="border-b border-gray-200">
+                        <td className="py-2 pr-4 text-sm font-medium text-gray-700 w-1/4">First Name</td>
+                        <td className="py-2 text-sm text-gray-900 w-1/4">{selectedTenant.firstName}</td>
+                        <td className="py-2 pr-4 text-sm font-medium text-gray-700 w-1/4">Last Name</td>
+                        <td className="py-2 text-sm text-gray-900 w-1/4">{selectedTenant.lastName}</td>
+                      </tr>
+                      <tr className="border-b border-gray-200">
+                        <td className="py-2 pr-4 text-sm font-medium text-gray-700">Email</td>
+                        <td className="py-2 text-sm text-gray-900">{selectedTenant.email}</td>
+                        <td className="py-2 pr-4 text-sm font-medium text-gray-700">Phone</td>
+                        <td className="py-2 text-sm text-gray-900">{selectedTenant.phone}</td>
+                      </tr>
+                      <tr className="border-b border-gray-200">
+                        <td className="py-2 pr-4 text-sm font-medium text-gray-700">Date of Birth</td>
+                        <td className="py-2 text-sm text-gray-900">
                           {selectedTenant.dateOfBirth 
                             ? new Date(selectedTenant.dateOfBirth).toLocaleDateString() 
                             : "Not provided"}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Status:</span>
-                        <Badge 
-                          className={`cursor-pointer ${getStatusColor(selectedTenant.status)}`}
-                          onClick={() => handleEditTenantStatus(selectedTenant)}
-                        >
-                          {selectedTenant.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4 text-center ml-[15px] mr-[15px]">
-                    <h3 className="text-lg font-semibold">Unit Assignment</h3>
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Unit:</span>
-                        <p className="text-sm">{getUnitNumber(selectedTenant.unitId)}</p>
-                      </div>
-                      {selectedTenant.monthlyRent && (
-                        <div>
-                          <span className="text-sm font-medium text-muted-foreground">Monthly Rent:</span>
-                          <p className="text-sm">{formatCurrency(selectedTenant.monthlyRent)}</p>
-                        </div>
-                      )}
-                      {selectedTenant.deposit && (
-                        <div>
-                          <span className="text-sm font-medium text-muted-foreground">Security Deposit:</span>
-                          <p className="text-sm">{formatCurrency(selectedTenant.deposit)}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                        </td>
+                        <td className="py-2 pr-4 text-sm font-medium text-gray-700">Status</td>
+                        <td className="py-2">
+                          <Badge 
+                            className={`cursor-pointer ${getStatusColor(selectedTenant.status)}`}
+                            onClick={() => handleEditTenantStatus(selectedTenant)}
+                          >
+                            {selectedTenant.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-sm font-medium text-gray-700">Emergency Contact Name</td>
+                        <td className="py-2 text-sm text-gray-900">
+                          {selectedTenant.emergencyContactName || "Not provided"}
+                        </td>
+                        <td className="py-2 pr-4 text-sm font-medium text-gray-700">Emergency Contact Phone</td>
+                        <td className="py-2 text-sm text-gray-900">
+                          {selectedTenant.emergencyContactPhone || "Not provided"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </TabsContent>
 
