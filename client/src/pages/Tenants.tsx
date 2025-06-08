@@ -466,13 +466,11 @@ export default function Tenants() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Tenants</h1>
         <div className="flex flex-col items-end space-y-3">
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Tenant
+          </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={handleAddDialogChange}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Tenant
-              </Button>
-            </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Tenant</DialogTitle>
