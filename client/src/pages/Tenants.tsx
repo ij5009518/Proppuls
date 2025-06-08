@@ -78,6 +78,30 @@ export default function Tenants() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  const handleAddDialogChange = (open: boolean) => {
+    setIsAddDialogOpen(open);
+    if (open) {
+      form.reset({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        dateOfBirth: undefined,
+        emergencyContactName: "",
+        emergencyContactPhone: "",
+        status: "pending",
+        unitId: "",
+        leaseStart: undefined,
+        leaseEnd: undefined,
+        monthlyRent: "",
+        deposit: "",
+        tenantType: "primary",
+        relationToPrimary: "",
+      });
+      setUploadedIdDocument(null);
+    }
+  };
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -442,28 +466,9 @@ export default function Tenants() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Tenants</h1>
         <div className="flex flex-col items-end space-y-3">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={handleAddDialogChange}>
             <DialogTrigger asChild>
-              <Button onClick={() => {
-                form.reset({
-                  firstName: "",
-                  lastName: "",
-                  email: "",
-                  phone: "",
-                  dateOfBirth: undefined,
-                  emergencyContactName: "",
-                  emergencyContactPhone: "",
-                  status: "pending",
-                  unitId: "",
-                  leaseStart: undefined,
-                  leaseEnd: undefined,
-                  monthlyRent: "",
-                  deposit: "",
-                  tenantType: "primary",
-                  relationToPrimary: "",
-                });
-                setIsAddDialogOpen(true);
-              }}>
+              <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Tenant
               </Button>
