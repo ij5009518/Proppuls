@@ -393,28 +393,39 @@ class Storage {
       console.log("Generating ongoing rent payments for active tenant:", tenant.id);
       console.log("Monthly amount:", monthlyAmount);
 
-      // Clear existing rent payments for this tenant
-      await db.delete(rentPayments).where(eq(rentPayments.tenantId, tenant.id));
+      // Get existing payments to avoid duplicates
+      const existingPayments = await db.select()
+        .from(rentPayments)
+        .where(eq(rentPayments.tenantId, tenant.id));
 
       const payments: any[] = [];
 
       // Generate payments for current month and next 11 months (12 total)
       for (let i = 0; i < 12; i++) {
         const dueDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
-
-        payments.push({
-          id: crypto.randomUUID(),
-          tenantId: tenant.id,
-          unitId: tenant.unitId,
-          amount: monthlyAmount.toString(),
-          dueDate: dueDate,
-          status: 'pending',
-          createdAt: new Date(),
-          updatedAt: new Date()
+        
+        // Check if payment already exists for this month
+        const paymentExists = existingPayments.some((payment: any) => {
+          const paymentDue = new Date(payment.dueDate);
+          return paymentDue.getMonth() === dueDate.getMonth() && 
+                 paymentDue.getFullYear() === dueDate.getFullYear();
         });
+
+        if (!paymentExists) {
+          payments.push({
+            id: crypto.randomUUID(),
+            tenantId: tenant.id,
+            unitId: tenant.unitId,
+            amount: monthlyAmount.toString(),
+            dueDate: dueDate,
+            status: 'pending',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        }
       }
 
-      console.log("Creating", payments.length, "ongoing rent payment records");
+      console.log("Creating", payments.length, "new ongoing rent payment records");
 
       if (payments.length > 0) {
         await db.insert(rentPayments).values(payments);
