@@ -806,17 +806,6 @@ export default function Tenants() {
                     <div className="space-y-1">
                       <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.email}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.phone}</p>
-                      {tenant.dateOfBirth && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          DOB: {new Date(tenant.dateOfBirth).toLocaleDateString()}
-                        </p>
-                      )}
-                      {tenant.emergencyContactName && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Emergency: {tenant.emergencyContactName}
-                          {tenant.emergencyContactPhone && ` - ${tenant.emergencyContactPhone}`}
-                        </p>
-                      )}
                     </div>
 
                     {/* Lease Information */}
