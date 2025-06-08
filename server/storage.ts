@@ -881,8 +881,7 @@ class EmailService {
           unitId: unitId,
           tenantName: "John Smith",
           moveInDate: new Date("2022-01-15"),
-          moveOutDate: new```text
- Date("2023-12-31"),
+          moveOutDate: new Date("2023-12-31"),
           monthlyRent: "1500",
           securityDeposit: "1500",
           moveOutReason: "lease_expired",
