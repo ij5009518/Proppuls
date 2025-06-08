@@ -20,7 +20,7 @@ export function registerRoutes(app: Express) {
   // Configure multer for file uploads
   const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+    limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit to prevent crashes
   });
 
   // Add a basic API route for testing
@@ -42,19 +42,22 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ message: "Only JPEG, PNG, and PDF files are allowed" });
       }
 
+      // Check file size
+      if (file.size > 2 * 1024 * 1024) {
+        return res.status(400).json({ message: "File size must be less than 2MB" });
+      }
+
       // Generate unique filename
       const fileExtension = file.originalname.split('.').pop();
       const fileName = `id-document-${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
       
-      // Convert file to base64 for storage (in a real app, you'd store this in a file system or cloud storage)
-      const base64Data = file.buffer.toString('base64');
-      const dataUrl = `data:${file.mimetype};base64,${base64Data}`;
-
+      // Store just the filename and indicate upload success
+      // In a production app, you would save the file to disk or cloud storage
       res.json({
         success: true,
         fileName: fileName,
         originalName: file.originalname,
-        url: dataUrl,
+        url: `uploaded://${fileName}`, // Use a simple reference instead of base64
         size: file.size
       });
     } catch (error) {

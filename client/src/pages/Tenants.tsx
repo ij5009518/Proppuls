@@ -148,6 +148,28 @@ export default function Tenants() {
   // Handle ID document upload
   const handleIdDocumentUpload = async (file: File) => {
     console.log("Starting ID document upload for file:", file.name);
+    
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Only PNG, JPEG, and PDF files are allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "File size must be less than 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsUploadingId(true);
     try {
       const formData = new FormData();
@@ -741,7 +763,7 @@ export default function Tenants() {
                                       {isUploadingId ? "Uploading..." : "Upload ID document"}
                                     </span>
                                   </div>
-                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 2MB</p>
                                 </div>
                                 <input
                                   type="file"
