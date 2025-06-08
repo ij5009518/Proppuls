@@ -1567,6 +1567,81 @@ export default function Tenants() {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* ID Document Section */}
+                  {selectedTenant.idDocumentUrl && (
+                    <div className="pt-6 border-t">
+                      <h3 className="text-lg font-semibold mb-4">Identity Document</h3>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-2">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                            <span className="text-sm font-medium">
+                              {selectedTenant.idDocumentName || "ID Document"}
+                            </span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // Open ID document in new tab
+                              if (selectedTenant.idDocumentUrl?.startsWith('data:')) {
+                                // For base64 data URLs, create a blob and open it
+                                const newWindow = window.open();
+                                if (newWindow) {
+                                  newWindow.document.write(`
+                                    <html>
+                                      <head><title>ID Document - ${selectedTenant.firstName} ${selectedTenant.lastName}</title></head>
+                                      <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f5f5f5;">
+                                        <img src="${selectedTenant.idDocumentUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="ID Document" />
+                                      </body>
+                                    </html>
+                                  `);
+                                }
+                              } else if (selectedTenant.idDocumentUrl?.startsWith('uploaded://')) {
+                                // For uploaded files, we'll need to handle this differently
+                                // For now, show a message that the file is stored securely
+                                toast({
+                                  title: "ID Document",
+                                  description: "This document is securely stored on the server.",
+                                });
+                              } else {
+                                // For regular URLs
+                                window.open(selectedTenant.idDocumentUrl, '_blank');
+                              }
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Document
+                          </Button>
+                        </div>
+                        
+                        {/* Preview for image documents */}
+                        {selectedTenant.idDocumentUrl?.startsWith('data:image/') && (
+                          <div className="border rounded-lg overflow-hidden bg-white">
+                            <img
+                              src={selectedTenant.idDocumentUrl}
+                              alt="ID Document Preview"
+                              className="w-full h-48 object-contain"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Info for uploaded documents */}
+                        {selectedTenant.idDocumentUrl?.startsWith('uploaded://') && (
+                          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-600">
+                              Document stored securely on server
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {selectedTenant.idDocumentName}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
