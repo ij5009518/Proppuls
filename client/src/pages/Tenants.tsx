@@ -869,194 +869,109 @@ export default function Tenants() {
           })}
         </div>
       ) : (
-        <Card className="border-4 border-blue-300 shadow-2xl rounded-2xl overflow-hidden bg-white dark:bg-gray-900" 
-              style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-          <div className="bg-gradient-to-r from-blue-300 to-indigo-300 dark:from-blue-700 dark:to-indigo-700 px-10 py-8 border-b-8 border-blue-400 dark:border-blue-600"
-               style={{ backgroundColor: '#93c5fd', borderBottom: '8px solid #3b82f6' }}>
-            <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight" 
-                style={{ fontSize: '2.5rem', fontWeight: '900', color: '#1f2937' }}>
-              📋 TENANT DIRECTORY
-            </h2>
-            <p className="text-xl text-blue-900 dark:text-blue-100 mt-3 font-black"
-               style={{ fontSize: '1.25rem', fontWeight: '900', color: '#1e3a8a' }}>
-              {filteredTenants.length} ACTIVE TENANTS
-            </p>
-          </div>
-          <Table className="tenant-table-enhanced">
-            <TableHeader>
-              <TableRow style={{ backgroundColor: '#dbeafe', borderBottom: '4px solid #3b82f6' }}>
-                <TableHead className="w-[180px] py-8 px-10" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  👤 NAME
-                </TableHead>
-                <TableHead className="w-[200px] py-8 px-10" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  📧 CONTACT
-                </TableHead>
-                <TableHead className="w-[100px] py-8 px-10 text-center" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  🏠 UNIT
-                </TableHead>
-                <TableHead className="w-[120px] py-8 px-10 text-right" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  💰 RENT
-                </TableHead>
-                <TableHead className="w-[150px] py-8 px-10" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  📅 LEASE
-                </TableHead>
-                <TableHead className="w-[100px] py-8 px-10" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  ✅ STATUS
-                </TableHead>
-                <TableHead className="w-[120px] py-8 px-10 text-right" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  💳 BALANCE
-                </TableHead>
-                <TableHead className="w-[150px] py-8 px-10 text-center" 
-                          style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  ⚙️ ACTIONS
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTenants.map((tenant, index) => {
-                const currentBalance = getCurrentMonthBalance(tenant.id);
-                const overduePayments = getOverduePayments(tenant.id);
-                
-                return (
-                  <TableRow 
-                    key={tenant.id} 
-                    className={`tenant-row-enhanced transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 hover:shadow-xl group ${
-                      index % 2 === 0 ? 'bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800' : 'bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-700'
-                    }`}
-                  >
-                    <TableCell className="tenant-row-enhanced">
-                      <div className="flex items-center space-x-6">
-                        <Avatar className="tenant-avatar-large border-4 border-white dark:border-gray-800 shadow-2xl ring-4 ring-blue-200 dark:ring-blue-800">
-                          <AvatarFallback className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white font-black">
+        <div className="space-y-4">
+          {filteredTenants.map((tenant) => {
+            const overduePayments = getOverduePayments(tenant.id);
+            const currentBalance = getCurrentMonthBalance(tenant.id);
+            
+            return (
+              <Card 
+                key={tenant.id} 
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => {
+                  setSelectedTenant(tenant);
+                  setIsViewDialogOpen(true);
+                }}
+              >
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white font-semibold">
                             {tenant.firstName[0]}{tenant.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors tracking-tight"
-                               style={{ fontSize: '1.75rem', fontWeight: '900', color: '#1f2937', lineHeight: '1.2' }}>
-                            {tenant.firstName} {tenant.lastName}
+                          <div className="flex items-center space-x-3">
+                            <h3 className="font-semibold text-lg">{tenant.firstName} {tenant.lastName}</h3>
+                            <Badge className={getStatusColor(tenant.status)}>
+                              {tenant.status}
+                            </Badge>
                           </div>
-                          <div className="text-lg text-gray-600 dark:text-gray-400 mt-2 font-bold font-mono bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg">
-                            ID: {tenant.id.slice(0, 8)}...
+                          <div className="flex items-center space-x-6 mt-1">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {tenant.unitId ? `Unit ${getUnitNumber(tenant.unitId)}` : "No Unit Assigned"}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.email}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.phone}</p>
                           </div>
+                          {tenant.unitId && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {getPropertyName(units?.find((u: Unit) => u.id === tenant.unitId)?.propertyId || "")}
+                            </p>
+                          )}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="tenant-row-enhanced">
-                      <div className="space-y-3">
-                        <div className="flex items-center text-gray-700 dark:text-gray-300">
-                          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
-                            <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <span className="truncate max-w-[160px]" 
-                                style={{ fontSize: '1.125rem', fontWeight: '700', color: '#374151' }}>
-                            {tenant.email}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-gray-600 dark:text-gray-400">
-                          <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
-                            <Phone className="h-6 w-6 text-green-600 dark:text-green-400" />
-                          </div>
-                          <span style={{ fontSize: '1.125rem', fontWeight: '700', color: '#374151' }}>
-                            {tenant.phone}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-6 px-6 text-center">
-                      <div className="flex items-center justify-center space-x-2">
-                        <div className="bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 inline-flex items-center justify-center"
-                             style={{ width: '3.5rem', height: '3.5rem', fontSize: '1.25rem', fontWeight: '900' }}>
-                          {getUnitNumber(tenant.unitId)}
-                        </div>
-                        {tenant.unitId && units && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const unit = units.find((u: Unit) => u.id === tenant.unitId);
-                              if (unit) handleViewTenantHistory(unit);
-                            }}
-                            title="View Tenant History"
-                          >
-                            <History className="h-4 w-4 text-gray-500 hover:text-blue-600" />
-                          </Button>
+                    </div>
+                    <div className="flex items-center space-x-6">
+                      <div className="text-right">
+                        {tenant.monthlyRent && (
+                          <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                            {formatCurrency(tenant.monthlyRent)}/mo
+                          </p>
+                        )}
+                        {tenant.leaseStart && tenant.leaseEnd && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatDate(tenant.leaseStart)} - {formatDate(tenant.leaseEnd)}
+                          </p>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell className="py-6 px-6 text-right">
-                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg px-4 py-3 inline-block border border-green-200 dark:border-green-800">
-                        <div className="text-green-800 dark:text-green-300"
-                             style={{ fontSize: '1.5rem', fontWeight: '900', color: '#166534' }}>
-                          {tenant.monthlyRent ? formatCurrency(tenant.monthlyRent) : "N/A"}
-                        </div>
-                        <div className="text-sm text-green-600 dark:text-green-400 font-bold">per month</div>
+                      <div className="text-right">
+                        {(() => {
+                          const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === tenant.id) || [];
+                          const totalOutstanding = tenantPayments
+                            .filter((payment: any) => !payment.paidDate)
+                            .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+                          const totalOverdue = tenantPayments
+                            .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
+                            .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+
+                          if (totalOverdue > 0) {
+                            return (
+                              <div>
+                                <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+                                  {formatCurrency(totalOverdue.toString())} overdue
+                                </p>
+                                {totalOutstanding > totalOverdue && (
+                                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                                    +{formatCurrency((totalOutstanding - totalOverdue).toString())} pending
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          } else if (totalOutstanding > 0) {
+                            return (
+                              <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">
+                                {formatCurrency(totalOutstanding.toString())} pending
+                              </p>
+                            );
+                          } else {
+                            return (
+                              <p className="text-sm text-green-600 dark:text-green-400">
+                                Up to date
+                              </p>
+                            );
+                          }
+                        })()}
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="text-sm">
-                        {tenant.leaseStart && tenant.leaseEnd ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
-                              <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
-                              {formatDate(tenant.leaseStart)}
-                            </div>
-                            <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
-                              <span className="w-2 h-2 bg-red-400 rounded-full mr-2"></span>
-                              {formatDate(tenant.leaseEnd)}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground italic">No lease dates</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <Badge className={`font-medium shadow-sm border-0 ${getStatusColor(tenant.status)}`}>
-                        <span className={`w-2 h-2 rounded-full mr-2 ${
-                          tenant.status === "active" ? "bg-emerald-500" : 
-                          tenant.status === "inactive" ? "bg-red-500" : "bg-amber-500"
-                        }`}></span>
-                        {tenant.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="flex items-center justify-end space-x-2">
-                        {currentBalance > 0 && (
-                          <div className="text-right">
-                            <div className="font-bold text-amber-600 dark:text-amber-400">
-                              {formatCurrency(currentBalance.toString())}
-                            </div>
-                            <div className="text-xs text-gray-500">balance due</div>
-                          </div>
-                        )}
-                        {overduePayments.length > 0 && (
-                          <div className="flex items-center space-x-1 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-md">
-                            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
-                            <span className="text-xs font-medium text-red-600 dark:text-red-400">Overdue</span>
-                          </div>
-                        )}
-                        {currentBalance === 0 && overduePayments.length === 0 && (
-                          <div className="text-xs text-gray-500 italic">Up to date</div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="flex items-center space-x-2 opacity-70 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center space-x-2">
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-green-50 dark:hover:bg-green-900/20"
-                          onClick={() => {
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedTenant(tenant);
                             paymentForm.setValue("tenantId", tenant.id);
                             paymentForm.setValue("unitId", tenant.unitId || "");
@@ -1065,25 +980,14 @@ export default function Tenants() {
                           }}
                           title="Record Payment"
                         >
-                          <DollarSign className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                          <DollarSign className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                          onClick={() => {
-                            setSelectedTenant(tenant);
-                            setIsViewDialogOpen(true);
-                          }}
-                          title="View Details"
-                        >
-                          <Eye className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                          onClick={() => {
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedTenant(tenant);
                             form.reset({
                               firstName: tenant.firstName,
@@ -1104,25 +1008,28 @@ export default function Tenants() {
                           }}
                           title="Edit Tenant"
                         >
-                          <Edit className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                          <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          onClick={() => deleteTenantMutation.mutate(tenant.id)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteTenantMutation.mutate(tenant.id);
+                          }}
                           title="Delete Tenant"
                         >
-                          <Trash2 className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </Card>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       )}
       {/* Payment Dialog */}
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
