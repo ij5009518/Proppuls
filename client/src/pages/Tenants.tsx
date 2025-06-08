@@ -170,6 +170,8 @@ export default function Tenants() {
       leaseEnd: undefined,
       monthlyRent: "",
       deposit: "",
+      tenantType: "primary",
+      relationToPrimary: "",
     },
   });
 
@@ -457,8 +459,9 @@ export default function Tenants() {
                   leaseEnd: undefined,
                   monthlyRent: "",
                   deposit: "",
+                  tenantType: "primary",
+                  relationToPrimary: "",
                 });
-                setIsAddDialogOpen(true);
               }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Tenant
@@ -947,41 +950,6 @@ export default function Tenants() {
                             </span>
                           </div>
                         )}
-                      </div>
-                    )}
-
-                    {/* Add Family Member Button */}
-                    {tenant.unitId && tenant.tenantType === 'primary' && (
-                      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            form.reset({
-                              firstName: "",
-                              lastName: "",
-                              email: "",
-                              phone: "",
-                              dateOfBirth: undefined,
-                              emergencyContactName: "",
-                              emergencyContactPhone: "",
-                              status: "active",
-                              unitId: tenant.unitId,
-                              leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
-                              leaseEnd: tenant.leaseEnd ? new Date(tenant.leaseEnd) : undefined,
-                              monthlyRent: tenant.monthlyRent || "",
-                              deposit: "",
-                              tenantType: "spouse",
-                              relationToPrimary: "",
-                            });
-                            setIsAddDialogOpen(true);
-                          }}
-                          className="w-full text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Family Member
-                        </Button>
                       </div>
                     )}
                   </div>
