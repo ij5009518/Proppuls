@@ -1583,31 +1583,68 @@ export default function Tenants() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              // Open ID document in new tab
-                              if (selectedTenant.idDocumentUrl?.startsWith('data:')) {
-                                // For base64 data URLs, create a blob and open it
-                                const newWindow = window.open();
-                                if (newWindow) {
-                                  newWindow.document.write(`
-                                    <html>
-                                      <head><title>ID Document - ${selectedTenant.firstName} ${selectedTenant.lastName}</title></head>
-                                      <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f5f5f5;">
-                                        <img src="${selectedTenant.idDocumentUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="ID Document" />
-                                      </body>
-                                    </html>
-                                  `);
+                            onClick={async () => {
+                              try {
+                                if (selectedTenant.idDocumentUrl?.startsWith('data:')) {
+                                  // For base64 data URLs, create a blob and open it
+                                  const newWindow = window.open();
+                                  if (newWindow) {
+                                    newWindow.document.write(`
+                                      <html>
+                                        <head><title>ID Document - ${selectedTenant.firstName} ${selectedTenant.lastName}</title></head>
+                                        <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f5f5f5;">
+                                          <img src="${selectedTenant.idDocumentUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="ID Document" />
+                                        </body>
+                                      </html>
+                                    `);
+                                  }
+                                } else if (selectedTenant.idDocumentUrl?.startsWith('uploaded://')) {
+                                  // For uploaded files, fetch from server
+                                  const fileName = selectedTenant.idDocumentUrl.replace('uploaded://', '');
+                                  try {
+                                    const response = await fetch(`/api/files/id-documents/${fileName}`);
+                                    if (response.ok) {
+                                      const blob = await response.blob();
+                                      const url = URL.createObjectURL(blob);
+                                      const newWindow = window.open();
+                                      if (newWindow) {
+                                        newWindow.document.write(`
+                                          <html>
+                                            <head><title>ID Document - ${selectedTenant.firstName} ${selectedTenant.lastName}</title></head>
+                                            <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f5f5f5;">
+                                              <img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="ID Document" />
+                                            </body>
+                                          </html>
+                                        `);
+                                      }
+                                    } else {
+                                      throw new Error('Failed to fetch document');
+                                    }
+                                  } catch (error) {
+                                    console.error('Error fetching document:', error);
+                                    toast({
+                                      title: "Error",
+                                      description: "Unable to load the document. Please try again.",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                } else if (selectedTenant.idDocumentUrl) {
+                                  // For regular URLs
+                                  window.open(selectedTenant.idDocumentUrl, '_blank');
+                                } else {
+                                  toast({
+                                    title: "No Document",
+                                    description: "No ID document available for this tenant.",
+                                    variant: "destructive",
+                                  });
                                 }
-                              } else if (selectedTenant.idDocumentUrl?.startsWith('uploaded://')) {
-                                // For uploaded files, we'll need to handle this differently
-                                // For now, show a message that the file is stored securely
+                              } catch (error) {
+                                console.error('Error opening document:', error);
                                 toast({
-                                  title: "ID Document",
-                                  description: "This document is securely stored on the server.",
+                                  title: "Error",
+                                  description: "An error occurred while trying to open the document.",
+                                  variant: "destructive",
                                 });
-                              } else {
-                                // For regular URLs
-                                window.open(selectedTenant.idDocumentUrl, '_blank');
                               }
                             }}
                           >

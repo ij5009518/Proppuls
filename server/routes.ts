@@ -7,6 +7,8 @@ import multer from "multer";
 import { parse } from "csv-parse/sync";
 import { emailService } from "./email";
 import Stripe from "stripe";
+import path from "path";
+import fs from "fs";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -28,7 +30,25 @@ export function registerRoutes(app: Express) {
     res.json({ status: "ok", message: "Server is running" });
   });
 
-  // File upload route for ID documents
+  // Serve ID documents
+  app.get("/api/files/id-documents/:fileName", (req, res) => {
+    const fileName = req.params.fileName;
+    const filePath = path.join(__dirname, "../uploads/id-documents", fileName);
+
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "File not found" });
+    }
+
+    // Set appropriate headers
+    res.setHeader('Content-Type', 'image/png'); // You might want to detect actual mime type
+    res.setHeader('Content-Disposition', 'inline');
+
+    // Send the file
+    res.sendFile(filePath);
+  });
+
+  // ID document upload endpoint
   app.post("/api/upload/id-document", upload.single("idDocument"), async (req, res) => {
     try {
       if (!req.file) {
@@ -37,7 +57,7 @@ export function registerRoutes(app: Express) {
 
       const file = req.file;
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-      
+
       if (!allowedTypes.includes(file.mimetype)) {
         return res.status(400).json({ message: "Only JPEG, PNG, and PDF files are allowed" });
       }
@@ -50,7 +70,7 @@ export function registerRoutes(app: Express) {
       // Generate unique filename
       const fileExtension = file.originalname.split('.').pop();
       const fileName = `id-document-${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
-      
+
       // Store just the filename and indicate upload success
       // In a production app, you would save the file to disk or cloud storage
       res.json({
@@ -70,7 +90,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/tenant/login", async (req, res) => {
     try {
       const { email, password } = req.body;
-      
+
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
@@ -81,7 +101,7 @@ export function registerRoutes(app: Express) {
       }
 
       const token = await storage.createTenantSession(tenant.id);
-      
+
       res.json({
         success: true,
         tenant: {
@@ -211,7 +231,7 @@ export function registerRoutes(app: Express) {
       });
     } catch (error: any) {
       console.error("Error creating payment intent:", error);
-      
+
       // Provide specific guidance for Stripe configuration issues
       if (error.code === 'parameter_invalid_empty' || error.message?.includes('payment method types')) {
         res.status(400).json({ 
@@ -231,7 +251,7 @@ export function registerRoutes(app: Express) {
 
       // Verify the payment intent was successful
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
+
       if (paymentIntent.status === "succeeded") {
         // Create a rent payment record
         const rentPayment = await storage.createRentPayment({
@@ -456,7 +476,7 @@ export function registerRoutes(app: Express) {
       console.log("=== API MIDDLEWARE HIT FOR", req.url, "===");
       console.log("Method:", req.method);
       console.log("Body:", JSON.stringify(req.body, null, 2));
-      
+
       // Convert date strings to Date objects if they exist
       const data = { ...req.body };
       if (data.leaseStart && typeof data.leaseStart === 'string') {
@@ -465,7 +485,7 @@ export function registerRoutes(app: Express) {
       if (data.leaseEnd && typeof data.leaseEnd === 'string') {
         data.leaseEnd = new Date(data.leaseEnd);
       }
-      
+
       const tenant = await storage.updateTenant(id, data);
       res.json(tenant);
     } catch (error) {
@@ -480,7 +500,7 @@ export function registerRoutes(app: Express) {
       console.log("=== API MIDDLEWARE HIT FOR", req.url, "===");
       console.log("Method:", req.method);
       console.log("Body:", JSON.stringify(req.body, null, 2));
-      
+
       // Convert date strings to Date objects if they exist
       const data = { ...req.body };
       if (data.leaseStart && typeof data.leaseStart === 'string') {
@@ -489,7 +509,7 @@ export function registerRoutes(app: Express) {
       if (data.leaseEnd && typeof data.leaseEnd === 'string') {
         data.leaseEnd = new Date(data.leaseEnd);
       }
-      
+
       const tenant = await storage.updateTenant(id, data);
       res.json(tenant);
     } catch (error) {
@@ -514,7 +534,7 @@ export function registerRoutes(app: Express) {
     try {
       const unitId = req.params.unitId;
       console.log("Route: Fetching tenant history for unit:", unitId);
-      
+
       // Return sample data directly in the route for now
       const sampleHistory = [
         {
@@ -557,7 +577,7 @@ export function registerRoutes(app: Express) {
           updatedAt: new Date()
         }
       ];
-      
+
       console.log("Route: Returning sample history with", sampleHistory.length, "records");
       res.json(sampleHistory);
     } catch (error) {
@@ -778,7 +798,7 @@ export function registerRoutes(app: Express) {
       if (taskData.dueDate) {
         taskData.dueDate = new Date(taskData.dueDate);
       }
-      
+
       const task = await storage.createTask(taskData);
       res.json(task);
     } catch (error) {
@@ -857,7 +877,7 @@ export function registerRoutes(app: Express) {
     try {
       const { email, password } = req.body;
 
-      // Get user by email
+            // Get user by email
       const user = await storage.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ message: "Invalid email or password" });
@@ -893,17 +913,17 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/rent-reminder", async (req, res) => {
     try {
       const { tenantId } = req.body;
-      
+
       // Get tenant details
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
       }
-      
+
       // Get unit and property details
       const unit = await storage.getUnitById(tenant.unitId);
       const property = await storage.getPropertyById(unit.propertyId);
-      
+
       const success = await emailService.sendRentReminder(tenant.email, {
         tenantName: `${tenant.firstName} ${tenant.lastName}`,
         unitNumber: unit.unitNumber,
@@ -911,7 +931,7 @@ export function registerRoutes(app: Express) {
         amount: tenant.monthlyRent,
         dueDate: new Date().toLocaleDateString(),
       });
-      
+
       if (success) {
         res.json({ message: "Rent reminder sent successfully" });
       } else {
@@ -926,15 +946,15 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/maintenance-notification", async (req, res) => {
     try {
       const { tenantId, description, status } = req.body;
-      
+
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
       }
-      
+
       const unit = await storage.getUnitById(tenant.unitId);
       const property = await storage.getPropertyById(unit.propertyId);
-      
+
       const success = await emailService.sendMaintenanceNotification(tenant.email, {
         tenantName: `${tenant.firstName} ${tenant.lastName}`,
         unitNumber: unit.unitNumber,
@@ -942,7 +962,7 @@ export function registerRoutes(app: Express) {
         description,
         status,
       });
-      
+
       if (success) {
         res.json({ message: "Maintenance notification sent successfully" });
       } else {
@@ -957,22 +977,22 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/welcome", async (req, res) => {
     try {
       const { tenantId } = req.body;
-      
+
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
       }
-      
+
       const unit = await storage.getUnitById(tenant.unitId);
       const property = await storage.getPropertyById(unit.propertyId);
-      
+
       const success = await emailService.sendWelcomeEmail(
         tenant.email,
         `${tenant.firstName} ${tenant.lastName}`,
         property.name,
         unit.unitNumber
       );
-      
+
       if (success) {
         res.json({ message: "Welcome email sent successfully" });
       } else {
@@ -987,7 +1007,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/bulk-rent-reminders", async (req, res) => {
     try {
       const { propertyId } = req.body;
-      
+
       let tenants;
       if (propertyId) {
         // Get tenants for specific property
@@ -1001,18 +1021,18 @@ export function registerRoutes(app: Express) {
         // Get all tenants
         tenants = await storage.getAllTenants();
       }
-      
+
       const results = {
         sent: 0,
         failed: 0,
         errors: []
       };
-      
+
       for (const tenant of tenants) {
         try {
           const unit = await storage.getUnitById(tenant.unitId);
           const property = await storage.getPropertyById(unit.propertyId);
-          
+
           const success = await emailService.sendRentReminder(tenant.email, {
             tenantName: `${tenant.firstName} ${tenant.lastName}`,
             unitNumber: unit.unitNumber,
@@ -1020,7 +1040,7 @@ export function registerRoutes(app: Express) {
             amount: tenant.monthlyRent,
             dueDate: new Date().toLocaleDateString(),
           });
-          
+
           if (success) {
             results.sent++;
           } else {
@@ -1032,7 +1052,7 @@ export function registerRoutes(app: Express) {
           results.errors.push(`Error processing ${tenant.email}: ${error.message}`);
         }
       }
-      
+
       res.json(results);
     } catch (error) {
       console.error("Error sending bulk rent reminders:", error);
@@ -1048,7 +1068,7 @@ export function registerRoutes(app: Express) {
       }
 
       const csvContent = req.file.buffer.toString('utf8');
-      
+
       // Parse CSV
       const records = parse(csvContent, {
         columns: true,
@@ -1094,7 +1114,7 @@ export function registerRoutes(app: Express) {
               if (!property) {
                 throw new Error(`Property "${record.propertyName}" not found`);
               }
-              
+
               await storage.createUnit({
                 propertyId: property.id,
                 unitNumber: record.unitNumber,
@@ -1114,7 +1134,7 @@ export function registerRoutes(app: Express) {
               if (!tenantProperty) {
                 throw new Error(`Property "${record.propertyName}" not found`);
               }
-              
+
               const units = await storage.getAllUnits();
               const unit = units.find(u => u.propertyId === tenantProperty.id && u.unitNumber === record.unitNumber);
               if (!unit) {
@@ -1197,7 +1217,7 @@ export function registerRoutes(app: Express) {
             default:
               throw new Error(`Unknown record type: ${record.type}`);
           }
-          
+
           results.successCount++;
         } catch (error) {
           results.errorCount++;
