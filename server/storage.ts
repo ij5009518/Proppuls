@@ -1,10 +1,10 @@
 import { User, TenantSession, TenantLogin, CreateTenantMaintenanceRequest } from '../shared/schema';
 import { db, users, properties, expenses, units, tenants, tenantSessions, tenantHistory, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
 import { eq, sql, and, gt } from 'drizzle-orm';
-import crypto from "crypto";
-import bcrypt from 'bcrypt';
+import * as crypto from "crypto";
+import * as bcrypt from 'bcrypt';
 import { Property, Expense, Unit, Tenant, TenantHistory, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 
 interface Session {
   token: string;
