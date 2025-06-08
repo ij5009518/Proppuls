@@ -778,28 +778,31 @@ export default function Tenants() {
               >
                 <CardContent className="p-4">
                   <div className="space-y-3">
-                    {/* Header with name and status */}
+                    {/* Name at the top */}
                     <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {tenant.firstName} {tenant.lastName}
-                        </h3>
-                        <div className="mt-1">
-                          <Badge className={getStatusColor(tenant.status)}>
-                            {tenant.status}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {tenant.unitId ? `Unit ${getUnitNumber(tenant.unitId)} - ${getPropertyName(units?.find((u: Unit) => u.id === tenant.unitId)?.propertyId || "")}` : "No Unit Assigned"}
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {tenant.firstName} {tenant.lastName}
+                      </h3>
+                      <Badge className={getStatusColor(tenant.status)}>
+                        {tenant.status}
+                      </Badge>
+                    </div>
+
+                    {/* Unit information below name */}
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {tenant.unitId ? `Unit ${getUnitNumber(tenant.unitId)}` : "No Unit Assigned"}
+                      </p>
+                      {tenant.unitId && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {getPropertyName(units?.find((u: Unit) => u.id === tenant.unitId)?.propertyId || "")}
                         </p>
-                        {tenant.monthlyRent && (
-                          <p className="text-sm font-semibold text-green-600 dark:text-green-400">
-                            {formatCurrency(tenant.monthlyRent)}/mo
-                          </p>
-                        )}
-                      </div>
+                      )}
+                      {tenant.monthlyRent && (
+                        <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                          {formatCurrency(tenant.monthlyRent)}/mo
+                        </p>
+                      )}
                     </div>
 
                     {/* Contact Information */}
