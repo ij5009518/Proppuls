@@ -813,27 +813,55 @@ export default function Tenants() {
 
 
 
-                    {/* Payment Status Alerts */}
-                    {(overduePayments.length > 0 || currentBalance > 0) && (
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {overduePayments.length > 0 && (
-                          <div className="flex items-center px-3 py-1 bg-red-100 dark:bg-red-900/20 rounded-full">
-                            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 mr-2" />
-                            <span className="text-sm font-medium text-red-800 dark:text-red-300">
-                              {overduePayments.length} overdue payment{overduePayments.length > 1 ? 's' : ''}
-                            </span>
+                    {/* Payment Summary */}
+                    {(() => {
+                      const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === tenant.id) || [];
+                      const totalPaid = tenantPayments
+                        .filter((payment: any) => payment.paidDate)
+                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+                      const totalOutstanding = tenantPayments
+                        .filter((payment: any) => !payment.paidDate)
+                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+                      const totalOverdue = tenantPayments
+                        .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
+                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+
+                      if (totalPaid === 0 && totalOutstanding === 0) return null;
+
+                      return (
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            {totalPaid > 0 && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-600 dark:text-gray-400">Total Paid:</span>
+                                <span className="font-medium text-green-600 dark:text-green-400">
+                                  {formatCurrency(totalPaid.toString())}
+                                </span>
+                              </div>
+                            )}
+                            {totalOutstanding > 0 && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-600 dark:text-gray-400">Outstanding:</span>
+                                <span className="font-medium text-yellow-600 dark:text-yellow-400">
+                                  {formatCurrency(totalOutstanding.toString())}
+                                </span>
+                              </div>
+                            )}
+                            {totalOverdue > 0 && (
+                              <div className="flex items-center justify-between col-span-2">
+                                <span className="text-gray-600 dark:text-gray-400 flex items-center">
+                                  <AlertTriangle className="h-3 w-3 text-red-500 mr-1" />
+                                  Overdue:
+                                </span>
+                                <span className="font-medium text-red-600 dark:text-red-400">
+                                  {formatCurrency(totalOverdue.toString())}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {currentBalance > 0 && (
-                          <div className="flex items-center px-3 py-1 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
-                            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mr-2" />
-                            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                              Balance: {formatCurrency(currentBalance.toString())}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>
