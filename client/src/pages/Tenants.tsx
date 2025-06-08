@@ -778,28 +778,31 @@ export default function Tenants() {
               >
                 <CardContent className="p-4">
                   <div className="space-y-3">
-                    {/* Header with name and status */}
+                    {/* Name at the top */}
                     <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {tenant.firstName} {tenant.lastName}
-                        </h3>
-                        <div className="mt-1">
-                          <Badge className={getStatusColor(tenant.status)}>
-                            {tenant.status}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {tenant.unitId ? `Unit ${getUnitNumber(tenant.unitId)} - ${getPropertyName(units?.find((u: Unit) => u.id === tenant.unitId)?.propertyId || "")}` : "No Unit Assigned"}
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {tenant.firstName} {tenant.lastName}
+                      </h3>
+                      <Badge className={getStatusColor(tenant.status)}>
+                        {tenant.status}
+                      </Badge>
+                    </div>
+
+                    {/* Unit information below name */}
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {tenant.unitId ? `Unit ${getUnitNumber(tenant.unitId)}` : "No Unit Assigned"}
+                      </p>
+                      {tenant.unitId && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {getPropertyName(units?.find((u: Unit) => u.id === tenant.unitId)?.propertyId || "")}
                         </p>
-                        {tenant.monthlyRent && (
-                          <p className="text-sm font-semibold text-green-600 dark:text-green-400">
-                            {formatCurrency(tenant.monthlyRent)}/mo
-                          </p>
-                        )}
-                      </div>
+                      )}
+                      {tenant.monthlyRent && (
+                        <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                          {formatCurrency(tenant.monthlyRent)}/mo
+                        </p>
+                      )}
                     </div>
 
                     {/* Contact Information */}
@@ -1495,7 +1498,23 @@ export default function Tenants() {
 
               <TabsContent value="payments" className="space-y-4">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Payment Status</h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Payment Status</h3>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        paymentForm.setValue("tenantId", selectedTenant.id);
+                        paymentForm.setValue("unitId", selectedTenant.unitId || "");
+                        paymentForm.setValue("amount", selectedTenant.monthlyRent || "");
+                        setIsPaymentDialogOpen(true);
+                      }}
+                    >
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      Add Payment
+                    </Button>
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-4">
                     {getCurrentMonthBalance(selectedTenant.id) > 0 && (
                       <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
@@ -1524,11 +1543,61 @@ export default function Tenants() {
                       </div>
                     )}
                   </div>
-                  <div className="pt-4 border-t">
-                    <Button variant="outline" size="sm">
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Add Payment
-                    </Button>
+
+                  {/* Payment History Table */}
+                  <div className="space-y-4">
+                    <h4 className="text-md font-medium">Payment History</h4>
+                    <div className="border rounded-lg">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Due Date</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Paid Date</TableHead>
+                            <TableHead>Method</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id)
+                            .sort((a: any, b: any) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
+                            .slice(0, 10)
+                            .map((payment: any) => (
+                            <TableRow key={payment.id}>
+                              <TableCell>{formatDate(payment.dueDate)}</TableCell>
+                              <TableCell className="font-medium">
+                                {formatCurrency(payment.amount.toString())}
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  className={
+                                    payment.paidDate ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" :
+                                    new Date(payment.dueDate) < new Date() ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400" :
+                                    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+                                  }
+                                >
+                                  {payment.paidDate ? "Paid" : 
+                                   new Date(payment.dueDate) < new Date() ? "Overdue" : "Pending"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {payment.paidDate ? formatDate(payment.paidDate) : "-"}
+                              </TableCell>
+                              <TableCell className="capitalize">
+                                {payment.paymentMethod || "-"}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {!rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id).length && (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center text-gray-500 py-8">
+                                No payment history found
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
