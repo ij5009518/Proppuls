@@ -1205,18 +1205,14 @@ export default function Tenants() {
                   <table className="w-full">
                     <tbody>
                       <tr>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700 w-1/3">First Name</td>
-                        <td className="py-4 text-sm text-gray-900 w-2/3">{selectedTenant.firstName}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-4 pr-6 text-sm font-medium text-gray-700 w-1/3">Last Name</td>
-                        <td className="py-4 text-sm text-gray-900 w-2/3">{selectedTenant.lastName}</td>
+                        <td className="py-4 pr-6 text-sm font-medium text-gray-700 w-1/4">First Name</td>
+                        <td className="py-4 text-sm text-gray-900 w-1/4">{selectedTenant.firstName}</td>
+                        <td className="py-4 pr-6 text-sm font-medium text-gray-700 w-1/4">Last Name</td>
+                        <td className="py-4 text-sm text-gray-900 w-1/4">{selectedTenant.lastName}</td>
                       </tr>
                       <tr>
                         <td className="py-4 pr-6 text-sm font-medium text-gray-700">Email</td>
                         <td className="py-4 text-sm text-gray-900">{selectedTenant.email}</td>
-                      </tr>
-                      <tr>
                         <td className="py-4 pr-6 text-sm font-medium text-gray-700">Phone</td>
                         <td className="py-4 text-sm text-gray-900">{selectedTenant.phone}</td>
                       </tr>
@@ -1227,8 +1223,6 @@ export default function Tenants() {
                             ? new Date(selectedTenant.dateOfBirth).toLocaleDateString() 
                             : "Not provided"}
                         </td>
-                      </tr>
-                      <tr>
                         <td className="py-4 pr-6 text-sm font-medium text-gray-700">Status</td>
                         <td className="py-4">
                           <Badge 
@@ -1244,8 +1238,6 @@ export default function Tenants() {
                         <td className="py-4 text-sm text-gray-900">
                           {selectedTenant.emergencyContactName || "Not provided"}
                         </td>
-                      </tr>
-                      <tr>
                         <td className="py-4 pr-6 text-sm font-medium text-gray-700">Emergency Contact Phone</td>
                         <td className="py-4 text-sm text-gray-900">
                           {selectedTenant.emergencyContactPhone || "Not provided"}
