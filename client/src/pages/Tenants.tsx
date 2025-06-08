@@ -79,7 +79,8 @@ export default function Tenants() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const handleAddDialogOpen = () => {
+  const handleOpenAddDialog = () => {
+    console.log("Opening add dialog...");
     form.reset({
       firstName: "",
       lastName: "",
@@ -99,6 +100,11 @@ export default function Tenants() {
     });
     setUploadedIdDocument(null);
     setIsAddDialogOpen(true);
+  };
+
+  const handleCloseAddDialog = () => {
+    console.log("Closing add dialog...");
+    setIsAddDialogOpen(false);
   };
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -243,7 +249,7 @@ export default function Tenants() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      setIsAddDialogOpen(false);
+      handleCloseAddDialog();
       form.reset();
       setUploadedIdDocument(null);
       toast({ title: "Success", description: "Tenant created successfully" });
@@ -464,11 +470,25 @@ export default function Tenants() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Tenants</h1>
         <div className="flex flex-col items-end space-y-3">
-          <Button onClick={handleAddDialogOpen}>
+          <Button 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleOpenAddDialog();
+            }}
+            type="button"
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Tenant
           </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            console.log("Dialog onOpenChange called with:", open);
+            if (open) {
+              handleOpenAddDialog();
+            } else {
+              handleCloseAddDialog();
+            }
+          }}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Tenant</DialogTitle>
@@ -799,7 +819,7 @@ export default function Tenants() {
                   </div>
 
                   <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    <Button type="button" variant="outline" onClick={handleCloseAddDialog}>
                       Cancel
                     </Button>
                     <Button type="submit" disabled={createTenantMutation.isPending}>
