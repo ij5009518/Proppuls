@@ -78,6 +78,34 @@ export default function Tenants() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  const handleOpenAddDialog = () => {
+    console.log("Opening add dialog...");
+    form.reset({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      dateOfBirth: undefined,
+      emergencyContactName: "",
+      emergencyContactPhone: "",
+      status: "pending",
+      unitId: "",
+      leaseStart: undefined,
+      leaseEnd: undefined,
+      monthlyRent: "",
+      deposit: "",
+      tenantType: "primary",
+      relationToPrimary: "",
+    });
+    setUploadedIdDocument(null);
+    setIsAddDialogOpen(true);
+  };
+
+  const handleCloseAddDialog = () => {
+    console.log("Closing add dialog...");
+    setIsAddDialogOpen(false);
+  };
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -119,6 +147,29 @@ export default function Tenants() {
 
   // Handle ID document upload
   const handleIdDocumentUpload = async (file: File) => {
+    console.log("Starting ID document upload for file:", file.name);
+    
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Only PNG, JPEG, and PDF files are allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "File size must be less than 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsUploadingId(true);
     try {
       const formData = new FormData();
@@ -130,23 +181,32 @@ export default function Tenants() {
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorText = await response.text();
+        console.error("Upload failed with response:", errorText);
+        throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
-      setUploadedIdDocument({
+      console.log("Upload successful, result:", result);
+      
+      const uploadedDoc = {
         url: result.url,
-        name: result.originalName
-      });
+        name: result.originalName || file.name
+      };
+      
+      setUploadedIdDocument(uploadedDoc);
+      console.log("Set uploaded document:", uploadedDoc);
 
       toast({
         title: "Success",
         description: "ID document uploaded successfully",
       });
     } catch (error) {
+      console.error("ID document upload error:", error);
+      setUploadedIdDocument(null);
       toast({
         title: "Error",
-        description: "Failed to upload ID document",
+        description: error instanceof Error ? error.message : "Failed to upload ID document",
         variant: "destructive",
       });
     } finally {
@@ -170,6 +230,8 @@ export default function Tenants() {
       leaseEnd: undefined,
       monthlyRent: "",
       deposit: "",
+      tenantType: "primary",
+      relationToPrimary: "",
     },
   });
 
@@ -210,16 +272,12 @@ export default function Tenants() {
 
   const createTenantMutation = useMutation({
     mutationFn: (data: any) => {
-      const tenantData = {
-        ...data,
-        idDocumentUrl: uploadedIdDocument?.url,
-        idDocumentName: uploadedIdDocument?.name,
-      };
-      return apiRequest("POST", "/api/tenants", tenantData);
+      console.log("Creating tenant with data:", data);
+      return apiRequest("POST", "/api/tenants", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      setIsAddDialogOpen(false);
+      handleCloseAddDialog();
       form.reset();
       setUploadedIdDocument(null);
       toast({ title: "Success", description: "Tenant created successfully" });
@@ -305,11 +363,18 @@ export default function Tenants() {
   });
 
   const onSubmit = (data: z.infer<typeof tenantSchema>) => {
+    console.log("Form submission started with data:", data);
+    console.log("Uploaded ID document:", uploadedIdDocument);
+    
     const submitData = {
       ...data,
       leaseStart: data.leaseStart?.toISOString(),
       leaseEnd: data.leaseEnd?.toISOString(),
+      idDocumentUrl: uploadedIdDocument?.url || null,
+      idDocumentName: uploadedIdDocument?.name || null,
     };
+    
+    console.log("Final submit data:", submitData);
     createTenantMutation.mutate(submitData);
   };
 
@@ -440,30 +505,25 @@ export default function Tenants() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Tenants</h1>
         <div className="flex flex-col items-end space-y-3">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => {
-                form.reset({
-                  firstName: "",
-                  lastName: "",
-                  email: "",
-                  phone: "",
-                  dateOfBirth: undefined,
-                  emergencyContactName: "",
-                  emergencyContactPhone: "",
-                  status: "pending",
-                  unitId: "",
-                  leaseStart: undefined,
-                  leaseEnd: undefined,
-                  monthlyRent: "",
-                  deposit: "",
-                });
-                setIsAddDialogOpen(true);
-              }}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Tenant
-              </Button>
-            </DialogTrigger>
+          <Button 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleOpenAddDialog();
+            }}
+            type="button"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Tenant
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            console.log("Dialog onOpenChange called with:", open);
+            if (open) {
+              handleOpenAddDialog();
+            } else {
+              handleCloseAddDialog();
+            }
+          }}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Tenant</DialogTitle>
@@ -703,7 +763,7 @@ export default function Tenants() {
                                       {isUploadingId ? "Uploading..." : "Upload ID document"}
                                     </span>
                                   </div>
-                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 2MB</p>
                                 </div>
                                 <input
                                   type="file"
@@ -794,11 +854,15 @@ export default function Tenants() {
                   </div>
 
                   <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    <Button type="button" variant="outline" onClick={handleCloseAddDialog}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={createTenantMutation.isPending}>
-                      {createTenantMutation.isPending ? "Creating..." : "Create Tenant"}
+                    <Button 
+                      type="submit" 
+                      disabled={createTenantMutation.isPending || isUploadingId}
+                    >
+                      {isUploadingId ? "Uploading ID..." : 
+                       createTenantMutation.isPending ? "Creating..." : "Create Tenant"}
                     </Button>
                   </div>
                 </form>
@@ -947,41 +1011,6 @@ export default function Tenants() {
                             </span>
                           </div>
                         )}
-                      </div>
-                    )}
-
-                    {/* Add Family Member Button */}
-                    {tenant.unitId && tenant.tenantType === 'primary' && (
-                      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            form.reset({
-                              firstName: "",
-                              lastName: "",
-                              email: "",
-                              phone: "",
-                              dateOfBirth: undefined,
-                              emergencyContactName: "",
-                              emergencyContactPhone: "",
-                              status: "active",
-                              unitId: tenant.unitId,
-                              leaseStart: tenant.leaseStart ? new Date(tenant.leaseStart) : undefined,
-                              leaseEnd: tenant.leaseEnd ? new Date(tenant.leaseEnd) : undefined,
-                              monthlyRent: tenant.monthlyRent || "",
-                              deposit: "",
-                              tenantType: "spouse",
-                              relationToPrimary: "",
-                            });
-                            setIsAddDialogOpen(true);
-                          }}
-                          className="w-full text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Family Member
-                        </Button>
                       </div>
                     )}
                   </div>
