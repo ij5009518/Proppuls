@@ -388,7 +388,21 @@ export default function Tenants() {
         <div className="flex flex-col items-end space-y-3">
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => {
+                form.reset({
+                  firstName: "",
+                  lastName: "",
+                  email: "",
+                  phone: "",
+                  status: "pending",
+                  unitId: "",
+                  leaseStart: undefined,
+                  leaseEnd: undefined,
+                  monthlyRent: "",
+                  deposit: "",
+                });
+                setIsAddDialogOpen(true);
+              }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Tenant
               </Button>
