@@ -607,7 +607,6 @@ export default function Tenants() {
           </div>
         </div>
       </div>
-
       <div className="flex items-center space-x-4">
         <Input
           placeholder="Search tenants..."
@@ -616,7 +615,6 @@ export default function Tenants() {
           className="max-w-sm"
         />
       </div>
-
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTenants.map((tenant) => {
@@ -966,7 +964,6 @@ export default function Tenants() {
           </Table>
         </Card>
       )}
-
       {/* Payment Dialog */}
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <DialogContent>
@@ -1031,7 +1028,6 @@ export default function Tenants() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Task Dialog */}
       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
         <DialogContent>
@@ -1142,7 +1138,6 @@ export default function Tenants() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Tenant Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -1207,7 +1202,7 @@ export default function Tenants() {
 
               <TabsContent value="details" className="space-y-4">
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-4">
+                  <div className="space-y-4 ml-[15px] mr-[15px] text-center">
                     <h3 className="text-lg font-semibold">Contact Information</h3>
                     <div className="space-y-2">
                       <div>
@@ -1566,7 +1561,6 @@ export default function Tenants() {
           )}
         </DialogContent>
       </Dialog>
-
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1762,7 +1756,6 @@ export default function Tenants() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Background Check Dialog */}
       <Dialog open={isBackgroundCheckDialogOpen} onOpenChange={setIsBackgroundCheckDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1891,7 +1884,6 @@ export default function Tenants() {
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Tenant History Dialog */}
       <Dialog open={isTenantHistoryDialogOpen} onOpenChange={setIsTenantHistoryDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -1978,7 +1970,6 @@ export default function Tenants() {
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Tenant Status Edit Dialog */}
       <Dialog open={isTenantStatusDialogOpen} onOpenChange={setIsTenantStatusDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
