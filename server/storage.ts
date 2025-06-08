@@ -736,6 +736,107 @@ class Storage {
     const result = await db.select().from(properties).where(eq(properties.id, id)).limit(1);
     return result[0] || null;
   }
+
+  // Generate monthly rent payments for active tenants
+  async generateMonthlyRentPayments() {
+    try {
+      const tenants = await this.getAllTenants();
+      const activeTenants = tenants.filter(tenant => 
+        tenant.status === 'active' && 
+        tenant.unitId && 
+        tenant.monthlyRent && 
+        parseFloat(tenant.monthlyRent) > 0
+      );
+
+      const today = new Date();
+      const results = [];
+
+      for (const tenant of activeTenants) {
+        // Generate payments for next 12 months
+        for (let monthOffset = 0; monthOffset < 12; monthOffset++) {
+          const dueDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+
+          // Check if payment already exists for this month
+          const existingPayments = await this.getTenantRentPayments(tenant.id);
+          const paymentExists = existingPayments.some((payment: any) => {
+            const paymentDue = new Date(payment.dueDate);
+            return paymentDue.getMonth() === dueDate.getMonth() && 
+                   paymentDue.getFullYear() === dueDate.getFullYear();
+          });
+
+          if (!paymentExists) {
+            const rentPayment = await this.createRentPayment({
+              tenantId: tenant.id,
+              unitId: tenant.unitId,
+              amount: tenant.monthlyRent,
+              dueDate,
+              status: "pending",
+              paymentMethod: null,
+              notes: `Monthly rent - ${dueDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
+            });
+            results.push(rentPayment);
+          }
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error("Error generating monthly rent payments:", error);
+      throw error;
+    }
+  }
+
+  // Get payment summaries for dashboard
+  async getPaymentSummaries() {
+    try {
+      const payments = await this.getAllRentPayments();
+      const today = new Date();
+      const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+      const totalRevenue = payments
+        .filter((p: any) => p.paidDate)
+        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+
+      const currentMonthRevenue = payments
+        .filter((p: any) => {
+          const paidDate = p.paidDate ? new Date(p.paidDate) : null;
+          return paidDate && paidDate >= currentMonth && paidDate < nextMonth;
+        })
+        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+
+      const outstandingBalance = payments
+        .filter((p: any) => !p.paidDate && new Date(p.dueDate) <= today)
+        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+
+      const overduePayments = payments
+        .filter((p: any) => !p.paidDate && new Date(p.dueDate) < today)
+        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+
+      const upcomingPayments = payments
+        .filter((p: any) => {
+          const dueDate = new Date(p.dueDate);
+          const futureDate = new Date(today);
+          futureDate.setDate(today.getDate() + 30);
+          return !p.paidDate && dueDate > today && dueDate <= futureDate;
+        })
+        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+
+      return {
+        totalRevenue,
+        currentMonthRevenue,
+        outstandingBalance,
+        overduePayments,
+        upcomingPayments,
+        totalPayments: payments.length,
+        paidPayments: payments.filter((p: any) => p.paidDate).length,
+        pendingPayments: payments.filter((p: any) => !p.paidDate).length
+      };
+    } catch (error) {
+      console.error("Error getting payment summaries:", error);
+      throw error;
+    }
+  }
 }
 
 // Email Service
@@ -780,7 +881,8 @@ class EmailService {
           unitId: unitId,
           tenantName: "John Smith",
           moveInDate: new Date("2022-01-15"),
-          moveOutDate: new Date("2023-12-31"),
+          moveOutDate: new```text
+ Date("2023-12-31"),
           monthlyRent: "1500",
           securityDeposit: "1500",
           moveOutReason: "lease_expired",

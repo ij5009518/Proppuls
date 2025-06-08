@@ -707,19 +707,57 @@ export function registerRoutes(app: Express) {
   // Dashboard KPIs route
   app.get("/api/dashboard/kpis", async (req, res) => {
     try {
-      // Mock KPI data for now
+      const properties = await storage.getAllProperties();
+      const units = await storage.getAllUnits();
+      const tenants = await storage.getAllTenants();
+      const maintenanceRequests = await storage.getAllMaintenanceRequests();
+      const paymentSummaries = await storage.getPaymentSummaries();
+
+      const occupiedUnits = tenants.filter(t => t.status === 'active' && t.unitId).length;
+      const occupancyRate = units.length > 0 ? ((occupiedUnits / units.length) * 100).toFixed(1) : "0";
+
       const kpis = {
-        totalProperties: 0,
-        totalUnits: 0,
-        occupancyRate: 0,
-        monthlyRevenue: 0,
-        maintenanceRequests: 0,
-        pendingRequests: 0
+        totalProperties: properties.length,
+        totalUnits: units.length,
+        occupancyRate: `${occupancyRate}%`,
+        occupancyChange: "+0%",
+        totalRevenue: `$${paymentSummaries.totalRevenue.toLocaleString()}`,
+        revenueChange: "+0%",
+        monthlyRevenue: paymentSummaries.currentMonthRevenue,
+        maintenanceRequests: maintenanceRequests.length,
+        pendingRequests: maintenanceRequests.filter((r: any) => r.status === 'open').length,
+        newProperties: 0
       };
       res.json(kpis);
     } catch (error) {
       console.error("Error fetching KPIs:", error);
       res.status(500).json({ message: "Failed to fetch KPIs" });
+    }
+  });
+
+  // Payment summaries route
+  app.get("/api/dashboard/payment-summaries", async (req, res) => {
+    try {
+      const summaries = await storage.getPaymentSummaries();
+      res.json(summaries);
+    } catch (error) {
+      console.error("Error fetching payment summaries:", error);
+      res.status(500).json({ message: "Failed to fetch payment summaries" });
+    }
+  });
+
+  // Generate monthly rent payments route
+  app.post("/api/rent-payments/generate-monthly", async (req, res) => {
+    try {
+      const generatedPayments = await storage.generateMonthlyRentPayments();
+      res.json({ 
+        success: true, 
+        generated: generatedPayments.length,
+        payments: generatedPayments 
+      });
+    } catch (error) {
+      console.error("Error generating monthly rent payments:", error);
+      res.status(500).json({ message: "Failed to generate monthly rent payments" });
     }
   });
 

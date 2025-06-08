@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,9 +17,21 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  AlertTriangle,
+  Calendar,
 } from "lucide-react";
 
 export default function Dashboard() {
+  const queryClient = useQueryClient();
+  
+  const formatCurrency = (amount: number | string) => {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(num || 0);
+  };
+
   const { data: kpis, isLoading: kpisLoading } = useQuery({
     queryKey: ["/api/dashboard/kpis"],
   });
@@ -30,6 +43,24 @@ export default function Dashboard() {
   const { data: maintenanceRequests, isLoading: maintenanceLoading } = useQuery({
     queryKey: ["/api/maintenance-requests"],
   });
+
+  const { data: paymentSummaries, isLoading: paymentSummariesLoading } = useQuery({
+    queryKey: ["/api/dashboard/payment-summaries"],
+  });
+
+  // Auto-generate monthly rent payments on component mount
+  const { mutate: generateRentPayments } = useMutation({
+    mutationFn: () => fetch("/api/rent-payments/generate-monthly", { method: "POST" }).then(res => res.json()),
+    onSuccess: () => {
+      // Refresh payment summaries after generation
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/payment-summaries"] });
+    }
+  });
+
+  // Generate payments on first load
+  React.useEffect(() => {
+    generateRentPayments();
+  }, []);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -252,100 +283,123 @@ export default function Dashboard() {
       {/* Financial Health Radar Chart */}
       <FinancialHealthRadar />
 
-      {/* Tables Row */}
+      {/* Payment Summary Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <Card className="xl:col-span-2">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Recent Properties</CardTitle>
-              <Button variant="link" size="sm">
-                View All
+              <CardTitle>Payment Overview</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => generateRentPayments()}
+              >
+                Generate Rent
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            {propertiesLoading ? (
+            {paymentSummariesLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse flex items-center space-x-4">
-                    <div className="h-10 w-10 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                      <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
-                    </div>
+                  <div key={i} className="animate-pulse">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                    <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded"></div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                  <thead className="bg-slate-50 dark:bg-slate-800">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Property
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Units
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Occupancy
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Revenue
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-card divide-y divide-slate-200 dark:divide-slate-700">
-                    {propertiesWithStats?.slice(0, 3).map((property: any) => (
-                      <tr key={property.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
-                              <div className="h-10 w-10 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                                <Home className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-slate-900 dark:text-foreground">
-                                {property.name}
-                              </div>
-                              <div className="text-sm text-slate-500 dark:text-muted-foreground">
-                                {property.address}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-foreground">
-                          {property.totalUnits}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="text-sm text-slate-900 dark:text-foreground">
-                              {property.occupancyRate ? property.occupancyRate.toFixed(1) : '0'}%
-                            </div>
-                            <div className="ml-2 w-16 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                              <div
-                                className={`h-2 rounded-full ${getOccupancyColor(property.occupancyRate || 0)}`}
-                                style={{ width: `${property.occupancyRate || 0}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-foreground">
-                          ${property.monthlyRevenue ? property.monthlyRevenue.toLocaleString() : '0'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant={getStatusBadgeVariant(property.status)}>
-                            {property.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="flex items-center">
+                      <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                          Total Revenue
+                        </p>
+                        <p className="text-2xl font-bold text-green-800 dark:text-green-200">
+                          {formatCurrency(paymentSummaries?.totalRevenue || 0)}
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          {paymentSummaries?.paidPayments || 0} payments received
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="flex items-center">
+                      <Calendar className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                          This Month Revenue
+                        </p>
+                        <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">
+                          {formatCurrency(paymentSummaries?.currentMonthRevenue || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                    <div className="flex items-center">
+                      <DollarSign className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                          Upcoming (30 days)
+                        </p>
+                        <p className="text-2xl font-bold text-purple-800 dark:text-purple-200">
+                          {formatCurrency(paymentSummaries?.upcomingPayments || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                    <div className="flex items-center">
+                      <Clock className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                          Outstanding Balance
+                        </p>
+                        <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-200">
+                          {formatCurrency(paymentSummaries?.outstandingBalance || 0)}
+                        </p>
+                        <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                          {paymentSummaries?.pendingPayments || 0} pending payments
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                    <div className="flex items-center">
+                      <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                      <div className="ml-4">
+                        <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                          Overdue Payments
+                        </p>
+                        <p className="text-2xl font-bold text-red-800 dark:text-red-200">
+                          {formatCurrency(paymentSummaries?.overduePayments || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Total Payment Records
+                      </p>
+                      <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+                        {paymentSummaries?.totalPayments || 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
