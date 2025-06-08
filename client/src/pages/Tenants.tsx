@@ -1599,32 +1599,17 @@ export default function Tenants() {
                                     `);
                                   }
                                 } else if (selectedTenant.idDocumentUrl?.startsWith('uploaded://')) {
-                                  // For uploaded files, fetch from server
+                                  // For uploaded files, open directly from server endpoint
                                   const fileName = selectedTenant.idDocumentUrl.replace('uploaded://', '');
-                                  try {
-                                    const response = await fetch(`/api/files/id-documents/${fileName}`);
-                                    if (response.ok) {
-                                      const blob = await response.blob();
-                                      const url = URL.createObjectURL(blob);
-                                      const newWindow = window.open();
-                                      if (newWindow) {
-                                        newWindow.document.write(`
-                                          <html>
-                                            <head><title>ID Document - ${selectedTenant.firstName} ${selectedTenant.lastName}</title></head>
-                                            <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f5f5f5;">
-                                              <img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="ID Document" />
-                                            </body>
-                                          </html>
-                                        `);
-                                      }
-                                    } else {
-                                      throw new Error('Failed to fetch document');
-                                    }
-                                  } catch (error) {
-                                    console.error('Error fetching document:', error);
+                                  const fileUrl = `/api/files/id-documents/${fileName}`;
+                                  
+                                  // Open the file directly in a new tab
+                                  const newWindow = window.open(fileUrl, '_blank');
+                                  
+                                  if (!newWindow) {
                                     toast({
-                                      title: "Error",
-                                      description: "Unable to load the document. Please try again.",
+                                      title: "Popup Blocked",
+                                      description: "Please allow popups for this site to view documents.",
                                       variant: "destructive",
                                     });
                                   }
