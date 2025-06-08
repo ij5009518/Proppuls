@@ -1201,22 +1201,22 @@ export default function Tenants() {
               </TabsList>
 
               <TabsContent value="details" className="space-y-4">
-                <div className="border border-red-200 rounded-lg p-4">
+                <div className="p-4">
                   <table className="w-full">
                     <tbody>
-                      <tr className="border-b border-gray-200">
+                      <tr>
                         <td className="py-2 pr-4 text-sm font-medium text-gray-700 w-1/4">First Name</td>
                         <td className="py-2 text-sm text-gray-900 w-1/4">{selectedTenant.firstName}</td>
                         <td className="py-2 pr-4 text-sm font-medium text-gray-700 w-1/4">Last Name</td>
                         <td className="py-2 text-sm text-gray-900 w-1/4">{selectedTenant.lastName}</td>
                       </tr>
-                      <tr className="border-b border-gray-200">
+                      <tr>
                         <td className="py-2 pr-4 text-sm font-medium text-gray-700">Email</td>
                         <td className="py-2 text-sm text-gray-900">{selectedTenant.email}</td>
                         <td className="py-2 pr-4 text-sm font-medium text-gray-700">Phone</td>
                         <td className="py-2 text-sm text-gray-900">{selectedTenant.phone}</td>
                       </tr>
-                      <tr className="border-b border-gray-200">
+                      <tr>
                         <td className="py-2 pr-4 text-sm font-medium text-gray-700">Date of Birth</td>
                         <td className="py-2 text-sm text-gray-900">
                           {selectedTenant.dateOfBirth 
