@@ -1516,7 +1516,7 @@ export default function Tenants() {
                   </div>
 
                   {/* Payment Summary Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {(() => {
                       const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id) || [];
                       const totalPaid = tenantPayments
@@ -1528,26 +1528,9 @@ export default function Tenants() {
                       const overdueAmount = tenantPayments
                         .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
                         .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
-                      const totalExpected = tenantPayments
-                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
 
                       return (
                         <>
-                          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                            <div className="flex items-center">
-                              <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-2" />
-                              <div>
-                                <p className="text-xs font-medium text-blue-800 dark:text-blue-200 uppercase tracking-wide">Total Expected</p>
-                                <p className="text-xl font-bold text-blue-800 dark:text-blue-200">
-                                  {formatCurrency(totalExpected.toString())}
-                                </p>
-                                <p className="text-xs text-blue-600 dark:text-blue-400">
-                                  {tenantPayments.length} charges
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
                           <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                             <div className="flex items-center">
                               <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400 mr-2" />
