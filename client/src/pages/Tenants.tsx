@@ -462,6 +462,7 @@ export default function Tenants() {
                   tenantType: "primary",
                   relationToPrimary: "",
                 });
+                setIsAddDialogOpen(true);
               }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Tenant
