@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, Upload, FileText, DollarSign, Calendar, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, Upload, FileText, DollarSign, Calendar, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1544,59 +1544,106 @@ export default function Tenants() {
                     )}
                   </div>
 
-                  {/* Payment History Table */}
+                  {/* Payment Summary */}
                   <div className="space-y-4">
-                    <h4 className="text-md font-medium">Payment History</h4>
-                    <div className="border rounded-lg">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Due Date</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Paid Date</TableHead>
-                            <TableHead>Method</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id)
-                            .sort((a: any, b: any) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
-                            .slice(0, 10)
-                            .map((payment: any) => (
-                            <TableRow key={payment.id}>
-                              <TableCell>{formatDate(payment.dueDate)}</TableCell>
-                              <TableCell className="font-medium">
-                                {formatCurrency(payment.amount.toString())}
-                              </TableCell>
-                              <TableCell>
-                                <Badge 
-                                  className={
-                                    payment.paidDate ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" :
-                                    new Date(payment.dueDate) < new Date() ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400" :
-                                    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                  }
-                                >
-                                  {payment.paidDate ? "Paid" : 
-                                   new Date(payment.dueDate) < new Date() ? "Overdue" : "Pending"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                {payment.paidDate ? formatDate(payment.paidDate) : "-"}
-                              </TableCell>
-                              <TableCell className="capitalize">
-                                {payment.paymentMethod || "-"}
-                              </TableCell>
-                            </TableRow>
+                    <h4 className="text-md font-medium">Payment Summary</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {(() => {
+                        const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id) || [];
+                        const totalPaid = tenantPayments
+                          .filter((payment: any) => payment.paidDate)
+                          .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount), 0);
+                        const totalOutstanding = tenantPayments
+                          .filter((payment: any) => !payment.paidDate)
+                          .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount), 0);
+                        const overdueAmount = tenantPayments
+                          .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
+                          .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount), 0);
+
+                        return (
+                          <>
+                            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                              <div className="flex items-center">
+                                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                                <div>
+                                  <p className="text-sm font-medium text-green-800 dark:text-green-200">Total Paid</p>
+                                  <p className="text-lg font-bold text-green-800 dark:text-green-200">
+                                    {formatCurrency(totalPaid.toString())}
+                                  </p>
+                                  <p className="text-xs text-green-600 dark:text-green-400">
+                                    {tenantPayments.filter((p: any) => p.paidDate).length} payments
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                              <div className="flex items-center">
+                                <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-2" />
+                                <div>
+                                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Outstanding</p>
+                                  <p className="text-lg font-bold text-yellow-800 dark:text-yellow-200">
+                                    {formatCurrency(totalOutstanding.toString())}
+                                  </p>
+                                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                                    {tenantPayments.filter((p: any) => !p.paidDate).length} payments due
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {overdueAmount > 0 && (
+                              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                <div className="flex items-center">
+                                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
+                                  <div>
+                                    <p className="text-sm font-medium text-red-800 dark:text-red-200">Overdue</p>
+                                    <p className="text-lg font-bold text-red-800 dark:text-red-200">
+                                      {formatCurrency(overdueAmount.toString())}
+                                    </p>
+                                    <p className="text-xs text-red-600 dark:text-red-400">
+                                      {tenantPayments.filter((p: any) => !p.paidDate && new Date(p.dueDate) < new Date()).length} overdue
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Recent Payments */}
+                    <div className="mt-6">
+                      <h5 className="text-sm font-medium mb-3">Recent Activity</h5>
+                      <div className="space-y-2">
+                        {rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id)
+                          .sort((a: any, b: any) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
+                          .slice(0, 3)
+                          .map((payment: any) => (
+                            <div key={payment.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                              <div>
+                                <p className="text-sm font-medium">{formatCurrency(payment.amount.toString())}</p>
+                                <p className="text-xs text-gray-500">Due: {formatDate(payment.dueDate)}</p>
+                              </div>
+                              <Badge 
+                                className={
+                                  payment.paidDate ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" :
+                                  new Date(payment.dueDate) < new Date() ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400" :
+                                  "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+                                }
+                              >
+                                {payment.paidDate ? "Paid" : 
+                                 new Date(payment.dueDate) < new Date() ? "Overdue" : "Pending"}
+                              </Badge>
+                            </div>
                           ))}
-                          {!rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id).length && (
-                            <TableRow>
-                              <TableCell colSpan={5} className="text-center text-gray-500 py-8">
-                                No payment history found
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
+                        {!rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id).length && (
+                          <div className="text-center text-gray-500 py-4">
+                            No payment records found
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
