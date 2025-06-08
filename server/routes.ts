@@ -33,19 +33,53 @@ export function registerRoutes(app: Express) {
   // Serve ID documents
   app.get("/api/files/id-documents/:fileName", (req, res) => {
     const fileName = req.params.fileName;
-    const filePath = path.join(__dirname, "../uploads/id-documents", fileName);
+    
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = path.join(__dirname, "../uploads/id-documents");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    const filePath = path.join(uploadsDir, fileName);
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
+      console.log("File not found:", filePath);
       return res.status(404).json({ error: "File not found" });
     }
 
+    // Detect MIME type based on file extension
+    const ext = path.extname(fileName).toLowerCase();
+    let contentType = 'application/octet-stream';
+    
+    switch (ext) {
+      case '.png':
+        contentType = 'image/png';
+        break;
+      case '.jpg':
+      case '.jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case '.pdf':
+        contentType = 'application/pdf';
+        break;
+      case '.gif':
+        contentType = 'image/gif';
+        break;
+    }
+
     // Set appropriate headers
-    res.setHeader('Content-Type', 'image/png'); // You might want to detect actual mime type
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
 
     // Send the file
-    res.sendFile(filePath);
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error("Error sending file:", err);
+        res.status(500).json({ error: "Failed to serve file" });
+      }
+    });
   });
 
   // ID document upload endpoint
@@ -71,13 +105,23 @@ export function registerRoutes(app: Express) {
       const fileExtension = file.originalname.split('.').pop();
       const fileName = `id-document-${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
 
-      // Store just the filename and indicate upload success
-      // In a production app, you would save the file to disk or cloud storage
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(__dirname, "../uploads/id-documents");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      // Save file to disk
+      const filePath = path.join(uploadsDir, fileName);
+      fs.writeFileSync(filePath, file.buffer);
+
+      console.log("File saved successfully:", filePath);
+
       res.json({
         success: true,
         fileName: fileName,
         originalName: file.originalname,
-        url: `uploaded://${fileName}`, // Use a simple reference instead of base64
+        url: `uploaded://${fileName}`,
         size: file.size
       });
     } catch (error) {
