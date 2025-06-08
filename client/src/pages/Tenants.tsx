@@ -1236,7 +1236,7 @@ export default function Tenants() {
                       </div>
                     </div>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-4 ml-[15px] mr-[15px] text-center">
                     <h3 className="text-lg font-semibold">Emergency Contact</h3>
                     <div className="space-y-2">
                       <div>
