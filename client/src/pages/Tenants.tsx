@@ -1213,7 +1213,7 @@ export default function Tenants() {
                         <p className="text-sm">{selectedTenant.email}</p>
                       </div>
                       <div>
-                        <span className="text-sm text-muted-foreground font-bold">Phone:</span>
+                        <span className="text-sm text-muted-foreground font-medium">Phone:</span>
                         <p className="text-sm">{selectedTenant.phone}</p>
                       </div>
                       <div>
