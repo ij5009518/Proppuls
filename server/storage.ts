@@ -124,25 +124,25 @@ class Storage {
   async updateProperty(id: string, propertyData: any): Promise<Property | null> {
     try {
       console.log("Storage: Updating property with data:", propertyData);
-      
+
       // Convert date strings to Date objects
       const updateData = {
         ...propertyData,
         updatedAt: new Date()
       };
-      
+
       // Handle purchaseDate conversion if it exists
       if (propertyData.purchaseDate) {
         updateData.purchaseDate = new Date(propertyData.purchaseDate);
       }
-      
+
       console.log("Storage: Update data after conversion:", updateData);
-      
+
       const [property] = await db.update(properties)
         .set(updateData)
         .where(eq(properties.id, id))
         .returning();
-        
+
       console.log("Storage: Property updated successfully:", property);
       return property || null;
     } catch (error) {
@@ -258,6 +258,16 @@ class Storage {
 
       const [tenant] = await db.insert(tenants).values(insertData).returning();
       console.log("Storage: Tenant created successfully:", tenant);
+
+      // Generate rent payments if tenant has lease dates and monthly rent
+      if (tenant.leaseStart && tenant.leaseEnd && tenant.monthlyRent) {
+        await this.generateRentPayments(tenant);
+      }
+      // If tenant is active and has monthly rent but no lease dates, generate ongoing payments
+      else if (tenant.status === 'active' && tenant.monthlyRent) {
+        await this.generateOngoingRentPayments(tenant);
+      }
+
       return tenant;
     } catch (error) {
       console.error("Storage: Error creating tenant:", error);
@@ -275,17 +285,51 @@ class Storage {
   }
 
   async updateTenant(id: string, tenantData: any): Promise<Tenant | null> {
-    const [tenant] = await db.update(tenants)
-      .set({ ...tenantData, updatedAt: new Date() })
-      .where(eq(tenants.id, id))
-      .returning();
+    try {
+      console.log("Storage: Updating tenant with data:", tenantData);
 
-    // Auto-generate rent payment records if lease information is provided
-    if (tenant && tenantData.leaseStart && tenantData.leaseEnd && tenantData.monthlyRent) {
-      await this.generateRentPayments(tenant);
+      // Convert date strings to Date objects
+      const updateData = {
+        ...tenantData,
+        updatedAt: new Date()
+      };
+
+      // Handle date conversions if they exist
+      if (tenantData.dateOfBirth) {
+        updateData.dateOfBirth = new Date(tenantData.dateOfBirth);
+      }
+      if (tenantData.leaseStart) {
+        updateData.leaseStart = new Date(tenantData.leaseStart);
+      }
+      if (tenantData.leaseEnd) {
+        updateData.leaseEnd = new Date(tenantData.leaseEnd);
+      }
+
+      console.log("Storage: Update data after conversion:", updateData);
+
+      const [tenant] = await db.update(tenants)
+        .set(updateData)
+        .where(eq(tenants.id, id))
+        .returning();
+
+      console.log("Storage: Tenant updated successfully:", tenant);
+
+      // Regenerate rent payments if lease dates, rent amount, or status changed
+      if (tenant && (tenantData.leaseStart || tenantData.leaseEnd || tenantData.monthlyRent || tenantData.status)) {
+        if (tenant.leaseStart && tenant.leaseEnd && tenant.monthlyRent) {
+          await this.generateRentPayments(tenant);
+        }
+        // If tenant became active and has monthly rent but no lease dates, generate ongoing payments
+        else if (tenant.status === 'active' && tenant.monthlyRent) {
+          await this.generateOngoingRentPayments(tenant);
+        }
+      }
+
+      return tenant || null;
+    } catch (error) {
+      console.error("Storage: Error updating tenant:", error);
+      throw error;
     }
-
-    return tenant || null;
   }
 
   private async generateRentPayments(tenant: Tenant): Promise<void> {
@@ -333,6 +377,51 @@ class Storage {
       }
     } catch (error) {
       console.error("Error generating rent payments:", error);
+    }
+  }
+
+  async generateOngoingRentPayments(tenant: any): Promise<void> {
+    try {
+      if (!tenant.monthlyRent) {
+        console.log("Missing monthly rent for ongoing payment generation");
+        return;
+      }
+
+      const monthlyAmount = parseFloat(tenant.monthlyRent);
+      const today = new Date();
+
+      console.log("Generating ongoing rent payments for active tenant:", tenant.id);
+      console.log("Monthly amount:", monthlyAmount);
+
+      // Clear existing rent payments for this tenant
+      await db.delete(rentPayments).where(eq(rentPayments.tenantId, tenant.id));
+
+      const payments: any[] = [];
+
+      // Generate payments for current month and next 11 months (12 total)
+      for (let i = 0; i < 12; i++) {
+        const dueDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+
+        payments.push({
+          id: crypto.randomUUID(),
+          tenantId: tenant.id,
+          unitId: tenant.unitId,
+          amount: monthlyAmount.toString(),
+          dueDate: dueDate,
+          status: 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+
+      console.log("Creating", payments.length, "ongoing rent payment records");
+
+      if (payments.length > 0) {
+        await db.insert(rentPayments).values(payments);
+        console.log("Ongoing rent payments created successfully");
+      }
+    } catch (error) {
+      console.error("Error generating ongoing rent payments:", error);
     }
   }
 
