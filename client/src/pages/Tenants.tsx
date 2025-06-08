@@ -737,18 +737,18 @@ export default function Tenants() {
               size="sm"
               onClick={() => setViewMode("grid")}
               className={viewMode === "grid" ? "bg-primary text-primary-foreground" : ""}
+              title="Grid View"
             >
-              <Grid className="h-4 w-4 mr-1" />
-              List View
+              <Grid className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setViewMode("list")}
               className={viewMode === "list" ? "bg-primary text-primary-foreground" : ""}
+              title="Table View"
             >
-              <List className="h-4 w-4 mr-1" />
-              Table View
+              <List className="h-4 w-4" />
             </Button>
           </div>
         </div>
