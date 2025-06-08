@@ -7,6 +7,8 @@ import multer from "multer";
 import { parse } from "csv-parse/sync";
 import { emailService } from "./email";
 import Stripe from "stripe";
+import path from "path";
+import fs from "fs";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -28,49 +30,207 @@ export function registerRoutes(app: Express) {
     res.json({ status: "ok", message: "Server is running" });
   });
 
-  // File upload route for ID documents
-  app.post("/api/upload/id-document", upload.single("idDocument"), async (req, res) => {
+  // Serve ID documents with enhanced error handling and security
+  app.get("/api/files/id-documents/:fileName", (req, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
-      const file = req.file;
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+      const fileName = req.params.fileName;
       
-      if (!allowedTypes.includes(file.mimetype)) {
-        return res.status(400).json({ message: "Only JPEG, PNG, and PDF files are allowed" });
+      // Validate filename to prevent path traversal attacks
+      if (!fileName || fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+        return res.status(400).json({ error: "Invalid filename" });
       }
-
-      // Check file size
-      if (file.size > 2 * 1024 * 1024) {
-        return res.status(400).json({ message: "File size must be less than 2MB" });
-      }
-
-      // Generate unique filename
-      const fileExtension = file.originalname.split('.').pop();
-      const fileName = `id-document-${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
       
-      // Store just the filename and indicate upload success
-      // In a production app, you would save the file to disk or cloud storage
-      res.json({
-        success: true,
-        fileName: fileName,
-        originalName: file.originalname,
-        url: `uploaded://${fileName}`, // Use a simple reference instead of base64
-        size: file.size
+      // Validate file extension
+      const ext = path.extname(fileName).toLowerCase();
+      const allowedExtensions = ['.png', '.jpg', '.jpeg', '.pdf', '.gif'];
+      if (!allowedExtensions.includes(ext)) {
+        return res.status(400).json({ error: "Invalid file type" });
+      }
+      
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(__dirname, "../uploads/id-documents");
+      try {
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+      } catch (dirError) {
+        console.error("Error creating uploads directory:", dirError);
+        return res.status(500).json({ error: "Server configuration error" });
+      }
+      
+      const filePath = path.join(uploadsDir, fileName);
+
+      // Check if file exists and is readable
+      try {
+        if (!fs.existsSync(filePath)) {
+          console.log("File not found:", filePath);
+          return res.status(404).json({ error: "File not found" });
+        }
+
+        const stats = fs.statSync(filePath);
+        if (!stats.isFile()) {
+          console.log("Path is not a file:", filePath);
+          return res.status(400).json({ error: "Invalid file path" });
+        }
+      } catch (statError) {
+        console.error("Error checking file stats:", statError);
+        return res.status(500).json({ error: "File access error" });
+      }
+
+      // Detect MIME type based on file extension
+      let contentType = 'application/octet-stream';
+      
+      switch (ext) {
+        case '.png':
+          contentType = 'image/png';
+          break;
+        case '.jpg':
+        case '.jpeg':
+          contentType = 'image/jpeg';
+          break;
+        case '.pdf':
+          contentType = 'application/pdf';
+          break;
+        case '.gif':
+          contentType = 'image/gif';
+          break;
+      }
+
+      // Set appropriate headers
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      res.setHeader('X-Content-Type-Options', 'nosniff'); // Security header
+
+      // Send the file with error handling
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error("Error sending file:", err);
+          if (!res.headersSent) {
+            res.status(500).json({ error: "Failed to serve file" });
+          }
+        }
       });
     } catch (error) {
-      console.error("Error uploading file:", error);
-      res.status(500).json({ message: "Failed to upload file" });
+      console.error("Unexpected error in file serving:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: "An unexpected error occurred",
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+      }
     }
+  });
+
+  // ID document upload endpoint with enhanced error handling
+  app.post("/api/upload/id-document", (req, res) => {
+    const uploadSingle = upload.single("idDocument");
+    
+    uploadSingle(req, res, async (err) => {
+      try {
+        // Handle multer errors first
+        if (err) {
+          console.error("Multer upload error:", err);
+          if (err instanceof multer.MulterError) {
+            if (err.code === 'LIMIT_FILE_SIZE') {
+              return res.status(400).json({ message: "File size must be less than 2MB" });
+            }
+            if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+              return res.status(400).json({ message: "Unexpected file field" });
+            }
+          }
+          return res.status(500).json({ message: "Upload processing failed" });
+        }
+
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const file = req.file;
+        console.log("Processing uploaded file:", {
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size
+        });
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+          return res.status(400).json({ message: "Only JPEG, PNG, and PDF files are allowed" });
+        }
+
+        // Double-check file size (multer should handle this, but be safe)
+        if (file.size > 2 * 1024 * 1024) {
+          return res.status(400).json({ message: "File size must be less than 2MB" });
+        }
+
+        // Validate filename to prevent path traversal
+        const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const fileExtension = path.extname(sanitizedOriginalName).toLowerCase();
+        
+        if (!fileExtension || !['.jpg', '.jpeg', '.png', '.pdf'].includes(fileExtension)) {
+          return res.status(400).json({ message: "Invalid file extension" });
+        }
+
+        // Generate unique filename
+        const fileName = `id-document-${Date.now()}-${crypto.randomUUID()}${fileExtension}`;
+
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = path.join(__dirname, "../uploads/id-documents");
+        try {
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+        } catch (dirError) {
+          console.error("Error creating uploads directory:", dirError);
+          return res.status(500).json({ message: "Failed to prepare upload directory" });
+        }
+
+        // Save file to disk with error handling
+        const filePath = path.join(uploadsDir, fileName);
+        try {
+          fs.writeFileSync(filePath, file.buffer);
+          console.log("File saved successfully:", filePath);
+        } catch (writeError) {
+          console.error("Error writing file:", writeError);
+          return res.status(500).json({ message: "Failed to save file" });
+        }
+
+        // Verify file was written correctly
+        try {
+          const stats = fs.statSync(filePath);
+          if (stats.size !== file.size) {
+            console.error("File size mismatch after write");
+            fs.unlinkSync(filePath); // Clean up corrupted file
+            return res.status(500).json({ message: "File upload verification failed" });
+          }
+        } catch (verifyError) {
+          console.error("Error verifying file:", verifyError);
+          return res.status(500).json({ message: "File upload verification failed" });
+        }
+
+        res.json({
+          success: true,
+          fileName: fileName,
+          originalName: file.originalname,
+          url: `uploaded://${fileName}`,
+          size: file.size
+        });
+      } catch (error) {
+        console.error("Unexpected error in file upload:", error);
+        res.status(500).json({ 
+          message: "An unexpected error occurred during file upload",
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+      }
+    });
   });
 
   // Tenant Authentication routes
   app.post("/api/tenant/login", async (req, res) => {
     try {
       const { email, password } = req.body;
-      
+
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
@@ -81,7 +241,7 @@ export function registerRoutes(app: Express) {
       }
 
       const token = await storage.createTenantSession(tenant.id);
-      
+
       res.json({
         success: true,
         tenant: {
@@ -211,7 +371,7 @@ export function registerRoutes(app: Express) {
       });
     } catch (error: any) {
       console.error("Error creating payment intent:", error);
-      
+
       // Provide specific guidance for Stripe configuration issues
       if (error.code === 'parameter_invalid_empty' || error.message?.includes('payment method types')) {
         res.status(400).json({ 
@@ -231,7 +391,7 @@ export function registerRoutes(app: Express) {
 
       // Verify the payment intent was successful
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
+
       if (paymentIntent.status === "succeeded") {
         // Create a rent payment record
         const rentPayment = await storage.createRentPayment({
@@ -436,6 +596,23 @@ export function registerRoutes(app: Express) {
   app.post("/api/tenants", async (req, res) => {
     try {
       console.log("Routes: Received tenant creation request:", req.body);
+      
+      // Validate required fields
+      const { firstName, lastName, email } = req.body;
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ 
+          message: "First name, last name, and email are required" 
+        });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ 
+          message: "Invalid email format" 
+        });
+      }
+
       const tenant = await storage.createTenant(req.body);
       console.log("Routes: Tenant created successfully:", tenant);
       res.json(tenant);
@@ -443,9 +620,17 @@ export function registerRoutes(app: Express) {
       console.error("Routes: Error creating tenant:", error);
       console.error("Routes: Error details:", error.message);
       console.error("Routes: Error stack:", error.stack);
+      
+      // Handle specific database errors
+      if (error.message?.includes('UNIQUE constraint failed')) {
+        return res.status(409).json({ 
+          message: "A tenant with this email already exists" 
+        });
+      }
+      
       res.status(500).json({ 
         message: "Failed to create tenant",
-        error: error.message 
+        error: process.env.NODE_ENV === 'development' ? error.message : "Internal server error"
       });
     }
   });
@@ -456,7 +641,7 @@ export function registerRoutes(app: Express) {
       console.log("=== API MIDDLEWARE HIT FOR", req.url, "===");
       console.log("Method:", req.method);
       console.log("Body:", JSON.stringify(req.body, null, 2));
-      
+
       // Convert date strings to Date objects if they exist
       const data = { ...req.body };
       if (data.leaseStart && typeof data.leaseStart === 'string') {
@@ -465,7 +650,7 @@ export function registerRoutes(app: Express) {
       if (data.leaseEnd && typeof data.leaseEnd === 'string') {
         data.leaseEnd = new Date(data.leaseEnd);
       }
-      
+
       const tenant = await storage.updateTenant(id, data);
       res.json(tenant);
     } catch (error) {
@@ -480,7 +665,7 @@ export function registerRoutes(app: Express) {
       console.log("=== API MIDDLEWARE HIT FOR", req.url, "===");
       console.log("Method:", req.method);
       console.log("Body:", JSON.stringify(req.body, null, 2));
-      
+
       // Convert date strings to Date objects if they exist
       const data = { ...req.body };
       if (data.leaseStart && typeof data.leaseStart === 'string') {
@@ -489,7 +674,7 @@ export function registerRoutes(app: Express) {
       if (data.leaseEnd && typeof data.leaseEnd === 'string') {
         data.leaseEnd = new Date(data.leaseEnd);
       }
-      
+
       const tenant = await storage.updateTenant(id, data);
       res.json(tenant);
     } catch (error) {
@@ -514,7 +699,7 @@ export function registerRoutes(app: Express) {
     try {
       const unitId = req.params.unitId;
       console.log("Route: Fetching tenant history for unit:", unitId);
-      
+
       // Return sample data directly in the route for now
       const sampleHistory = [
         {
@@ -557,7 +742,7 @@ export function registerRoutes(app: Express) {
           updatedAt: new Date()
         }
       ];
-      
+
       console.log("Route: Returning sample history with", sampleHistory.length, "records");
       res.json(sampleHistory);
     } catch (error) {
@@ -778,7 +963,7 @@ export function registerRoutes(app: Express) {
       if (taskData.dueDate) {
         taskData.dueDate = new Date(taskData.dueDate);
       }
-      
+
       const task = await storage.createTask(taskData);
       res.json(task);
     } catch (error) {
@@ -857,7 +1042,7 @@ export function registerRoutes(app: Express) {
     try {
       const { email, password } = req.body;
 
-      // Get user by email
+            // Get user by email
       const user = await storage.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ message: "Invalid email or password" });
@@ -893,17 +1078,17 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/rent-reminder", async (req, res) => {
     try {
       const { tenantId } = req.body;
-      
+
       // Get tenant details
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
       }
-      
+
       // Get unit and property details
       const unit = await storage.getUnitById(tenant.unitId);
       const property = await storage.getPropertyById(unit.propertyId);
-      
+
       const success = await emailService.sendRentReminder(tenant.email, {
         tenantName: `${tenant.firstName} ${tenant.lastName}`,
         unitNumber: unit.unitNumber,
@@ -911,7 +1096,7 @@ export function registerRoutes(app: Express) {
         amount: tenant.monthlyRent,
         dueDate: new Date().toLocaleDateString(),
       });
-      
+
       if (success) {
         res.json({ message: "Rent reminder sent successfully" });
       } else {
@@ -926,15 +1111,15 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/maintenance-notification", async (req, res) => {
     try {
       const { tenantId, description, status } = req.body;
-      
+
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
       }
-      
+
       const unit = await storage.getUnitById(tenant.unitId);
       const property = await storage.getPropertyById(unit.propertyId);
-      
+
       const success = await emailService.sendMaintenanceNotification(tenant.email, {
         tenantName: `${tenant.firstName} ${tenant.lastName}`,
         unitNumber: unit.unitNumber,
@@ -942,7 +1127,7 @@ export function registerRoutes(app: Express) {
         description,
         status,
       });
-      
+
       if (success) {
         res.json({ message: "Maintenance notification sent successfully" });
       } else {
@@ -957,22 +1142,22 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/welcome", async (req, res) => {
     try {
       const { tenantId } = req.body;
-      
+
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
       }
-      
+
       const unit = await storage.getUnitById(tenant.unitId);
       const property = await storage.getPropertyById(unit.propertyId);
-      
+
       const success = await emailService.sendWelcomeEmail(
         tenant.email,
         `${tenant.firstName} ${tenant.lastName}`,
         property.name,
         unit.unitNumber
       );
-      
+
       if (success) {
         res.json({ message: "Welcome email sent successfully" });
       } else {
@@ -987,7 +1172,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/bulk-rent-reminders", async (req, res) => {
     try {
       const { propertyId } = req.body;
-      
+
       let tenants;
       if (propertyId) {
         // Get tenants for specific property
@@ -1001,18 +1186,18 @@ export function registerRoutes(app: Express) {
         // Get all tenants
         tenants = await storage.getAllTenants();
       }
-      
+
       const results = {
         sent: 0,
         failed: 0,
         errors: []
       };
-      
+
       for (const tenant of tenants) {
         try {
           const unit = await storage.getUnitById(tenant.unitId);
           const property = await storage.getPropertyById(unit.propertyId);
-          
+
           const success = await emailService.sendRentReminder(tenant.email, {
             tenantName: `${tenant.firstName} ${tenant.lastName}`,
             unitNumber: unit.unitNumber,
@@ -1020,7 +1205,7 @@ export function registerRoutes(app: Express) {
             amount: tenant.monthlyRent,
             dueDate: new Date().toLocaleDateString(),
           });
-          
+
           if (success) {
             results.sent++;
           } else {
@@ -1032,7 +1217,7 @@ export function registerRoutes(app: Express) {
           results.errors.push(`Error processing ${tenant.email}: ${error.message}`);
         }
       }
-      
+
       res.json(results);
     } catch (error) {
       console.error("Error sending bulk rent reminders:", error);
@@ -1048,7 +1233,7 @@ export function registerRoutes(app: Express) {
       }
 
       const csvContent = req.file.buffer.toString('utf8');
-      
+
       // Parse CSV
       const records = parse(csvContent, {
         columns: true,
@@ -1094,7 +1279,7 @@ export function registerRoutes(app: Express) {
               if (!property) {
                 throw new Error(`Property "${record.propertyName}" not found`);
               }
-              
+
               await storage.createUnit({
                 propertyId: property.id,
                 unitNumber: record.unitNumber,
@@ -1114,7 +1299,7 @@ export function registerRoutes(app: Express) {
               if (!tenantProperty) {
                 throw new Error(`Property "${record.propertyName}" not found`);
               }
-              
+
               const units = await storage.getAllUnits();
               const unit = units.find(u => u.propertyId === tenantProperty.id && u.unitNumber === record.unitNumber);
               if (!unit) {
@@ -1197,7 +1382,7 @@ export function registerRoutes(app: Express) {
             default:
               throw new Error(`Unknown record type: ${record.type}`);
           }
-          
+
           results.successCount++;
         } catch (error) {
           results.errorCount++;

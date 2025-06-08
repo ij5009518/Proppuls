@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -145,7 +145,7 @@ export default function Tenants() {
     enabled: !!selectedUnitForHistory?.id,
   });
 
-  // Handle ID document upload
+  // Handle ID document upload with enhanced error handling
   const handleIdDocumentUpload = async (file: File) => {
     console.log("Starting ID document upload for file:", file.name);
     
@@ -169,25 +169,51 @@ export default function Tenants() {
       });
       return;
     }
+
+    // Validate file name
+    if (!file.name || file.name.length === 0) {
+      toast({
+        title: "Invalid file",
+        description: "File must have a valid name",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsUploadingId(true);
     try {
       const formData = new FormData();
       formData.append('idDocument', file);
 
+      // Add timeout to prevent hanging uploads
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch('/api/upload/id-document', {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Upload failed with response:", errorText);
-        throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+        let errorMessage = "Upload failed";
+        try {
+          const errorResult = await response.json();
+          errorMessage = errorResult.message || errorMessage;
+        } catch {
+          errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
       console.log("Upload successful, result:", result);
+      
+      if (!result.success || !result.url) {
+        throw new Error("Invalid response from server");
+      }
       
       const uploadedDoc = {
         url: result.url,
@@ -204,9 +230,19 @@ export default function Tenants() {
     } catch (error) {
       console.error("ID document upload error:", error);
       setUploadedIdDocument(null);
+      
+      let errorMessage = "Failed to upload ID document";
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = "Upload timed out. Please try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to upload ID document",
+        title: "Upload Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -366,16 +402,35 @@ export default function Tenants() {
     console.log("Form submission started with data:", data);
     console.log("Uploaded ID document:", uploadedIdDocument);
     
-    const submitData = {
-      ...data,
-      leaseStart: data.leaseStart?.toISOString(),
-      leaseEnd: data.leaseEnd?.toISOString(),
-      idDocumentUrl: uploadedIdDocument?.url || null,
-      idDocumentName: uploadedIdDocument?.name || null,
-    };
-    
-    console.log("Final submit data:", submitData);
-    createTenantMutation.mutate(submitData);
+    try {
+      const submitData = {
+        ...data,
+        leaseStart: data.leaseStart?.toISOString(),
+        leaseEnd: data.leaseEnd?.toISOString(),
+        idDocumentUrl: uploadedIdDocument?.url || null,
+        idDocumentName: uploadedIdDocument?.name || null,
+      };
+      
+      // Validate required fields one more time
+      if (!data.firstName || !data.lastName || !data.email) {
+        toast({
+          title: "Validation Error",
+          description: "First name, last name, and email are required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log("Final submit data:", submitData);
+      createTenantMutation.mutate(submitData);
+    } catch (error) {
+      console.error("Error preparing tenant data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to prepare tenant data for submission",
+        variant: "destructive",
+      });
+    }
   };
 
   const onEditSubmit = (data: z.infer<typeof tenantSchema>) => {
@@ -527,6 +582,9 @@ export default function Tenants() {
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Tenant</DialogTitle>
+                <div className="text-sm text-muted-foreground">
+                  Create a new tenant profile with contact information, lease details, and identity documents.
+                </div>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -907,12 +965,7 @@ export default function Tenants() {
             
             return (
               <Card 
-                key={tenant.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => {
-                  setSelectedTenant(tenant);
-                  setIsViewDialogOpen(true);
-                }}
+                key={tenant.id}
               >
                 <CardContent className="p-4">
                   <div className="space-y-3">
@@ -1280,6 +1333,9 @@ export default function Tenants() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Record Payment - {selectedTenant?.firstName} {selectedTenant?.lastName}</DialogTitle>
+            <div className="text-sm text-muted-foreground">
+              Record a rent payment for this tenant. Enter the payment amount, due date, and payment method.
+            </div>
           </DialogHeader>
           <Form {...paymentForm}>
             <form onSubmit={paymentForm.handleSubmit(onPaymentSubmit)} className="space-y-4">
@@ -1344,6 +1400,9 @@ export default function Tenants() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Task - {selectedTenant?.firstName} {selectedTenant?.lastName}</DialogTitle>
+            <div className="text-sm text-muted-foreground">
+              Create a new task related to this tenant. Tasks can include maintenance requests, inspections, or administrative items.
+            </div>
           </DialogHeader>
           <Form {...taskForm}>
             <form onSubmit={taskForm.handleSubmit(onTaskSubmit)} className="space-y-4">
@@ -1457,6 +1516,14 @@ export default function Tenants() {
               <DialogTitle className="flex items-center gap-2">
                 {selectedTenant?.firstName} {selectedTenant?.lastName} - Tenant Details
               </DialogTitle>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              View complete tenant information, lease details, payment history, and manage tasks.
+            </div>
+          </DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div></div>
               <div className="flex items-center gap-2 mr-8">
 
                 <Button 
@@ -1567,6 +1634,103 @@ export default function Tenants() {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* ID Document Section */}
+                  {selectedTenant.idDocumentUrl && (
+                    <div className="pt-6 border-t">
+                      <h3 className="text-lg font-semibold mb-4">Identity Document</h3>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-2">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                            <span className="text-sm font-medium">
+                              {selectedTenant.idDocumentName || "ID Document"}
+                            </span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                if (selectedTenant.idDocumentUrl?.startsWith('data:')) {
+                                  // For base64 data URLs, create a blob and open it
+                                  const newWindow = window.open();
+                                  if (newWindow) {
+                                    newWindow.document.write(`
+                                      <html>
+                                        <head><title>ID Document - ${selectedTenant.firstName} ${selectedTenant.lastName}</title></head>
+                                        <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f5f5f5;">
+                                          <img src="${selectedTenant.idDocumentUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="ID Document" />
+                                        </body>
+                                      </html>
+                                    `);
+                                  }
+                                } else if (selectedTenant.idDocumentUrl?.startsWith('uploaded://')) {
+                                  // For uploaded files, open directly from server endpoint
+                                  const fileName = selectedTenant.idDocumentUrl.replace('uploaded://', '');
+                                  const fileUrl = `/api/files/id-documents/${fileName}`;
+                                  
+                                  // Open the file directly in a new tab
+                                  const newWindow = window.open(fileUrl, '_blank');
+                                  
+                                  if (!newWindow) {
+                                    toast({
+                                      title: "Popup Blocked",
+                                      description: "Please allow popups for this site to view documents.",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                } else if (selectedTenant.idDocumentUrl) {
+                                  // For regular URLs
+                                  window.open(selectedTenant.idDocumentUrl, '_blank');
+                                } else {
+                                  toast({
+                                    title: "No Document",
+                                    description: "No ID document available for this tenant.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              } catch (error) {
+                                console.error('Error opening document:', error);
+                                toast({
+                                  title: "Error",
+                                  description: "An error occurred while trying to open the document.",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Document
+                          </Button>
+                        </div>
+                        
+                        {/* Preview for image documents */}
+                        {selectedTenant.idDocumentUrl?.startsWith('data:image/') && (
+                          <div className="border rounded-lg overflow-hidden bg-white">
+                            <img
+                              src={selectedTenant.idDocumentUrl}
+                              alt="ID Document Preview"
+                              className="w-full h-48 object-contain"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Info for uploaded documents */}
+                        {selectedTenant.idDocumentUrl?.startsWith('uploaded://') && (
+                          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-600">
+                              Document stored securely on server
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {selectedTenant.idDocumentName}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
@@ -1859,6 +2023,9 @@ export default function Tenants() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Tenant</DialogTitle>
+            <div className="text-sm text-muted-foreground">
+              Update tenant information including contact details, lease terms, and unit assignment.
+            </div>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-6">
@@ -2101,6 +2268,9 @@ export default function Tenants() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Background Check - {selectedTenant?.firstName} {selectedTenant?.lastName}</DialogTitle>
+            <div className="text-sm text-muted-foreground">
+              Manage background screening including credit checks, criminal background, employment verification, and references.
+            </div>
           </DialogHeader>
           <div className="space-y-6">
             {/* Background Check Status */}
@@ -2231,6 +2401,9 @@ export default function Tenants() {
             <DialogTitle>
               Tenant History - Unit {selectedUnitForHistory?.unitNumber}
             </DialogTitle>
+            <div className="text-sm text-muted-foreground">
+              View historical tenant information for this unit, including previous lease terms and move-out reasons.
+            </div>
           </DialogHeader>
           <div className="space-y-6">
             {tenantHistory.length === 0 ? (
@@ -2315,6 +2488,9 @@ export default function Tenants() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Tenant Status</DialogTitle>
+            <div className="text-sm text-muted-foreground">
+              Update the tenant's status. Changing to "Moved Out" will create a historical record and clear unit assignment.
+            </div>
           </DialogHeader>
           <Form {...tenantStatusForm}>
             <form onSubmit={tenantStatusForm.handleSubmit(onTenantStatusSubmit)} className="space-y-4">
