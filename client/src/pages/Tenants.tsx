@@ -808,27 +808,7 @@ export default function Tenants() {
                       <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.phone}</p>
                     </div>
 
-                    {/* Lease Information */}
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                      {tenant.leaseStart && (
-                        <div className="text-sm">
-                          <span className="font-medium text-gray-600 dark:text-gray-400">Lease Start:</span>
-                          <p className="text-gray-900 dark:text-white">{formatDate(tenant.leaseStart)}</p>
-                        </div>
-                      )}
-                      {tenant.leaseEnd && (
-                        <div className="text-sm">
-                          <span className="font-medium text-gray-600 dark:text-gray-400">Lease End:</span>
-                          <p className="text-gray-900 dark:text-white">{formatDate(tenant.leaseEnd)}</p>
-                        </div>
-                      )}
-                      {tenant.deposit && (
-                        <div className="text-sm">
-                          <span className="font-medium text-gray-600 dark:text-gray-400">Security Deposit:</span>
-                          <p className="text-gray-900 dark:text-white">{formatCurrency(tenant.deposit)}</p>
-                        </div>
-                      )}
-                    </div>
+
 
                     {/* Payment Status Alerts */}
                     {(overduePayments.length > 0 || currentBalance > 0) && (
@@ -1364,20 +1344,7 @@ export default function Tenants() {
                         <p className="text-sm font-medium text-gray-700 mb-1">Email</p>
                         <p className="text-sm text-gray-900">{selectedTenant.email}</p>
                       </div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Date of Birth</p>
-                        <p className="text-sm text-gray-900">
-                          {selectedTenant.dateOfBirth 
-                            ? new Date(selectedTenant.dateOfBirth).toLocaleDateString() 
-                            : "Not provided"}
-                        </p>
-                      </div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</p>
-                        <p className="text-sm text-gray-900">
-                          {selectedTenant.emergencyContactName || "Not provided"}
-                        </p>
-                      </div>
+
                     </div>
                     <div>
                       <div className="mb-6">
@@ -1397,12 +1364,7 @@ export default function Tenants() {
                           {selectedTenant.status}
                         </Badge>
                       </div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Emergency Contact Phone</p>
-                        <p className="text-sm text-gray-900">
-                          {selectedTenant.emergencyContactPhone || "Not provided"}
-                        </p>
-                      </div>
+
                     </div>
                   </div>
                 </div>
@@ -1420,20 +1382,8 @@ export default function Tenants() {
                             {selectedTenant.leaseStart ? 'Active' : 'No Active Lease'}
                           </p>
                         </div>
-                        {selectedTenant.leaseStart && (
-                          <div>
-                            <span className="text-sm font-medium text-muted-foreground">Start Date:</span>
-                            <p className="text-sm">{formatDate(selectedTenant.leaseStart)}</p>
-                          </div>
-                        )}
                       </div>
                       <div className="space-y-3">
-                        {selectedTenant.leaseEnd && (
-                          <div>
-                            <span className="text-sm font-medium text-muted-foreground">End Date:</span>
-                            <p className="text-sm">{formatDate(selectedTenant.leaseEnd)}</p>
-                          </div>
-                        )}
                         {selectedTenant.monthlyRent && (
                           <div>
                             <span className="text-sm font-medium text-muted-foreground">Monthly Rent:</span>
