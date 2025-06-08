@@ -117,6 +117,43 @@ export default function Tenants() {
     enabled: !!selectedUnitForHistory?.id,
   });
 
+  // Handle ID document upload
+  const handleIdDocumentUpload = async (file: File) => {
+    setIsUploadingId(true);
+    try {
+      const formData = new FormData();
+      formData.append('idDocument', file);
+
+      const response = await fetch('/api/upload/id-document', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      setUploadedIdDocument({
+        url: result.url,
+        name: result.originalName
+      });
+
+      toast({
+        title: "Success",
+        description: "ID document uploaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload ID document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingId(false);
+    }
+  };
+
   const form = useForm<z.infer<typeof tenantSchema>>({
     resolver: zodResolver(tenantSchema),
     defaultValues: {
