@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,34 +78,6 @@ export default function Tenants() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-
-  const handleOpenAddDialog = () => {
-    console.log("Opening add dialog...");
-    form.reset({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      dateOfBirth: undefined,
-      emergencyContactName: "",
-      emergencyContactPhone: "",
-      status: "pending",
-      unitId: "",
-      leaseStart: undefined,
-      leaseEnd: undefined,
-      monthlyRent: "",
-      deposit: "",
-      tenantType: "primary",
-      relationToPrimary: "",
-    });
-    setUploadedIdDocument(null);
-    setIsAddDialogOpen(true);
-  };
-
-  const handleCloseAddDialog = () => {
-    console.log("Closing add dialog...");
-    setIsAddDialogOpen(false);
-  };
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -145,111 +117,6 @@ export default function Tenants() {
     enabled: !!selectedUnitForHistory?.id,
   });
 
-  // Handle ID document upload with enhanced error handling
-  const handleIdDocumentUpload = async (file: File) => {
-    console.log("Starting ID document upload for file:", file.name);
-    
-    // Validate file type
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
-    if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Invalid file type",
-        description: "Only PNG, JPEG, and PDF files are allowed",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "File size must be less than 2MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file name
-    if (!file.name || file.name.length === 0) {
-      toast({
-        title: "Invalid file",
-        description: "File must have a valid name",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsUploadingId(true);
-    try {
-      const formData = new FormData();
-      formData.append('idDocument', file);
-
-      // Add timeout to prevent hanging uploads
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-      const response = await fetch('/api/upload/id-document', {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        let errorMessage = "Upload failed";
-        try {
-          const errorResult = await response.json();
-          errorMessage = errorResult.message || errorMessage;
-        } catch {
-          errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
-      console.log("Upload successful, result:", result);
-      
-      if (!result.success || !result.url) {
-        throw new Error("Invalid response from server");
-      }
-      
-      const uploadedDoc = {
-        url: result.url,
-        name: result.originalName || file.name
-      };
-      
-      setUploadedIdDocument(uploadedDoc);
-      console.log("Set uploaded document:", uploadedDoc);
-
-      toast({
-        title: "Success",
-        description: "ID document uploaded successfully",
-      });
-    } catch (error) {
-      console.error("ID document upload error:", error);
-      setUploadedIdDocument(null);
-      
-      let errorMessage = "Failed to upload ID document";
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          errorMessage = "Upload timed out. Please try again.";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
-      toast({
-        title: "Upload Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploadingId(false);
-    }
-  };
-
   const form = useForm<z.infer<typeof tenantSchema>>({
     resolver: zodResolver(tenantSchema),
     defaultValues: {
@@ -266,8 +133,6 @@ export default function Tenants() {
       leaseEnd: undefined,
       monthlyRent: "",
       deposit: "",
-      tenantType: "primary",
-      relationToPrimary: "",
     },
   });
 
@@ -307,15 +172,11 @@ export default function Tenants() {
   });
 
   const createTenantMutation = useMutation({
-    mutationFn: (data: any) => {
-      console.log("Creating tenant with data:", data);
-      return apiRequest("POST", "/api/tenants", data);
-    },
+    mutationFn: (data: any) => apiRequest("POST", "/api/tenants", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      handleCloseAddDialog();
+      setIsAddDialogOpen(false);
       form.reset();
-      setUploadedIdDocument(null);
       toast({ title: "Success", description: "Tenant created successfully" });
     },
     onError: () => {
@@ -399,38 +260,12 @@ export default function Tenants() {
   });
 
   const onSubmit = (data: z.infer<typeof tenantSchema>) => {
-    console.log("Form submission started with data:", data);
-    console.log("Uploaded ID document:", uploadedIdDocument);
-    
-    try {
-      const submitData = {
-        ...data,
-        leaseStart: data.leaseStart?.toISOString(),
-        leaseEnd: data.leaseEnd?.toISOString(),
-        idDocumentUrl: uploadedIdDocument?.url || null,
-        idDocumentName: uploadedIdDocument?.name || null,
-      };
-      
-      // Validate required fields one more time
-      if (!data.firstName || !data.lastName || !data.email) {
-        toast({
-          title: "Validation Error",
-          description: "First name, last name, and email are required",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      console.log("Final submit data:", submitData);
-      createTenantMutation.mutate(submitData);
-    } catch (error) {
-      console.error("Error preparing tenant data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to prepare tenant data for submission",
-        variant: "destructive",
-      });
-    }
+    const submitData = {
+      ...data,
+      leaseStart: data.leaseStart?.toISOString(),
+      leaseEnd: data.leaseEnd?.toISOString(),
+    };
+    createTenantMutation.mutate(submitData);
   };
 
   const onEditSubmit = (data: z.infer<typeof tenantSchema>) => {
@@ -560,31 +395,33 @@ export default function Tenants() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Tenants</h1>
         <div className="flex flex-col items-end space-y-3">
-          <Button 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleOpenAddDialog();
-            }}
-            type="button"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Tenant
-          </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-            console.log("Dialog onOpenChange called with:", open);
-            if (open) {
-              handleOpenAddDialog();
-            } else {
-              handleCloseAddDialog();
-            }
-          }}>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => {
+                form.reset({
+                  firstName: "",
+                  lastName: "",
+                  email: "",
+                  phone: "",
+                  dateOfBirth: undefined,
+                  emergencyContactName: "",
+                  emergencyContactPhone: "",
+                  status: "pending",
+                  unitId: "",
+                  leaseStart: undefined,
+                  leaseEnd: undefined,
+                  monthlyRent: "",
+                  deposit: "",
+                });
+                setIsAddDialogOpen(true);
+              }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Tenant
+              </Button>
+            </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Tenant</DialogTitle>
-                <div className="text-sm text-muted-foreground">
-                  Create a new tenant profile with contact information, lease details, and identity documents.
-                </div>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -742,102 +579,73 @@ export default function Tenants() {
                     />
                   </div>
 
-                  {/* Tenant Type Section */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="tenantType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tenant Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select tenant type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="primary">Primary Tenant</SelectItem>
-                              <SelectItem value="spouse">Spouse</SelectItem>
-                              <SelectItem value="child">Child</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="relationToPrimary"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Relation to Primary</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., spouse, child, parent" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
                   {/* ID Upload Section */}
                   <div className="space-y-4">
                     <div className="border-t pt-4">
                       <h3 className="text-lg font-medium text-gray-900 mb-4">Identity Documents</h3>
-                      <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <FormLabel>Government ID Document</FormLabel>
-                          {uploadedIdDocument ? (
-                            <div className="mt-2 p-4 border-2 border-green-300 border-dashed rounded-md bg-green-50">
-                              <div className="flex items-center space-x-2">
-                                <FileText className="h-5 w-5 text-green-600" />
-                                <span className="text-sm text-green-800">{uploadedIdDocument.name}</span>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setUploadedIdDocument(null)}
-                                  className="ml-auto"
-                                >
-                                  Remove
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="mt-2">
-                              <label className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors cursor-pointer">
-                                <div className="space-y-1 text-center">
-                                  {isUploadingId ? (
-                                    <div className="mx-auto h-12 w-12 text-blue-500">
-                                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                                    </div>
-                                  ) : (
-                                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                                  )}
-                                  <div className="flex text-sm text-gray-600">
-                                    <span className="font-medium text-blue-600 hover:text-blue-500">
-                                      {isUploadingId ? "Uploading..." : "Upload ID document"}
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 2MB</p>
-                                </div>
-                                <input
-                                  type="file"
-                                  className="sr-only"
-                                  accept="image/*,.pdf"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      handleIdDocumentUpload(file);
-                                    }
-                                  }}
-                                  disabled={isUploadingId}
+                          <FormLabel>Government ID (Front)</FormLabel>
+                          <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+                            <div className="space-y-1 text-center">
+                              <svg
+                                className="mx-auto h-12 w-12 text-gray-400"
+                                stroke="currentColor"
+                                fill="none"
+                                viewBox="0 0 48 48"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                  strokeWidth={2}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
                                 />
-                              </label>
+                              </svg>
+                              <div className="flex text-sm text-gray-600">
+                                <label
+                                  htmlFor="id-front-upload"
+                                  className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                >
+                                  <span>Upload front of ID</span>
+                                  <input id="id-front-upload" name="id-front-upload" type="file" className="sr-only" accept="image/*" />
+                                </label>
+                              </div>
+                              <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
                             </div>
-                          )}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <FormLabel>Government ID (Back)</FormLabel>
+                          <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+                            <div className="space-y-1 text-center">
+                              <svg
+                                className="mx-auto h-12 w-12 text-gray-400"
+                                stroke="currentColor"
+                                fill="none"
+                                viewBox="0 0 48 48"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                  strokeWidth={2}
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              <div className="flex text-sm text-gray-600">
+                                <label
+                                  htmlFor="id-back-upload"
+                                  className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                >
+                                  <span>Upload back of ID</span>
+                                  <input id="id-back-upload" name="id-back-upload" type="file" className="sr-only" accept="image/*" />
+                                </label>
+                              </div>
+                              <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -912,15 +720,11 @@ export default function Tenants() {
                   </div>
 
                   <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={handleCloseAddDialog}>
+                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={createTenantMutation.isPending || isUploadingId}
-                    >
-                      {isUploadingId ? "Uploading ID..." : 
-                       createTenantMutation.isPending ? "Creating..." : "Create Tenant"}
+                    <Button type="submit" disabled={createTenantMutation.isPending}>
+                      {createTenantMutation.isPending ? "Creating..." : "Create Tenant"}
                     </Button>
                   </div>
                 </form>
@@ -965,7 +769,12 @@ export default function Tenants() {
             
             return (
               <Card 
-                key={tenant.id}
+                key={tenant.id} 
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => {
+                  setSelectedTenant(tenant);
+                  setIsViewDialogOpen(true);
+                }}
               >
                 <CardContent className="p-4">
                   <div className="space-y-3">
@@ -1007,19 +816,6 @@ export default function Tenants() {
                           Emergency: {tenant.emergencyContactName}
                           {tenant.emergencyContactPhone && ` - ${tenant.emergencyContactPhone}`}
                         </p>
-                      )}
-                      {tenant.tenantType && tenant.tenantType !== 'primary' && (
-                        <p className="text-sm text-blue-600 dark:text-blue-400">
-                          {tenant.tenantType === 'spouse' ? 'Spouse' : 
-                           tenant.tenantType === 'child' ? 'Child' : 
-                           tenant.tenantType === 'other' ? tenant.relationToPrimary || 'Other' : tenant.tenantType}
-                        </p>
-                      )}
-                      {tenant.idDocumentName && (
-                        <div className="flex items-center text-sm text-green-600 dark:text-green-400">
-                          <FileText className="h-3 w-3 mr-1" />
-                          ID Verified
-                        </div>
                       )}
                     </div>
 
@@ -1333,9 +1129,6 @@ export default function Tenants() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Record Payment - {selectedTenant?.firstName} {selectedTenant?.lastName}</DialogTitle>
-            <div className="text-sm text-muted-foreground">
-              Record a rent payment for this tenant. Enter the payment amount, due date, and payment method.
-            </div>
           </DialogHeader>
           <Form {...paymentForm}>
             <form onSubmit={paymentForm.handleSubmit(onPaymentSubmit)} className="space-y-4">
@@ -1400,9 +1193,6 @@ export default function Tenants() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Task - {selectedTenant?.firstName} {selectedTenant?.lastName}</DialogTitle>
-            <div className="text-sm text-muted-foreground">
-              Create a new task related to this tenant. Tasks can include maintenance requests, inspections, or administrative items.
-            </div>
           </DialogHeader>
           <Form {...taskForm}>
             <form onSubmit={taskForm.handleSubmit(onTaskSubmit)} className="space-y-4">
@@ -1516,14 +1306,6 @@ export default function Tenants() {
               <DialogTitle className="flex items-center gap-2">
                 {selectedTenant?.firstName} {selectedTenant?.lastName} - Tenant Details
               </DialogTitle>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              View complete tenant information, lease details, payment history, and manage tasks.
-            </div>
-          </DialogHeader>
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div></div>
               <div className="flex items-center gap-2 mr-8">
 
                 <Button 
@@ -1634,103 +1416,6 @@ export default function Tenants() {
                       </div>
                     </div>
                   </div>
-                  
-                  {/* ID Document Section */}
-                  {selectedTenant.idDocumentUrl && (
-                    <div className="pt-6 border-t">
-                      <h3 className="text-lg font-semibold mb-4">Identity Document</h3>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-2">
-                            <FileText className="h-5 w-5 text-blue-600" />
-                            <span className="text-sm font-medium">
-                              {selectedTenant.idDocumentName || "ID Document"}
-                            </span>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              try {
-                                if (selectedTenant.idDocumentUrl?.startsWith('data:')) {
-                                  // For base64 data URLs, create a blob and open it
-                                  const newWindow = window.open();
-                                  if (newWindow) {
-                                    newWindow.document.write(`
-                                      <html>
-                                        <head><title>ID Document - ${selectedTenant.firstName} ${selectedTenant.lastName}</title></head>
-                                        <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f5f5f5;">
-                                          <img src="${selectedTenant.idDocumentUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" alt="ID Document" />
-                                        </body>
-                                      </html>
-                                    `);
-                                  }
-                                } else if (selectedTenant.idDocumentUrl?.startsWith('uploaded://')) {
-                                  // For uploaded files, open directly from server endpoint
-                                  const fileName = selectedTenant.idDocumentUrl.replace('uploaded://', '');
-                                  const fileUrl = `/api/files/id-documents/${fileName}`;
-                                  
-                                  // Open the file directly in a new tab
-                                  const newWindow = window.open(fileUrl, '_blank');
-                                  
-                                  if (!newWindow) {
-                                    toast({
-                                      title: "Popup Blocked",
-                                      description: "Please allow popups for this site to view documents.",
-                                      variant: "destructive",
-                                    });
-                                  }
-                                } else if (selectedTenant.idDocumentUrl) {
-                                  // For regular URLs
-                                  window.open(selectedTenant.idDocumentUrl, '_blank');
-                                } else {
-                                  toast({
-                                    title: "No Document",
-                                    description: "No ID document available for this tenant.",
-                                    variant: "destructive",
-                                  });
-                                }
-                              } catch (error) {
-                                console.error('Error opening document:', error);
-                                toast({
-                                  title: "Error",
-                                  description: "An error occurred while trying to open the document.",
-                                  variant: "destructive",
-                                });
-                              }
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Document
-                          </Button>
-                        </div>
-                        
-                        {/* Preview for image documents */}
-                        {selectedTenant.idDocumentUrl?.startsWith('data:image/') && (
-                          <div className="border rounded-lg overflow-hidden bg-white">
-                            <img
-                              src={selectedTenant.idDocumentUrl}
-                              alt="ID Document Preview"
-                              className="w-full h-48 object-contain"
-                            />
-                          </div>
-                        )}
-                        
-                        {/* Info for uploaded documents */}
-                        {selectedTenant.idDocumentUrl?.startsWith('uploaded://') && (
-                          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-600">
-                              Document stored securely on server
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {selectedTenant.idDocumentName}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </TabsContent>
 
@@ -2023,9 +1708,6 @@ export default function Tenants() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Tenant</DialogTitle>
-            <div className="text-sm text-muted-foreground">
-              Update tenant information including contact details, lease terms, and unit assignment.
-            </div>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-6">
@@ -2268,9 +1950,6 @@ export default function Tenants() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Background Check - {selectedTenant?.firstName} {selectedTenant?.lastName}</DialogTitle>
-            <div className="text-sm text-muted-foreground">
-              Manage background screening including credit checks, criminal background, employment verification, and references.
-            </div>
           </DialogHeader>
           <div className="space-y-6">
             {/* Background Check Status */}
@@ -2401,9 +2080,6 @@ export default function Tenants() {
             <DialogTitle>
               Tenant History - Unit {selectedUnitForHistory?.unitNumber}
             </DialogTitle>
-            <div className="text-sm text-muted-foreground">
-              View historical tenant information for this unit, including previous lease terms and move-out reasons.
-            </div>
           </DialogHeader>
           <div className="space-y-6">
             {tenantHistory.length === 0 ? (
@@ -2488,9 +2164,6 @@ export default function Tenants() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Tenant Status</DialogTitle>
-            <div className="text-sm text-muted-foreground">
-              Update the tenant's status. Changing to "Moved Out" will create a historical record and clear unit assignment.
-            </div>
           </DialogHeader>
           <Form {...tenantStatusForm}>
             <form onSubmit={tenantStatusForm.handleSubmit(onTenantStatusSubmit)} className="space-y-4">
