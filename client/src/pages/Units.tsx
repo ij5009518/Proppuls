@@ -527,7 +527,6 @@ export default function Units() {
           </DialogContent>
         </Dialog>
       </div>
-
       <div className="flex justify-between items-center">
         <Input
           placeholder="Search units, properties, or tenants..."
@@ -552,7 +551,6 @@ export default function Units() {
           </Button>
         </div>
       </div>
-
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredUnits.map((unit) => (
@@ -654,12 +652,11 @@ export default function Units() {
           ))}
         </div>
       )}
-
       {/* View Unit Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center pl-[12px] pr-[12px]">
               <DialogTitle>Unit Details</DialogTitle>
               {selectedUnit && (
                 <div className="flex space-x-2">
@@ -980,7 +977,6 @@ export default function Units() {
           )}
         </DialogContent>
       </Dialog>
-
       {/* Edit Unit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -1124,7 +1120,6 @@ export default function Units() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Create Task Dialog */}
       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -1250,7 +1245,6 @@ export default function Units() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Assign Tenant Dialog */}
       <Dialog open={isAssignTenantDialogOpen} onOpenChange={setIsAssignTenantDialogOpen}>
         <DialogContent className="max-w-md">
@@ -1309,7 +1303,6 @@ export default function Units() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Tenant History Dialog */}
       <Dialog open={isTenantHistoryDialogOpen} onOpenChange={setIsTenantHistoryDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -1376,7 +1369,6 @@ export default function Units() {
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Tenant Status Edit Dialog */}
       <Dialog open={isTenantStatusDialogOpen} onOpenChange={setIsTenantStatusDialogOpen}>
         <DialogContent className="max-w-md">
