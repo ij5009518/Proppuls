@@ -1253,7 +1253,7 @@ export default function Tenants() {
                       </div>
                     </div>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-4 text-center ml-[15px] mr-[15px]">
                     <h3 className="text-lg font-semibold">Unit Assignment</h3>
                     <div className="space-y-2">
                       <div>
