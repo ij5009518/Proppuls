@@ -858,14 +858,28 @@ export function registerRoutes(app: Express) {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user
+      // Create a new organization for this user
+      const organizationName = `${firstName} ${lastName}'s Organization`;
+      const organization = await storage.createOrganization({
+        name: organizationName,
+        domain: null,
+        plan: 'starter',
+        status: 'active',
+        maxUsers: 10,
+        maxProperties: 50,
+        monthlyPrice: 19,
+        settings: {}
+      });
+
+      // Create user with new organization
       const user = await storage.createUser({
         email,
         password: hashedPassword,
         firstName,
         lastName,
-        role: role || 'tenant',
+        role: 'admin', // Make them admin of their own organization
         phone: phone || null,
+        organizationId: organization.id,
       });
 
       // Create session token
@@ -879,7 +893,8 @@ export function registerRoutes(app: Express) {
           email: user.email, 
           firstName: user.firstName, 
           lastName: user.lastName, 
-          role: user.role 
+          role: user.role,
+          organizationId: user.organizationId
         } 
       });
     } catch (error) {
