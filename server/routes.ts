@@ -20,7 +20,7 @@ export function registerRoutes(app: Express) {
   // Configure multer for file uploads
   const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit for ID document photos
   });
 
   // Add a basic API route for testing
