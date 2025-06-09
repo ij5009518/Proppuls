@@ -20,7 +20,6 @@ import {
   Zap,
   Sparkles,
 } from 'lucide-react';
-import logoImage from "@assets/ChatGPT Image Jun 8, 2025, 10_55_20 PM_1749438382648.png";
 import {
   Sidebar,
   SidebarContent,
@@ -138,14 +137,12 @@ export default function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5">
         <div className="flex items-center gap-3 px-4 py-4">
-          <img 
-            src={logoImage} 
-            alt="PropertyFlow Logo" 
-            className="h-10 w-10 rounded-xl object-contain shadow-lg"
-          />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
+            <Building className="h-5 w-5 text-primary-foreground" />
+          </div>
           <div className="flex flex-col">
-            <span className="font-bold text-foreground">PropertyFlow</span>
-            <span className="text-xs text-muted-foreground">Property Management</span>
+            <span className="font-bold text-foreground">Property Manager</span>
+            <span className="text-xs text-muted-foreground">Real Estate Platform</span>
           </div>
         </div>
       </SidebarHeader>
