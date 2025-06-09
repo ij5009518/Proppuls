@@ -18,15 +18,23 @@ class Storage {
   // Organization management methods
   async createOrganization(organizationData: any): Promise<Organization> {
     const id = crypto.randomUUID();
-    const organization = {
+    const organizationRecord = {
       id,
-      ...organizationData,
+      name: organizationData.name,
+      domain: organizationData.domain,
+      plan: organizationData.plan,
+      status: organizationData.status,
+      maxUsers: organizationData.maxUsers,
+      maxProperties: organizationData.maxProperties,
+      monthlyPrice: organizationData.monthlyPrice,
+      settings: organizationData.settings || {},
+      isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    await db.insert(organizations).values(organization);
-    return organization;
+    await db.insert(organizations).values(organizationRecord);
+    return organizationRecord;
   }
 
   async getAllOrganizations(): Promise<Organization[]> {
@@ -63,6 +71,7 @@ class Storage {
       password: userData.password,
       phone: userData.phone || null,
       role: userData.role || 'tenant',
+      organizationId: userData.organizationId,
       isActive: userData.isActive !== undefined ? userData.isActive : true,
       createdAt: new Date(),
       updatedAt: new Date()
