@@ -770,7 +770,7 @@ export default function Tenants() {
                                       />
                                     </label>
                                   </div>
-                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 50MB</p>
                                 </>
                               )}
                             </div>
@@ -840,7 +840,7 @@ export default function Tenants() {
                                       />
                                     </label>
                                   </div>
-                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 50MB</p>
                                 </>
                               )}
                             </div>
