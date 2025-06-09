@@ -1942,13 +1942,16 @@ export default function Tenants() {
       </Dialog>
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Tenant</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              {/* Personal Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Personal Information</h3>
+                <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -2223,6 +2226,7 @@ export default function Tenants() {
                 <Button type="submit" disabled={updateTenantMutation.isPending}>
                   {updateTenantMutation.isPending ? "Updating..." : "Update Tenant"}
                 </Button>
+              </div>
               </div>
             </form>
           </Form>
