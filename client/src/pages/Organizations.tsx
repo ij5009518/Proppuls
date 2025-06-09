@@ -178,9 +178,9 @@ export default function Organizations() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
+                    <SelectItem value="starter">Starter - $19/month</SelectItem>
+                    <SelectItem value="professional">Professional - $39/month</SelectItem>
+                    <SelectItem value="enterprise">Enterprise - Custom pricing</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -260,8 +260,14 @@ export default function Organizations() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Plan</span>
                   <Badge variant={org.plan === 'enterprise' ? 'default' : 'secondary'}>
-                    {org.plan}
+                    {pricingPlans[org.plan as keyof typeof pricingPlans]?.label || org.plan}
                   </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Monthly Price</span>
+                  <span className="text-lg font-bold text-primary">
+                    {org.plan === 'enterprise' ? 'Custom' : `$${org.monthlyPrice || pricingPlans[org.plan as keyof typeof pricingPlans]?.price}`}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Status</span>
