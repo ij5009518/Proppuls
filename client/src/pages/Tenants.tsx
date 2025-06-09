@@ -2170,6 +2170,52 @@ export default function Tenants() {
                 />
               </div>
 
+              {/* Government ID Preview Section */}
+              {selectedTenant?.idDocumentUrl && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Government ID Documents</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <FormLabel>Government ID (Front)</FormLabel>
+                      <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                        <div className="space-y-1 text-center">
+                          <div className="space-y-2">
+                            <div className="flex justify-center">
+                              <img 
+                                src={selectedTenant.idDocumentUrl} 
+                                alt="Front ID" 
+                                className="max-w-full max-h-48 object-contain rounded-md border"
+                              />
+                            </div>
+                            <p className="text-sm text-green-600 font-medium">Front ID Document</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {selectedTenant?.idDocumentBackUrl && (
+                      <div>
+                        <FormLabel>Government ID (Back)</FormLabel>
+                        <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                          <div className="space-y-1 text-center">
+                            <div className="space-y-2">
+                              <div className="flex justify-center">
+                                <img 
+                                  src={selectedTenant.idDocumentBackUrl} 
+                                  alt="Back ID" 
+                                  className="max-w-full max-h-48 object-contain rounded-md border"
+                                />
+                              </div>
+                              <p className="text-sm text-green-600 font-medium">Back ID Document</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancel
