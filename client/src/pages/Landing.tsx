@@ -201,6 +201,172 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-900">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-foreground mb-4">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-xl text-slate-600 dark:text-muted-foreground max-w-3xl mx-auto">
+              Choose the perfect plan for your property management needs. Start with our affordable 
+              starter plan and scale as your portfolio grows.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Starter Plan */}
+            <Card className="relative hover:shadow-xl transition-shadow border-2">
+              <CardHeader className="text-center pb-8">
+                <CardTitle className="text-2xl font-bold mb-2">Starter</CardTitle>
+                <div className="text-4xl font-bold text-primary mb-2">
+                  $19<span className="text-lg font-normal text-slate-600 dark:text-muted-foreground">/month</span>
+                </div>
+                <p className="text-slate-600 dark:text-muted-foreground">Perfect for small property owners</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Up to 10 units</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Basic tenant management</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Rent tracking</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Maintenance requests</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Basic reporting</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Email support</span>
+                  </div>
+                </div>
+                <Button className="w-full mt-6" onClick={() => window.location.href = '/register'}>
+                  Get Started
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Professional Plan */}
+            <Card className="relative hover:shadow-xl transition-shadow border-2 border-primary">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-primary text-primary-foreground px-4 py-1">Most Popular</Badge>
+              </div>
+              <CardHeader className="text-center pb-8 pt-8">
+                <CardTitle className="text-2xl font-bold mb-2">Professional</CardTitle>
+                <div className="text-4xl font-bold text-primary mb-2">
+                  $39<span className="text-lg font-normal text-slate-600 dark:text-muted-foreground">/month</span>
+                </div>
+                <p className="text-slate-600 dark:text-muted-foreground">Ideal for growing portfolios</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Up to 50 properties</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Advanced tenant management</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Financial analytics</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Vendor management</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Document management</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Priority support</span>
+                  </div>
+                </div>
+                <Button className="w-full mt-6" onClick={() => window.location.href = '/register'}>
+                  Get Started
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Enterprise Plan */}
+            <Card className="relative hover:shadow-xl transition-shadow border-2">
+              <CardHeader className="text-center pb-8">
+                <CardTitle className="text-2xl font-bold mb-2">Enterprise</CardTitle>
+                <div className="text-4xl font-bold text-primary mb-2">
+                  Custom<span className="text-lg font-normal text-slate-600 dark:text-muted-foreground"> pricing</span>
+                </div>
+                <p className="text-slate-600 dark:text-muted-foreground">For large property management companies</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Unlimited properties</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Multi-user organizations</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Advanced integrations</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Custom reports</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>White-label options</span>
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                    <span>Dedicated support</span>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full mt-6">
+                  Contact Sales
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-slate-600 dark:text-muted-foreground mb-4">
+              All plans include a 14-day free trial. No credit card required.
+            </p>
+            <div className="flex justify-center space-x-6 text-sm text-slate-500 dark:text-muted-foreground">
+              <div className="flex items-center">
+                <Shield className="h-4 w-4 mr-2" />
+                Bank-level security
+              </div>
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
+                99.9% uptime guarantee
+              </div>
+              <div className="flex items-center">
+                <Star className="h-4 w-4 mr-2" />
+                Award-winning support
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Benefits Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">

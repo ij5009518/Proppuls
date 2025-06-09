@@ -49,10 +49,14 @@ export const ComplianceStatusEnum = z.enum([
 export const organizationSchema = z.object({
   id: z.string(),
   name: z.string(),
-  subdomain: z.string(),
+  domain: z.string().nullable(),
   plan: z.enum(["starter", "professional", "enterprise"]),
+  status: z.enum(["active", "inactive", "suspended"]).default("active"),
+  maxUsers: z.number().default(10),
+  maxProperties: z.number().default(50),
+  monthlyPrice: z.number().default(19),
   settings: z.record(z.any()).optional(),
-  isActive: z.boolean(),
+  isActive: z.boolean().default(true),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
