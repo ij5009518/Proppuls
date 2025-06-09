@@ -18,6 +18,7 @@ import {
   FileText,
   Star
 } from "lucide-react";
+import logoImage from "@assets/ChatGPT Image Jun 8, 2025, 10_55_20 PM_1749438382648.png";
 
 export default function Landing() {
   const features = [
@@ -107,9 +108,11 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Building className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <img 
+                src={logoImage} 
+                alt="PropertyFlow Logo" 
+                className="w-8 h-8 rounded-lg object-contain"
+              />
               <span className="text-xl font-bold text-slate-900 dark:text-foreground">
                 PropertyFlow
               </span>
