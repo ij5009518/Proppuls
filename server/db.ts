@@ -7,8 +7,20 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Define database tables
+export const organizations = pgTable('organizations', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  subdomain: text('subdomain').notNull().unique(),
+  plan: text('plan').notNull().default('starter'),
+  settings: jsonb('settings'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull(),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
   email: text('email').notNull().unique(),
@@ -22,6 +34,7 @@ export const users = pgTable('users', {
 
 export const properties = pgTable("properties", {
   id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull(),
   name: text("name").notNull(),
   address: text("address").notNull(),
   city: text("city").notNull(),
@@ -51,6 +64,7 @@ export const units = pgTable('units', {
 
 export const tenants = pgTable('tenants', {
   id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull(),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
   email: text('email').notNull(),
