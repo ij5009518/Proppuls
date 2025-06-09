@@ -588,6 +588,7 @@ export const permitSchema = z.object({
 });
 
 // Insert schemas (for creating new records)
+export const insertOrganizationSchema = organizationSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertUserSchema = userSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPropertySchema = propertySchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertUnitSchema = unitSchema.omit({ id: true, createdAt: true, updatedAt: true });
@@ -643,6 +644,7 @@ export const createTenantMaintenanceRequestSchema = z.object({
 export const insertTenantSessionSchema = tenantSessionSchema.omit({ id: true, createdAt: true });
 
 // TypeScript types
+export type Organization = z.infer<typeof organizationSchema>;
 export type User = z.infer<typeof userSchema>;
 export type Property = z.infer<typeof propertySchema>;
 export type Unit = z.infer<typeof unitSchema>;
