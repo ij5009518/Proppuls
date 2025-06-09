@@ -433,7 +433,22 @@ export function registerRoutes(app: Express) {
   app.post("/api/tenants", async (req, res) => {
     try {
       console.log("Routes: Received tenant creation request:", req.body);
-      const tenant = await storage.createTenant(req.body);
+      
+      // Validate required fields
+      const { firstName, lastName, email, phone } = req.body;
+      if (!firstName || !lastName || !email || !phone) {
+        return res.status(400).json({ 
+          message: "Missing required fields: firstName, lastName, email, and phone are required" 
+        });
+      }
+
+      // Add default organizationId if not provided
+      const tenantData = {
+        ...req.body,
+        organizationId: req.body.organizationId || "default-org"
+      };
+
+      const tenant = await storage.createTenant(tenantData);
       console.log("Routes: Tenant created successfully:", tenant);
       res.json(tenant);
     } catch (error) {
