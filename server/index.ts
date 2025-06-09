@@ -4,8 +4,8 @@ import { registerAIRoutes } from "./ai";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Debug middleware to see what's being received
 app.use('/api/*', (req, res, next) => {
