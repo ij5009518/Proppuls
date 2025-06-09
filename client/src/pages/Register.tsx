@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Home, Eye, EyeOff } from "lucide-react";
+import logoImage from "@assets/ChatGPT Image Jun 8, 2025, 10_55_20 PM_1749438382648.png";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
@@ -65,9 +66,11 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
-            <Home className="h-6 w-6 text-primary-foreground" />
-          </div>
+          <img 
+            src={logoImage} 
+            alt="PropertyFlow Logo" 
+            className="mx-auto h-12 w-12 rounded-lg object-contain"
+          />
           <h2 className="mt-6 text-3xl font-bold text-slate-900 dark:text-foreground">
             Join PropertyFlow
           </h2>
