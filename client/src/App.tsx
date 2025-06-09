@@ -24,6 +24,7 @@ import Expenses from "@/pages/Expenses";
 import Calendar from "@/pages/Calendar";
 import AIAssistant from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
+import Organizations from "@/pages/Organizations";
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -95,6 +96,7 @@ function AuthenticatedApp() {
         <Route path="/ai-assistant" component={AIAssistant} />
         <Route path="/email-manager" component={EmailManager} />
         <Route path="/mobile-app" component={MobileApp} />
+        <Route path="/organizations" component={Organizations} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
