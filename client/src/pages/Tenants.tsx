@@ -2104,84 +2104,89 @@ export default function Tenants() {
                   )}
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="leaseStart"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lease Start Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          value={field.value ? field.value.toISOString().split('T')[0] : ''}
-                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="leaseEnd"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lease End Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          value={field.value ? field.value.toISOString().split('T')[0] : ''}
-                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="monthlyRent"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly Rent</FormLabel>
-                      <FormControl>
-                        <Input placeholder="1200.00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="deposit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Security Deposit</FormLabel>
-                      <FormControl>
-                        <Input placeholder="1200.00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Lease Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Lease Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="leaseStart"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Lease Start Date</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                            onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="leaseEnd"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Lease End Date</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                            onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="monthlyRent"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Monthly Rent</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1200.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="deposit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Security Deposit</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1200.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              {/* Government ID Preview Section */}
-              {selectedTenant?.idDocumentUrl && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Government ID Documents</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <FormLabel>Government ID (Front)</FormLabel>
-                      <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                        <div className="space-y-1 text-center">
+              {/* Government ID Documents Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Government ID Documents</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <FormLabel>Government ID (Front)</FormLabel>
+                    <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+                      <div className="space-y-1 text-center">
+                        {selectedTenant?.idDocumentUrl ? (
                           <div className="space-y-2">
                             <div className="flex justify-center">
                               <img 
@@ -2192,32 +2197,68 @@ export default function Tenants() {
                             </div>
                             <p className="text-sm text-green-600 font-medium">Front ID Document</p>
                           </div>
-                        </div>
+                        ) : (
+                          <>
+                            <svg
+                              className="mx-auto h-12 w-12 text-gray-400"
+                              stroke="currentColor"
+                              fill="none"
+                              viewBox="0 0 48 48"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            <p className="text-sm text-gray-600">No front ID document available</p>
+                          </>
+                        )}
                       </div>
                     </div>
-                    
-                    {selectedTenant?.idDocumentBackUrl && (
-                      <div>
-                        <FormLabel>Government ID (Back)</FormLabel>
-                        <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                          <div className="space-y-1 text-center">
-                            <div className="space-y-2">
-                              <div className="flex justify-center">
-                                <img 
-                                  src={selectedTenant.idDocumentBackUrl} 
-                                  alt="Back ID" 
-                                  className="max-w-full max-h-48 object-contain rounded-md border"
-                                />
-                              </div>
-                              <p className="text-sm text-green-600 font-medium">Back ID Document</p>
+                  </div>
+                  
+                  <div>
+                    <FormLabel>Government ID (Back)</FormLabel>
+                    <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+                      <div className="space-y-1 text-center">
+                        {selectedTenant?.idDocumentBackUrl ? (
+                          <div className="space-y-2">
+                            <div className="flex justify-center">
+                              <img 
+                                src={selectedTenant.idDocumentBackUrl} 
+                                alt="Back ID" 
+                                className="max-w-full max-h-48 object-contain rounded-md border"
+                              />
                             </div>
+                            <p className="text-sm text-green-600 font-medium">Back ID Document</p>
                           </div>
-                        </div>
+                        ) : (
+                          <>
+                            <svg
+                              className="mx-auto h-12 w-12 text-gray-400"
+                              stroke="currentColor"
+                              fill="none"
+                              viewBox="0 0 48 48"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            <p className="text-sm text-gray-600">No back ID document available</p>
+                          </>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
 
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
@@ -2226,7 +2267,6 @@ export default function Tenants() {
                 <Button type="submit" disabled={updateTenantMutation.isPending}>
                   {updateTenantMutation.isPending ? "Updating..." : "Update Tenant"}
                 </Button>
-              </div>
               </div>
             </form>
           </Form>
