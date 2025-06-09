@@ -184,13 +184,10 @@ export default function Tenants() {
       setIsAddDialogOpen(false);
       form.reset();
       setUploadedIdDocument(null);
-      setUploadedIdBackDocument(null);
       toast({ title: "Success", description: "Tenant created successfully" });
     },
-    onError: (error: any) => {
-      console.error("Tenant creation error:", error);
-      const errorMessage = error?.message || "Failed to create tenant";
-      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create tenant", variant: "destructive" });
     },
   });
 
@@ -370,20 +367,14 @@ export default function Tenants() {
   const onSubmit = (data: z.infer<typeof tenantSchema>) => {
     const submitData = {
       ...data,
-      organizationId: "default-org", // Add required organizationId
-      leaseStart: data.leaseStart?.toISOString().split('T')[0] || null,
-      leaseEnd: data.leaseEnd?.toISOString().split('T')[0] || null,
-      dateOfBirth: data.dateOfBirth?.toISOString().split('T')[0] || null,
+      leaseStart: data.leaseStart?.toISOString().split('T')[0],
+      leaseEnd: data.leaseEnd?.toISOString().split('T')[0],
+      dateOfBirth: data.dateOfBirth?.toISOString().split('T')[0],
       idDocumentUrl: uploadedIdDocument?.url || null,
       idDocumentName: uploadedIdDocument?.name || null,
       idBackDocumentUrl: uploadedIdBackDocument?.url || null,
       idBackDocumentName: uploadedIdBackDocument?.name || null,
-      monthlyRent: data.monthlyRent || null,
-      deposit: data.deposit || null,
-      unitId: data.unitId || null,
     };
-    
-    console.log("Submitting tenant data:", submitData);
     createTenantMutation.mutate(submitData);
   };
 
@@ -536,7 +527,6 @@ export default function Tenants() {
                 });
                 setUploadedIdDocument(null);
                 setUploadedIdBackDocument(null);
-                setIsAddDialogOpen(true);
               }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Tenant
