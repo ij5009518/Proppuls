@@ -135,6 +135,10 @@ export default function Tenants() {
       leaseEnd: undefined,
       monthlyRent: "",
       deposit: "",
+      idDocumentUrl: "",
+      idDocumentName: "",
+      tenantType: "primary",
+      relationToPrimary: "",
     },
   });
 
@@ -363,8 +367,9 @@ export default function Tenants() {
   const onSubmit = (data: z.infer<typeof tenantSchema>) => {
     const submitData = {
       ...data,
-      leaseStart: data.leaseStart?.toISOString(),
-      leaseEnd: data.leaseEnd?.toISOString(),
+      leaseStart: data.leaseStart?.toISOString().split('T')[0],
+      leaseEnd: data.leaseEnd?.toISOString().split('T')[0],
+      dateOfBirth: data.dateOfBirth?.toISOString().split('T')[0],
       idDocumentUrl: uploadedIdDocument?.url || null,
       idDocumentName: uploadedIdDocument?.name || null,
       idBackDocumentUrl: uploadedIdBackDocument?.url || null,
@@ -517,10 +522,11 @@ export default function Tenants() {
                   leaseEnd: undefined,
                   monthlyRent: "",
                   deposit: "",
+                  tenantType: "primary",
+                  relationToPrimary: "",
                 });
                 setUploadedIdDocument(null);
                 setUploadedIdBackDocument(null);
-                setIsAddDialogOpen(true);
               }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Tenant
