@@ -46,8 +46,20 @@ export const ComplianceStatusEnum = z.enum([
 ]);
 
 // Base schemas
+export const organizationSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  subdomain: z.string(),
+  plan: z.enum(["starter", "professional", "enterprise"]),
+  settings: z.record(z.any()).optional(),
+  isActive: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
 export const userSchema = z.object({
   id: z.string(),
+  organizationId: z.string(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),
@@ -61,6 +73,7 @@ export const userSchema = z.object({
 
 export const propertySchema = z.object({
   id: z.string(),
+  organizationId: z.string(),
   name: z.string(),
   address: z.string(),
   city: z.string(),
@@ -90,6 +103,7 @@ export const unitSchema = z.object({
 
 export const tenantSchema = z.object({
   id: z.string(),
+  organizationId: z.string(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),
