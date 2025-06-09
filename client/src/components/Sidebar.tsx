@@ -136,14 +136,12 @@ export default function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5">
-        <div className="flex items-center gap-3 px-4 py-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
-            <Building className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-foreground">Property Manager</span>
-            <span className="text-xs text-muted-foreground">Real Estate Platform</span>
-          </div>
+        <div className="flex items-center space-x-2 px-4 py-3">
+          <img 
+            src="/src/assets/proppulse-logo.png" 
+            alt="PropPulse" 
+            className="h-8 w-auto"
+          />
         </div>
       </SidebarHeader>
       <SidebarContent className="p-3">
