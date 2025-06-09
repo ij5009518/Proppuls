@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -175,11 +176,11 @@ export default function Landing() {
               Everything You Need to Manage Properties
             </h2>
             <p className="text-xl text-slate-600 dark:text-muted-foreground max-w-3xl mx-auto">
-            From tenant screening to financial reporting, PropPulse provides all the tools 
-            you need to efficiently manage your real estate portfolio.
+              From tenant screening to financial reporting, PropertyFlow provides all the tools 
+              you need to efficiently manage your real estate portfolio.
             </p>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow border-0 shadow-md">
@@ -212,7 +213,7 @@ export default function Landing() {
               their business with our platform.
             </p>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {benefits.map((benefit, index) => (
               <div key={index} className="text-center">
@@ -242,7 +243,7 @@ export default function Landing() {
               See what our customers have to say about PropertyFlow
             </p>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow">
