@@ -15,6 +15,44 @@ interface Session {
 class Storage {
   private sessions: Map<string, Session> = new Map();
 
+  // Organization management methods
+  async createOrganization(organizationData: any): Promise<Organization> {
+    const id = crypto.randomUUID();
+    const organization = {
+      id,
+      ...organizationData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await db.insert(organizations).values(organization);
+    return organization;
+  }
+
+  async getAllOrganizations(): Promise<Organization[]> {
+    return await db.select().from(organizations);
+  }
+
+  async getOrganizationById(id: string): Promise<Organization | null> {
+    const result = await db.select().from(organizations).where(eq(organizations.id, id));
+    return result[0] || null;
+  }
+
+  async updateOrganization(id: string, organizationData: any): Promise<Organization | null> {
+    const updatedData = {
+      ...organizationData,
+      updatedAt: new Date(),
+    };
+
+    await db.update(organizations).set(updatedData).where(eq(organizations.id, id));
+    return await this.getOrganizationById(id);
+  }
+
+  async deleteOrganization(id: string): Promise<boolean> {
+    await db.delete(organizations).where(eq(organizations.id, id));
+    return true;
+  }
+
   // User methods
   async createUser(userData: any): Promise<User> {
     const [user] = await db.insert(users).values({
