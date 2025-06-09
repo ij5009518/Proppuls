@@ -714,25 +714,28 @@ export default function Tenants() {
                               {uploadedIdDocument?.url ? (
                                 <div className="space-y-2">
                                   <div className="flex items-center justify-center">
-                                    {uploadedIdDocument.url.toLowerCase().includes('.pdf') ? (
-                                      <FileText className="h-16 w-16 text-green-600" />
-                                    ) : (
-                                      <img 
-                                        src={uploadedIdDocument.url} 
-                                        alt="ID Front"
-                                        className="h-24 w-32 object-cover rounded border"
-                                      />
-                                    )}
+                                    <CheckCircle className="h-16 w-16 text-green-600" />
                                   </div>
                                   <p className="text-sm text-green-600 font-medium">Front ID Uploaded</p>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setUploadedIdDocument(null)}
-                                  >
-                                    Remove
-                                  </Button>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(uploadedIdDocument.url, '_blank')}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      Preview
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setUploadedIdDocument(null)}
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
                                 </div>
                               ) : (
                                 <>
@@ -781,25 +784,28 @@ export default function Tenants() {
                               {uploadedIdBackDocument?.url ? (
                                 <div className="space-y-2">
                                   <div className="flex items-center justify-center">
-                                    {uploadedIdBackDocument.url.toLowerCase().includes('.pdf') ? (
-                                      <FileText className="h-16 w-16 text-green-600" />
-                                    ) : (
-                                      <img 
-                                        src={uploadedIdBackDocument.url} 
-                                        alt="ID Back"
-                                        className="h-24 w-32 object-cover rounded border"
-                                      />
-                                    )}
+                                    <CheckCircle className="h-16 w-16 text-green-600" />
                                   </div>
                                   <p className="text-sm text-green-600 font-medium">Back ID Uploaded</p>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setUploadedIdBackDocument(null)}
-                                  >
-                                    Remove
-                                  </Button>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => window.open(uploadedIdBackDocument.url, '_blank')}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      Preview
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setUploadedIdBackDocument(null)}
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
                                 </div>
                               ) : (
                                 <>
