@@ -122,6 +122,11 @@ const menuSections: MenuSection[] = [
     title: 'System',
     items: [
       {
+        title: 'Organizations',
+        url: '/organizations',
+        icon: Building2,
+      },
+      {
         title: 'Settings',
         url: '/settings',
         icon: Settings,
