@@ -89,7 +89,9 @@ export default function Tenants() {
   const [selectedUnitForHistory, setSelectedUnitForHistory] = useState<Unit | null>(null);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [uploadedIdDocument, setUploadedIdDocument] = useState<{url: string, name: string} | null>(null);
+  const [uploadedIdBackDocument, setUploadedIdBackDocument] = useState<{url: string, name: string} | null>(null);
   const [isUploadingId, setIsUploadingId] = useState(false);
+  const [isUploadingIdBack, setIsUploadingIdBack] = useState(false);
   const { toast } = useToast();
 
   const { data: tenants, isLoading: tenantsLoading } = useQuery({
@@ -309,6 +311,55 @@ export default function Tenants() {
     }
   };
 
+  const handleIdBackDocumentUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ 
+        title: "File too large", 
+        description: "Please select a file smaller than 10MB", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setIsUploadingIdBack(true);
+    try {
+      const formData = new FormData();
+      formData.append('idDocument', file);
+
+      const response = await fetch('/api/upload/id-document', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      setUploadedIdBackDocument({
+        url: result.url,
+        name: result.originalName,
+      });
+
+      toast({ 
+        title: "ID back uploaded successfully", 
+        description: `${file.name} has been uploaded` 
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({ 
+        title: "Upload failed", 
+        description: "Please try again", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsUploadingIdBack(false);
+    }
+  };
+
   const onSubmit = (data: z.infer<typeof tenantSchema>) => {
     const submitData = {
       ...data,
@@ -316,6 +367,8 @@ export default function Tenants() {
       leaseEnd: data.leaseEnd?.toISOString(),
       idDocumentUrl: uploadedIdDocument?.url || null,
       idDocumentName: uploadedIdDocument?.name || null,
+      idBackDocumentUrl: uploadedIdBackDocument?.url || null,
+      idBackDocumentName: uploadedIdBackDocument?.name || null,
     };
     createTenantMutation.mutate(submitData);
   };
@@ -466,6 +519,7 @@ export default function Tenants() {
                   deposit: "",
                 });
                 setUploadedIdDocument(null);
+                setUploadedIdBackDocument(null);
                 setIsAddDialogOpen(true);
               }}>
                 <Plus className="mr-2 h-4 w-4" />
@@ -644,9 +698,17 @@ export default function Tenants() {
                               {uploadedIdDocument?.url ? (
                                 <div className="space-y-2">
                                   <div className="flex items-center justify-center">
-                                    <FileText className="h-8 w-8 text-green-600" />
+                                    {uploadedIdDocument.url.toLowerCase().includes('.pdf') ? (
+                                      <FileText className="h-16 w-16 text-green-600" />
+                                    ) : (
+                                      <img 
+                                        src={uploadedIdDocument.url} 
+                                        alt="ID Front"
+                                        className="h-24 w-32 object-cover rounded border"
+                                      />
+                                    )}
                                   </div>
-                                  <p className="text-sm text-green-600 font-medium">{uploadedIdDocument.name}</p>
+                                  <p className="text-sm text-green-600 font-medium">Front ID Uploaded</p>
                                   <Button
                                     type="button"
                                     variant="outline"
@@ -700,37 +762,65 @@ export default function Tenants() {
                           <FormLabel>Government ID (Back)</FormLabel>
                           <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
                             <div className="space-y-1 text-center">
-                              <svg
-                                className="mx-auto h-12 w-12 text-gray-400"
-                                stroke="currentColor"
-                                fill="none"
-                                viewBox="0 0 48 48"
-                                aria-hidden="true"
-                              >
-                                <path
-                                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                  strokeWidth={2}
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                              <div className="flex text-sm text-gray-600">
-                                <label
-                                  htmlFor="id-back-upload"
-                                  className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                                >
-                                  <span>Upload back of ID</span>
-                                  <input 
-                                    id="id-back-upload" 
-                                    name="id-back-upload" 
-                                    type="file" 
-                                    className="sr-only" 
-                                    accept="image/*,application/pdf"
-                                    disabled={isUploadingId}
-                                  />
-                                </label>
-                              </div>
-                              <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                              {uploadedIdBackDocument?.url ? (
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-center">
+                                    {uploadedIdBackDocument.url.toLowerCase().includes('.pdf') ? (
+                                      <FileText className="h-16 w-16 text-green-600" />
+                                    ) : (
+                                      <img 
+                                        src={uploadedIdBackDocument.url} 
+                                        alt="ID Back"
+                                        className="h-24 w-32 object-cover rounded border"
+                                      />
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-green-600 font-medium">Back ID Uploaded</p>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setUploadedIdBackDocument(null)}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              ) : (
+                                <>
+                                  <svg
+                                    className="mx-auto h-12 w-12 text-gray-400"
+                                    stroke="currentColor"
+                                    fill="none"
+                                    viewBox="0 0 48 48"
+                                    aria-hidden="true"
+                                  >
+                                    <path
+                                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                      strokeWidth={2}
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                  <div className="flex text-sm text-gray-600">
+                                    <label
+                                      htmlFor="id-back-upload"
+                                      className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                                    >
+                                      <span>{isUploadingIdBack ? "Uploading..." : "Upload back of ID"}</span>
+                                      <input 
+                                        id="id-back-upload" 
+                                        name="id-back-upload" 
+                                        type="file" 
+                                        className="sr-only" 
+                                        accept="image/*,application/pdf"
+                                        disabled={isUploadingIdBack}
+                                        onChange={handleIdBackDocumentUpload}
+                                      />
+                                    </label>
+                                  </div>
+                                  <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -810,6 +900,7 @@ export default function Tenants() {
                     <Button type="button" variant="outline" onClick={() => {
                       setIsAddDialogOpen(false);
                       setUploadedIdDocument(null);
+                      setUploadedIdBackDocument(null);
                     }}>
                       Cancel
                     </Button>
