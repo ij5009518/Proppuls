@@ -19,10 +19,17 @@ export default function Organizations() {
   const [formData, setFormData] = useState({
     name: '',
     domain: '',
-    plan: 'basic',
+    plan: 'starter',
     maxUsers: 10,
     maxProperties: 50,
+    monthlyPrice: 19,
   });
+
+  const pricingPlans = {
+    starter: { price: 19, maxUnits: 10, label: 'Starter' },
+    professional: { price: 39, maxProperties: 50, label: 'Professional' },
+    enterprise: { price: 'Custom', maxProperties: 'Unlimited', label: 'Enterprise' }
+  };
 
   const { data: organizations = [], isLoading } = useQuery<Organization[]>({
     queryKey: ['/api/organizations'],
@@ -41,7 +48,7 @@ export default function Organizations() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/organizations'] });
       setIsCreateDialogOpen(false);
-      setFormData({ name: '', domain: '', plan: 'basic', maxUsers: 10, maxProperties: 50 });
+      setFormData({ name: '', domain: '', plan: 'starter', maxUsers: 10, maxProperties: 50, monthlyPrice: 19 });
       toast({ title: 'Organization created successfully' });
     },
     onError: () => {
@@ -62,7 +69,7 @@ export default function Organizations() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/organizations'] });
       setEditingOrg(null);
-      setFormData({ name: '', domain: '', plan: 'basic', maxUsers: 10, maxProperties: 50 });
+      setFormData({ name: '', domain: '', plan: 'starter', maxUsers: 10, maxProperties: 50, monthlyPrice: 19 });
       toast({ title: 'Organization updated successfully' });
     },
     onError: () => {
@@ -104,6 +111,7 @@ export default function Organizations() {
       plan: org.plan,
       maxUsers: org.maxUsers,
       maxProperties: org.maxProperties,
+      monthlyPrice: org.monthlyPrice || 19,
     });
   };
 

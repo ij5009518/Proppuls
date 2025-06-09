@@ -10,8 +10,12 @@ if (!process.env.DATABASE_URL) {
 export const organizations = pgTable('organizations', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  subdomain: text('subdomain').notNull().unique(),
+  domain: text('domain'),
   plan: text('plan').notNull().default('starter'),
+  status: text('status').notNull().default('active'),
+  maxUsers: integer('max_users').default(10),
+  maxProperties: integer('max_properties').default(50),
+  monthlyPrice: integer('monthly_price').default(19),
   settings: jsonb('settings'),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
