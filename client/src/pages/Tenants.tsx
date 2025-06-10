@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, Upload, FileText, DollarSign, Calendar, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone, CheckCircle } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, Upload, Download, FileText, DollarSign, Calendar, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -425,6 +425,67 @@ export default function Tenants() {
     taskForm.setValue("tenantId", tenant.id);
     taskForm.setValue("unitId", tenant.unitId || "");
     setIsTaskDialogOpen(true);
+  };
+
+  const handleLeaseAgreementUpload = async (event: React.ChangeEvent<HTMLInputElement>, tenantId: string) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (50MB limit)
+    if (file.size > 50 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select a file smaller than 50MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target?.result as string;
+        
+        // Update tenant with lease agreement URL
+        const response = await apiRequest(`/api/tenants/${tenantId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            leaseAgreementUrl: dataUrl,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          toast({
+            title: "Success",
+            description: "Lease agreement uploaded successfully.",
+          });
+          
+          // Refresh tenants data
+          queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+        } else {
+          throw new Error('Upload failed');
+        }
+      };
+
+      reader.onerror = () => {
+        toast({
+          title: "Upload failed",
+          description: "There was an error reading the file.",
+          variant: "destructive",
+        });
+      };
+
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading the lease agreement.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewTenantHistory = (unit: Unit) => {
@@ -1557,11 +1618,57 @@ export default function Tenants() {
                     </div>
                   </div>
                   <div className="pt-4 border-t">
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <FileText className="h-4 w-4 mr-2" />
-                        View Lease Agreement
-                      </Button>
+                    <div className="flex gap-2 flex-wrap">
+                      {selectedTenant.leaseAgreementUrl ? (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              window.open(selectedTenant.leaseAgreementUrl!, '_blank');
+                            }}
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            View Lease Agreement
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = selectedTenant.leaseAgreementUrl!;
+                              link.download = `${selectedTenant.firstName}_${selectedTenant.lastName}_Lease_Agreement`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download Lease Agreement
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                            className="hidden"
+                            id={`lease-upload-${selectedTenant.id}`}
+                            onChange={(e) => handleLeaseAgreementUpload(e, selectedTenant.id)}
+                          />
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              const input = document.getElementById(`lease-upload-${selectedTenant.id}`) as HTMLInputElement;
+                              input?.click();
+                            }}
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Lease Agreement
+                          </Button>
+                        </div>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
