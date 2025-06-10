@@ -450,11 +450,8 @@ export default function Tenants() {
         const dataUrl = e.target?.result as string;
         
         // Update tenant with lease agreement URL
-        await apiRequest(`/api/tenants/${tenantId}`, {
-          method: 'PATCH',
-          body: {
-            leaseAgreementUrl: dataUrl,
-          },
+        await apiRequest("PATCH", `/api/tenants/${tenantId}`, {
+          leaseAgreementUrl: dataUrl,
         });
 
         toast({
