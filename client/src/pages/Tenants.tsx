@@ -51,9 +51,8 @@ const rentPaymentSchema = z.object({
   tenantId: z.string().min(1, "Tenant is required"),
   unitId: z.string().min(1, "Unit is required"),
   amount: z.string().min(1, "Amount is required"),
-  dueDate: z.date(),
-  paidDate: z.date().optional(),
-  paymentMethod: z.enum(["CHECK", "CASH", "ACH"]).optional(),
+  paymentDate: z.date(),
+  paymentMethod: z.enum(["CHECK", "CASH", "ACH"]),
   lateFeeAmount: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -148,7 +147,8 @@ export default function Tenants() {
       tenantId: "",
       unitId: "",
       amount: "",
-      paymentMethod: undefined,
+      paymentDate: new Date(),
+      paymentMethod: "CHECK",
       lateFeeAmount: "",
       notes: "",
     },
@@ -401,11 +401,14 @@ export default function Tenants() {
 
   const onPaymentSubmit = (data: z.infer<typeof rentPaymentSchema>) => {
     const submitData = {
-      ...data,
-      dueDate: data.dueDate.toISOString(),
-      paidDate: data.paidDate?.toISOString(),
+      tenantId: data.tenantId,
+      unitId: data.unitId,
       amount: parseFloat(data.amount),
+      dueDate: data.paymentDate.toISOString(),
+      paidDate: data.paymentDate.toISOString(),
+      paymentMethod: data.paymentMethod,
       lateFeeAmount: data.lateFeeAmount ? parseFloat(data.lateFeeAmount) : 0,
+      notes: data.notes || "",
     };
     createPaymentMutation.mutate(submitData);
   };
@@ -1297,10 +1300,10 @@ export default function Tenants() {
               />
               <FormField
                 control={paymentForm.control}
-                name="dueDate"
+                name="paymentDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel>Payment Date</FormLabel>
                     <FormControl>
                       <Input 
                         type="date" 
@@ -1331,6 +1334,32 @@ export default function Tenants() {
                         <SelectItem value="ACH">ACH</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={paymentForm.control}
+                name="lateFeeAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Late Fee Amount (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={paymentForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Payment notes..." {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
