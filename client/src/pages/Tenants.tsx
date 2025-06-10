@@ -53,7 +53,7 @@ const rentPaymentSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   dueDate: z.date(),
   paidDate: z.date().optional(),
-  paymentMethod: z.string().optional(),
+  paymentMethod: z.enum(["CHECK", "CASH", "ACH"]).optional(),
   lateFeeAmount: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -148,7 +148,7 @@ export default function Tenants() {
       tenantId: "",
       unitId: "",
       amount: "",
-      paymentMethod: "",
+      paymentMethod: undefined,
       lateFeeAmount: "",
       notes: "",
     },
@@ -447,27 +447,20 @@ export default function Tenants() {
         const dataUrl = e.target?.result as string;
         
         // Update tenant with lease agreement URL
-        const response = await apiRequest(`/api/tenants/${tenantId}`, {
+        await apiRequest(`/api/tenants/${tenantId}`, {
           method: 'PATCH',
-          body: JSON.stringify({
+          body: {
             leaseAgreementUrl: dataUrl,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
           },
         });
 
-        if (response.ok) {
-          toast({
-            title: "Success",
-            description: "Lease agreement uploaded successfully.",
-          });
-          
-          // Refresh tenants data
-          queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-        } else {
-          throw new Error('Upload failed');
-        }
+        toast({
+          title: "Success",
+          description: "Lease agreement uploaded successfully.",
+        });
+        
+        // Refresh tenants data
+        queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       };
 
       reader.onerror = () => {
@@ -1326,9 +1319,18 @@ export default function Tenants() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Payment Method</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Check, Cash, ACH, etc." {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CHECK">Check</SelectItem>
+                        <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="ACH">ACH</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
