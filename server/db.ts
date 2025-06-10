@@ -88,6 +88,7 @@ export const tenants = pgTable('tenants', {
   leaseEnd: timestamp('lease_end'),
   monthlyRent: decimal('monthly_rent'),
   deposit: decimal('deposit'),
+  leaseAgreementUrl: text('lease_agreement_url'),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

@@ -123,6 +123,7 @@ export const tenantSchema = z.object({
   leaseEnd: z.date().nullable(),
   monthlyRent: z.string().nullable(),
   deposit: z.string().nullable(),
+  leaseAgreementUrl: z.string().nullable(),
   status: z.enum(["active", "inactive", "pending"]),
   createdAt: z.date(),
   updatedAt: z.date(),
