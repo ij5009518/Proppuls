@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, Upload, Download, FileText, DollarSign, Calendar, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone, CheckCircle } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, Upload, Download, FileText, DollarSign, Calendar, CalendarIcon, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1478,11 +1478,11 @@ export default function Tenants() {
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
+                        <CalendarComponent
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                          disabled={(date: Date) => date > new Date() || date < new Date("1900-01-01")}
                           initialFocus
                         />
                       </PopoverContent>
@@ -2106,6 +2106,15 @@ export default function Tenants() {
                                     size="sm"
                                     onClick={() => {
                                       setSelectedPayment(payment);
+                                      editPaymentForm.reset({
+                                        tenantId: payment.tenantId,
+                                        unitId: payment.unitId,
+                                        amount: payment.amount.toString(),
+                                        paymentDate: new Date(payment.paidDate || payment.dueDate),
+                                        paymentMethod: payment.paymentMethod || "CHECK",
+                                        lateFeeAmount: payment.lateFeeAmount ? payment.lateFeeAmount.toString() : "",
+                                        notes: payment.notes || "",
+                                      });
                                       setIsEditPaymentDialogOpen(true);
                                     }}
                                   >
