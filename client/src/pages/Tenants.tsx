@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, Upload, Download, FileText, DollarSign, Calendar, CalendarIcon, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone, CheckCircle } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, Upload, Download, FileText, DollarSign, Calendar, CalendarIcon, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone, CheckCircle, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -260,6 +261,17 @@ export default function Tenants() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update payment", variant: "destructive" });
+    },
+  });
+
+  const deletePaymentMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/rent-payments/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
+      toast({ title: "Success", description: "Payment deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete payment", variant: "destructive" });
     },
   });
 
@@ -571,20 +583,21 @@ export default function Tenants() {
   };
 
   const getCurrentMonthBalance = (tenantId: string) => {
-    if (!rentPayments || !tenants) return 0;
+    if (!rentPayments) return 0;
     
-    // Find the tenant to get their monthly rent
-    const tenant = tenants.find((t: any) => t.id === tenantId);
-    const monthlyRent = tenant?.monthlyRent ? parseFloat(tenant.monthlyRent) : 0;
+    // Get all unpaid rent payments for this tenant
+    const unpaidPayments = rentPayments.filter((p: RentPayment) => 
+      p.tenantId === tenantId && 
+      p.status === 'pending' && 
+      !p.paidDate
+    );
     
-    // Calculate total payments made by this tenant
-    const tenantPayments = rentPayments.filter((p: RentPayment) => p.tenantId === tenantId);
-    const totalPaid = tenantPayments.reduce((total: number, payment: RentPayment) => {
-      return total + (payment.amount || 0);
+    // Calculate total unpaid amount
+    const totalUnpaid = unpaidPayments.reduce((total: number, payment: RentPayment) => {
+      return total + (parseFloat(payment.amount.toString()) || 0);
     }, 0);
     
-    // Outstanding balance = Monthly rent - Total payments made
-    return Math.max(0, monthlyRent - totalPaid);
+    return totalUnpaid;
   };
 
   const getOverduePayments = (tenantId: string) => {
@@ -2101,25 +2114,44 @@ export default function Tenants() {
                                   {payment.notes || "-"}
                                 </TableCell>
                                 <TableCell>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedPayment(payment);
-                                      editPaymentForm.reset({
-                                        tenantId: payment.tenantId,
-                                        unitId: payment.unitId,
-                                        amount: payment.amount.toString(),
-                                        paymentDate: new Date(payment.paidDate || payment.dueDate),
-                                        paymentMethod: payment.paymentMethod || "CHECK",
-                                        lateFeeAmount: payment.lateFeeAmount ? payment.lateFeeAmount.toString() : "",
-                                        notes: payment.notes || "",
-                                      });
-                                      setIsEditPaymentDialogOpen(true);
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setSelectedPayment(payment);
+                                          editPaymentForm.reset({
+                                            tenantId: payment.tenantId,
+                                            unitId: payment.unitId,
+                                            amount: payment.amount.toString(),
+                                            paymentDate: new Date(payment.paidDate || payment.dueDate),
+                                            paymentMethod: payment.paymentMethod || "CHECK",
+                                            lateFeeAmount: payment.lateFeeAmount ? payment.lateFeeAmount.toString() : "",
+                                            notes: payment.notes || "",
+                                          });
+                                          setIsEditPaymentDialogOpen(true);
+                                        }}
+                                      >
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          if (confirm("Are you sure you want to delete this payment?")) {
+                                            deletePaymentMutation.mutate(payment.id);
+                                          }
+                                        }}
+                                        className="text-red-600"
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </TableCell>
                               </TableRow>
                             ));

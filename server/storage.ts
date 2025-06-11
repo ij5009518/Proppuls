@@ -679,11 +679,34 @@ class Storage {
   }
 
   async updateRentPayment(id: string, paymentData: any): Promise<RentPayment | null> {
-    const [payment] = await db.update(rentPayments)
-      .set({ ...paymentData, updatedAt: new Date() })
-      .where(eq(rentPayments.id, id))
-      .returning();
-    return payment || null;
+    try {
+      console.log("Updating rent payment with data:", paymentData);
+      
+      const updateData = {
+        ...paymentData,
+        dueDate: paymentData.dueDate ? new Date(paymentData.dueDate) : undefined,
+        paidDate: paymentData.paidDate ? new Date(paymentData.paidDate) : undefined,
+        updatedAt: new Date()
+      };
+
+      // Remove undefined values
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
+      console.log("Formatted update data:", updateData);
+
+      const [payment] = await db.update(rentPayments)
+        .set(updateData)
+        .where(eq(rentPayments.id, id))
+        .returning();
+      return payment || null;
+    } catch (error) {
+      console.error("Error updating rent payment:", error);
+      throw error;
+    }
   }
 
   async deleteRentPayment(id: string): Promise<boolean> {
