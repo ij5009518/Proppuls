@@ -17,8 +17,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
+import { formatCurrency, formatDate, getStatusColor, cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import type { Tenant, InsertTenant, Unit, RentPayment, InsertRentPayment, Task, InsertTask, TenantHistory } from "@shared/schema";
 
 const tenantSchema = z.object({
@@ -156,6 +159,19 @@ export default function Tenants() {
     },
   });
 
+  const editPaymentForm = useForm<z.infer<typeof rentPaymentSchema>>({
+    resolver: zodResolver(rentPaymentSchema),
+    defaultValues: {
+      tenantId: "",
+      unitId: "",
+      amount: "",
+      paymentDate: new Date(),
+      paymentMethod: "CHECK",
+      lateFeeAmount: "",
+      notes: "",
+    },
+  });
+
   const taskForm = useForm<z.infer<typeof taskSchema>>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
@@ -230,6 +246,20 @@ export default function Tenants() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to record payment", variant: "destructive" });
+    },
+  });
+
+  const updatePaymentMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => 
+      apiRequest("PUT", `/api/rent-payments/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
+      setIsEditPaymentDialogOpen(false);
+      editPaymentForm.reset();
+      toast({ title: "Success", description: "Payment updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update payment", variant: "destructive" });
     },
   });
 
@@ -415,6 +445,22 @@ export default function Tenants() {
     createPaymentMutation.mutate(submitData);
   };
 
+  const onEditPaymentSubmit = (data: z.infer<typeof rentPaymentSchema>) => {
+    if (!selectedPayment) return;
+    
+    const submitData = {
+      tenantId: data.tenantId,
+      unitId: data.unitId,
+      amount: parseFloat(data.amount),
+      dueDate: data.paymentDate.toISOString(),
+      paidDate: data.paymentDate.toISOString(),
+      paymentMethod: data.paymentMethod,
+      lateFeeAmount: data.lateFeeAmount ? parseFloat(data.lateFeeAmount) : 0,
+      notes: data.notes || "",
+    };
+    updatePaymentMutation.mutate({ id: selectedPayment.id, data: submitData });
+  };
+
   const onTaskSubmit = (data: z.infer<typeof taskSchema>) => {
     const taskData: InsertTask = {
       ...data,
@@ -525,11 +571,20 @@ export default function Tenants() {
   };
 
   const getCurrentMonthBalance = (tenantId: string) => {
-    if (!rentPayments) return 0;
+    if (!rentPayments || !tenants) return 0;
+    
+    // Find the tenant to get their monthly rent
+    const tenant = tenants.find((t: any) => t.id === tenantId);
+    const monthlyRent = tenant?.monthlyRent ? parseFloat(tenant.monthlyRent) : 0;
+    
+    // Calculate total payments made by this tenant
     const tenantPayments = rentPayments.filter((p: RentPayment) => p.tenantId === tenantId);
-    return tenantPayments.reduce((total: number, payment: RentPayment) => {
+    const totalPaid = tenantPayments.reduce((total: number, payment: RentPayment) => {
       return total + (payment.amount || 0);
     }, 0);
+    
+    // Outstanding balance = Monthly rent - Total payments made
+    return Math.max(0, monthlyRent - totalPaid);
   };
 
   const getOverduePayments = (tenantId: string) => {
@@ -1375,6 +1430,128 @@ export default function Tenants() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Payment Dialog */}
+      <Dialog open={isEditPaymentDialogOpen} onOpenChange={setIsEditPaymentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Payment</DialogTitle>
+          </DialogHeader>
+          <Form {...editPaymentForm}>
+            <form onSubmit={editPaymentForm.handleSubmit(onEditPaymentSubmit)} className="space-y-4">
+              <FormField
+                control={editPaymentForm.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editPaymentForm.control}
+                name="paymentDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Payment Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editPaymentForm.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Method</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CHECK">Check</SelectItem>
+                        <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="ACH">ACH</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editPaymentForm.control}
+                name="lateFeeAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Late Fee Amount (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editPaymentForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Payment notes..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditPaymentDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updatePaymentMutation.isPending}>
+                  {updatePaymentMutation.isPending ? "Updating..." : "Update Payment"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       {/* Task Dialog */}
       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
         <DialogContent>
