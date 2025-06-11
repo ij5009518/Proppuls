@@ -87,6 +87,8 @@ export default function Tenants() {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [selectedUnitForHistory, setSelectedUnitForHistory] = useState<Unit | null>(null);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
+  const [isEditPaymentDialogOpen, setIsEditPaymentDialogOpen] = useState(false);
   const [uploadedIdDocument, setUploadedIdDocument] = useState<{url: string, name: string} | null>(null);
   const [uploadedIdBackDocument, setUploadedIdBackDocument] = useState<{url: string, name: string} | null>(null);
   const [isUploadingId, setIsUploadingId] = useState(false);
@@ -1868,6 +1870,7 @@ export default function Tenants() {
                             <TableHead className="font-semibold">Paid Date</TableHead>
                             <TableHead className="font-semibold">Method</TableHead>
                             <TableHead className="font-semibold">Notes</TableHead>
+                            <TableHead className="font-semibold">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1880,7 +1883,7 @@ export default function Tenants() {
                             if (sortedPayments.length === 0) {
                               return (
                                 <TableRow>
-                                  <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                                  <TableCell colSpan={7} className="text-center text-gray-500 py-8">
                                     <div className="flex flex-col items-center space-y-2">
                                       <DollarSign className="h-8 w-8 text-gray-300" />
                                       <p>No payment history found</p>
@@ -1919,6 +1922,18 @@ export default function Tenants() {
                                 </TableCell>
                                 <TableCell className="text-gray-600 dark:text-gray-400 max-w-[200px] truncate">
                                   {payment.notes || "-"}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedPayment(payment);
+                                      setIsEditPaymentDialogOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
                                 </TableCell>
                               </TableRow>
                             ));
