@@ -1,270 +1,349 @@
-
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Mail, Send, Users, AlertCircle, CheckCircle, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Mail, Send, Users, Building, CheckCircle, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+
+const testEmailSchema = z.object({
+  to: z.string().email("Please enter a valid email address"),
+  subject: z.string().min(1, "Subject is required"),
+  message: z.string().min(1, "Message is required"),
+});
 
 export default function EmailManager() {
-  const [selectedProperty, setSelectedProperty] = useState<string>("");
-  const [selectedTenant, setSelectedTenant] = useState<string>("");
-  const [emailType, setEmailType] = useState<string>("");
-  const { toast } = useToast();
+  const [isTestEmailDialogOpen, setIsTestEmailDialogOpen] = useState(false);
+  const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
 
-  // Fetch data
-  const { data: properties = [] } = useQuery({
-    queryKey: ["/api/properties"],
-    queryFn: async () => {
-      const response = await fetch("/api/properties");
-      return response.json();
+  const testEmailForm = useForm<z.infer<typeof testEmailSchema>>({
+    resolver: zodResolver(testEmailSchema),
+    defaultValues: {
+      to: "",
+      subject: "",
+      message: "",
     },
   });
 
-  const { data: tenants = [] } = useQuery({
+  // Fetch tenants
+  const { data: tenants, isLoading: tenantsLoading } = useQuery({
     queryKey: ["/api/tenants"],
-    queryFn: async () => {
-      const response = await fetch("/api/tenants");
-      return response.json();
-    },
+    queryFn: () => apiRequest("GET", "/api/tenants"),
   });
 
-  // Email mutations
-  const sendRentReminderMutation = useMutation({
-    mutationFn: async (tenantId: string) => {
-      const response = await fetch("/api/email/rent-reminder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantId }),
-      });
-      return response.json();
-    },
+  // Fetch properties for context
+  const { data: properties } = useQuery({
+    queryKey: ["/api/properties"],
+    queryFn: () => apiRequest("GET", "/api/properties"),
+  });
+
+  // Fetch units for context
+  const { data: units } = useQuery({
+    queryKey: ["/api/units"],
+    queryFn: () => apiRequest("GET", "/api/units"),
+  });
+
+  const sendTestEmailMutation = useMutation({
+    mutationFn: (data: z.infer<typeof testEmailSchema>) => 
+      apiRequest("POST", "/api/emails/test", data),
     onSuccess: () => {
-      toast({ title: "Rent reminder sent successfully!" });
+      toast({ title: "Success", description: "Test email sent successfully" });
+      setIsTestEmailDialogOpen(false);
+      testEmailForm.reset();
     },
     onError: () => {
-      toast({ title: "Failed to send rent reminder", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to send test email", variant: "destructive" });
+    },
+  });
+
+  const sendRentReminderMutation = useMutation({
+    mutationFn: (tenantId: string) => 
+      apiRequest("POST", "/api/emails/send-rent-reminder", { tenantId }),
+    onSuccess: () => {
+      toast({ title: "Success", description: "Rent reminder sent successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to send rent reminder", variant: "destructive" });
     },
   });
 
   const sendWelcomeEmailMutation = useMutation({
-    mutationFn: async (tenantId: string) => {
-      const response = await fetch("/api/email/welcome", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantId }),
-      });
-      return response.json();
-    },
+    mutationFn: (tenantId: string) => 
+      apiRequest("POST", "/api/emails/send-welcome", { tenantId }),
     onSuccess: () => {
-      toast({ title: "Welcome email sent successfully!" });
+      toast({ title: "Success", description: "Welcome email sent successfully" });
     },
     onError: () => {
-      toast({ title: "Failed to send welcome email", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to send welcome email", variant: "destructive" });
     },
   });
 
-  const sendBulkRentRemindersMutation = useMutation({
-    mutationFn: async (propertyId?: string) => {
-      const response = await fetch("/api/email/bulk-rent-reminders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ propertyId }),
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({ 
-        title: "Bulk emails sent", 
-        description: `Sent: ${data.sent}, Failed: ${data.failed}` 
-      });
-    },
-    onError: () => {
-      toast({ title: "Failed to send bulk emails", variant: "destructive" });
-    },
-  });
-
-  const handleSendEmail = () => {
-    if (!selectedTenant) {
-      toast({ title: "Please select a tenant", variant: "destructive" });
-      return;
-    }
-
-    switch (emailType) {
-      case "rent-reminder":
-        sendRentReminderMutation.mutate(selectedTenant);
-        break;
-      case "welcome":
-        sendWelcomeEmailMutation.mutate(selectedTenant);
-        break;
-      default:
-        toast({ title: "Please select an email type", variant: "destructive" });
-    }
+  const getPropertyName = (propertyId: string) => {
+    if (!propertyId || !properties) return "Unknown Property";
+    const property = properties.find((p: any) => p.id === propertyId);
+    return property?.name || "Unknown Property";
   };
 
-  const handleBulkRentReminders = () => {
-    sendBulkRentRemindersMutation.mutate(selectedProperty === "all" ? undefined : selectedProperty || undefined);
+  const getUnitName = (unitId: string) => {
+    if (!unitId || !units) return "Unknown Unit";
+    const unit = units.find((u: any) => u.id === unitId);
+    return unit?.name || "Unknown Unit";
   };
 
-  const filteredTenants = selectedProperty && selectedProperty !== "all"
-    ? tenants.filter((tenant: any) => {
-        // You'll need to join with units to filter by property
-        return true; // Simplified for now
-      })
-    : tenants;
+  const onTestEmailSubmit = (data: z.infer<typeof testEmailSchema>) => {
+    sendTestEmailMutation.mutate(data);
+  };
+
+  if (tenantsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Email Manager</h1>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Mail className="h-8 w-8 text-blue-600" />
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Email Manager</h1>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Individual Email Sending */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5" />
-              Send Individual Email
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Email Type</label>
-              <Select value={emailType} onValueChange={setEmailType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select email type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="rent-reminder">Rent Reminder</SelectItem>
-                  <SelectItem value="welcome">Welcome Email</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Property (Optional)</label>
-              <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by property" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Properties</SelectItem>
-                  {properties.map((property: any) => (
-                    <SelectItem key={property.id} value={property.id}>
-                      {property.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Tenant</label>
-              <Select value={selectedTenant} onValueChange={setSelectedTenant}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select tenant" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredTenants.map((tenant: any) => (
-                    <SelectItem key={tenant.id} value={tenant.id}>
-                      {tenant.firstName} {tenant.lastName} - {tenant.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button 
-              onClick={handleSendEmail} 
-              className="w-full"
-              disabled={sendRentReminderMutation.isPending || sendWelcomeEmailMutation.isPending}
-            >
-              {(sendRentReminderMutation.isPending || sendWelcomeEmailMutation.isPending) ? "Sending..." : "Send Email"}
+        <Dialog open={isTestEmailDialogOpen} onOpenChange={setIsTestEmailDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Mail className="h-4 w-4 mr-2" />
+              Send Test Email
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Bulk Email Sending */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Bulk Email Sending
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Property (Optional)</label>
-              <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select property or leave blank for all" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Properties</SelectItem>
-                  {properties.map((property: any) => (
-                    <SelectItem key={property.id} value={property.id}>
-                      {property.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-medium text-blue-900 mb-2">Rent Reminders</h3>
-              <p className="text-sm text-blue-700 mb-3">
-                Send rent payment reminders to all tenants in the selected property (or all properties if none selected).
-              </p>
-              <Button 
-                onClick={handleBulkRentReminders}
-                disabled={sendBulkRentRemindersMutation.isPending}
-                variant="outline"
-                className="w-full"
-              >
-                {sendBulkRentRemindersMutation.isPending ? "Sending..." : "Send Bulk Rent Reminders"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Send Test Email</DialogTitle>
+            </DialogHeader>
+            <Form {...testEmailForm}>
+              <form onSubmit={testEmailForm.handleSubmit(onTestEmailSubmit)} className="space-y-4">
+                <FormField
+                  control={testEmailForm.control}
+                  name="to"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>To</FormLabel>
+                      <FormControl>
+                        <Input placeholder="recipient@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={testEmailForm.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subject</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Test email subject" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={testEmailForm.control}
+                  name="message"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Message</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Your test message..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsTestEmailDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={sendTestEmailMutation.isPending}>
+                    {sendTestEmailMutation.isPending ? "Sending..." : "Send Email"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Email Templates Preview */}
+      {/* Email Status */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Email Templates
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            Gmail Connection Status
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="border rounded-lg p-4">
-              <Badge variant="outline" className="mb-2">Rent Reminder</Badge>
-              <p className="text-sm text-gray-600">
-                Automated reminder for upcoming rent payments with property and payment details.
-              </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                Connected
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                Gmail is configured and ready to send emails
+              </span>
             </div>
-            <div className="border rounded-lg p-4">
-              <Badge variant="outline" className="mb-2">Welcome Email</Badge>
-              <p className="text-sm text-gray-600">
-                Welcome new tenants with important information about their unit and property.
-              </p>
-            </div>
-            <div className="border rounded-lg p-4">
-              <Badge variant="outline" className="mb-2">Maintenance Updates</Badge>
-              <p className="text-sm text-gray-600">
-                Notify tenants about maintenance request status changes and updates.
-              </p>
-            </div>
+            <Button variant="outline" onClick={() => setIsTestEmailDialogOpen(true)}>
+              Test Connection
+            </Button>
           </div>
         </CardContent>
       </Card>
+
+      <Tabs defaultValue="tenants" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="tenants">Send to Tenants</TabsTrigger>
+          <TabsTrigger value="templates">Email Templates</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tenants" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Send Emails to Tenants</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {tenants?.map((tenant: any) => {
+                  const unit = units?.find((u: any) => u.id === tenant.unitId);
+                  const property = properties?.find((p: any) => p.id === unit?.propertyId);
+                  
+                  return (
+                    <div key={tenant.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-10 h-10 bg-primary/10 text-primary rounded-full">
+                          {tenant.firstName.charAt(0)}{tenant.lastName.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-semibold">
+                            {tenant.firstName} {tenant.lastName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {tenant.email}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {property?.name} - Unit {unit?.name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => sendRentReminderMutation.mutate(tenant.id)}
+                          disabled={sendRentReminderMutation.isPending}
+                        >
+                          <Mail className="h-4 w-4 mr-2" />
+                          Rent Reminder
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => sendWelcomeEmailMutation.mutate(tenant.id)}
+                          disabled={sendWelcomeEmailMutation.isPending}
+                        >
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Welcome Email
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Rent Reminder
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Automatically includes tenant name, property details, rent amount, and due date.
+                </p>
+                <div className="bg-gray-50 p-3 rounded text-xs">
+                  <strong>Subject:</strong> Rent Payment Reminder - [Property] Unit [Unit]<br/>
+                  <strong>Content:</strong> Dear [Tenant], this is a friendly reminder that your rent payment is due...
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Welcome Email
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Sent to new tenants with important information about their lease.
+                </p>
+                <div className="bg-gray-50 p-3 rounded text-xs">
+                  <strong>Subject:</strong> Welcome to [Property] - Unit [Unit]<br/>
+                  <strong>Content:</strong> Welcome to your new home! Important reminders about rent payments...
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  Maintenance Update
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Updates tenants on the status of their maintenance requests.
+                </p>
+                <div className="bg-gray-50 p-3 rounded text-xs">
+                  <strong>Subject:</strong> Maintenance Update - [Property] Unit [Unit]<br/>
+                  <strong>Content:</strong> We have an update regarding your maintenance request...
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -275,6 +275,26 @@ export default function Tenants() {
     },
   });
 
+  const sendRentReminderMutation = useMutation({
+    mutationFn: (tenantId: string) => apiRequest("POST", "/api/emails/send-rent-reminder", { tenantId }),
+    onSuccess: () => {
+      toast({ title: "Success", description: "Rent reminder email sent successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to send rent reminder", variant: "destructive" });
+    },
+  });
+
+  const sendWelcomeEmailMutation = useMutation({
+    mutationFn: (tenantId: string) => apiRequest("POST", "/api/emails/send-welcome", { tenantId }),
+    onSuccess: () => {
+      toast({ title: "Success", description: "Welcome email sent successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to send welcome email", variant: "destructive" });
+    },
+  });
+
   const createTaskMutation = useMutation({
     mutationFn: (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
     onSuccess: () => {
