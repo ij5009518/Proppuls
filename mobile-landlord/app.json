@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "PropertyFlow Landlord",
+    "slug": "propertyflow-landlord",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2563eb"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.propertyflow.landlord"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2563eb"
+      },
+      "package": "com.propertyflow.landlord"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
