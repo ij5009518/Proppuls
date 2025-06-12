@@ -38,6 +38,10 @@ export function registerRoutes(app: Express) {
         return res.status(404).json({ message: "Tenant not found" });
       }
 
+      if (!tenant.unitId) {
+        return res.status(400).json({ message: "Tenant must be assigned to a unit before sending rent reminders" });
+      }
+
       const unit = await storage.getUnitById(tenant.unitId);
       if (!unit) {
         return res.status(404).json({ message: "Unit not found" });
@@ -76,6 +80,10 @@ export function registerRoutes(app: Express) {
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
+      }
+
+      if (!tenant.unitId) {
+        return res.status(400).json({ message: "Tenant must be assigned to a unit before sending welcome emails" });
       }
 
       const unit = await storage.getUnitById(tenant.unitId);
