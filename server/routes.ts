@@ -28,6 +28,146 @@ export function registerRoutes(app: Express) {
     res.json({ status: "ok", message: "Server is running" });
   });
 
+  // Email routes
+  app.post("/api/emails/send-rent-reminder", async (req, res) => {
+    try {
+      const { tenantId } = req.body;
+      
+      const tenant = await storage.getTenantById(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+
+      const unit = await storage.getUnitById(tenant.unitId);
+      if (!unit) {
+        return res.status(404).json({ message: "Unit not found" });
+      }
+
+      const property = await storage.getPropertyById(unit.propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      const emailData = {
+        tenantName: `${tenant.firstName} ${tenant.lastName}`,
+        unitNumber: unit.name,
+        propertyName: property.name,
+        amount: parseFloat(tenant.monthlyRent || "0"),
+        dueDate: new Date().toLocaleDateString()
+      };
+
+      const success = await emailService.sendRentReminder(tenant.email, emailData);
+      
+      if (success) {
+        res.json({ message: "Rent reminder sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send email" });
+      }
+    } catch (error) {
+      console.error("Error sending rent reminder:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/emails/send-welcome", async (req, res) => {
+    try {
+      const { tenantId } = req.body;
+      
+      const tenant = await storage.getTenantById(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+
+      const unit = await storage.getUnitById(tenant.unitId);
+      if (!unit) {
+        return res.status(404).json({ message: "Unit not found" });
+      }
+
+      const property = await storage.getPropertyById(unit.propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      const success = await emailService.sendWelcomeEmail(
+        tenant.email,
+        `${tenant.firstName} ${tenant.lastName}`,
+        property.name,
+        unit.name
+      );
+      
+      if (success) {
+        res.json({ message: "Welcome email sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send email" });
+      }
+    } catch (error) {
+      console.error("Error sending welcome email:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/emails/send-maintenance-notification", async (req, res) => {
+    try {
+      const { tenantId, description, status } = req.body;
+      
+      const tenant = await storage.getTenantById(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ message: "Tenant not found" });
+      }
+
+      const unit = await storage.getUnitById(tenant.unitId);
+      if (!unit) {
+        return res.status(404).json({ message: "Unit not found" });
+      }
+
+      const property = await storage.getPropertyById(unit.propertyId);
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      const emailData = {
+        tenantName: `${tenant.firstName} ${tenant.lastName}`,
+        unitNumber: unit.name,
+        propertyName: property.name,
+        description,
+        status
+      };
+
+      const success = await emailService.sendMaintenanceNotification(tenant.email, emailData);
+      
+      if (success) {
+        res.json({ message: "Maintenance notification sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send email" });
+      }
+    } catch (error) {
+      console.error("Error sending maintenance notification:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/emails/test", async (req, res) => {
+    try {
+      const { to, subject, message } = req.body;
+      
+      const success = await emailService.sendEmail({
+        to,
+        subject,
+        html: `<p>${message}</p>`,
+        text: message
+      });
+      
+      if (success) {
+        res.json({ message: "Test email sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send test email" });
+      }
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   // File upload route for ID documents
   app.post("/api/upload/id-document", upload.single("idDocument"), async (req, res) => {
     try {
