@@ -259,8 +259,38 @@ export const taskSchema = z.object({
   notes: z.string().optional(),
   isRecurring: z.boolean().optional(),
   recurrencePeriod: z.enum(["weekly", "monthly", "quarterly", "yearly"]).optional(),
+  // Communication settings
+  communicationMethod: z.enum(["none", "email", "sms", "both"]).default("none"),
+  recipientEmail: z.string().optional(),
+  recipientPhone: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date().optional(),
+});
+
+export const taskCommunicationSchema = z.object({
+  id: z.string(),
+  taskId: z.string(),
+  type: z.enum(["email", "sms"]),
+  recipient: z.string(),
+  subject: z.string().optional(),
+  message: z.string(),
+  status: z.enum(["pending", "sent", "delivered", "failed"]).default("pending"),
+  sentAt: z.date().optional(),
+  deliveredAt: z.date().optional(),
+  errorMessage: z.string().optional(),
+  createdAt: z.date(),
+});
+
+export const taskHistorySchema = z.object({
+  id: z.string(),
+  taskId: z.string(),
+  action: z.enum(["created", "updated", "status_changed", "assigned", "communication_sent"]),
+  field: z.string().optional(),
+  oldValue: z.string().optional(),
+  newValue: z.string().optional(),
+  userId: z.string().optional(),
+  notes: z.string().optional(),
+  createdAt: z.date(),
 });
 
 // 1. Lease Management System
@@ -604,6 +634,8 @@ export const insertRentPaymentSchema = rentPaymentSchema.omit({ id: true, create
 export const insertMortgageSchema = mortgageSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertExpenseSchema = expenseSchema.omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTaskSchema = taskSchema.omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTaskCommunicationSchema = taskCommunicationSchema.omit({ id: true, createdAt: true });
+export const insertTaskHistorySchema = taskHistorySchema.omit({ id: true, createdAt: true });
 
 // New Insert schemas for advanced features
 export const insertLeaseSchema = leaseSchema.omit({ id: true, createdAt: true, updatedAt: true });
@@ -664,6 +696,8 @@ export type RentPayment = z.infer<typeof rentPaymentSchema>;
 export type Mortgage = z.infer<typeof mortgageSchema>;
 export type Expense = z.infer<typeof expenseSchema>;
 export type Task = z.infer<typeof taskSchema>;
+export type TaskCommunication = z.infer<typeof taskCommunicationSchema>;
+export type TaskHistory = z.infer<typeof taskHistorySchema>;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertProperty = z.infer<typeof insertPropertySchema>;
@@ -675,6 +709,8 @@ export type InsertRentPayment = z.infer<typeof insertRentPaymentSchema>;
 export type InsertMortgage = z.infer<typeof insertMortgageSchema>;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type InsertTaskCommunication = z.infer<typeof insertTaskCommunicationSchema>;
+export type InsertTaskHistory = z.infer<typeof insertTaskHistorySchema>;
 
 // Advanced feature types
 export type Lease = z.infer<typeof leaseSchema>;
