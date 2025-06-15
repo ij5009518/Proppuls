@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List } from "lucide-react";
+import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -25,6 +25,7 @@ const taskFormSchema = z.object({
   status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
   category: z.string().min(1, "Category is required"),
   dueDate: z.string().optional(),
+  assignedTo: z.string().optional(),
 });
 
 type TaskFormData = z.infer<typeof taskFormSchema>;
@@ -36,6 +37,9 @@ export default function Tasks() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showTaskDetails, setShowTaskDetails] = useState(false);
+  const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<Task | null>(null);
+  const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -46,6 +50,7 @@ export default function Tasks() {
       status: "pending",
       category: "general",
       dueDate: "",
+      assignedTo: "",
     },
   });
 
@@ -58,6 +63,7 @@ export default function Tasks() {
       status: "pending",
       category: "general",
       dueDate: "",
+      assignedTo: "",
     },
   });
 
@@ -167,8 +173,26 @@ export default function Tasks() {
       status: task.status,
       category: task.category,
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "",
+      assignedTo: task.assignedTo || "",
     });
     setIsEditDialogOpen(true);
+  };
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTaskForDetails(task);
+    setShowTaskDetails(true);
+  };
+
+  const handleBackToTasks = () => {
+    setShowTaskDetails(false);
+    setSelectedTaskForDetails(null);
+  };
+
+  const handleDocumentUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadedDocument(file);
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -222,6 +246,128 @@ export default function Tasks() {
 
   if (tasksLoading) {
     return <div className="flex justify-center items-center min-h-96">Loading tasks...</div>;
+  }
+
+  // Task Details View
+  if (showTaskDetails && selectedTaskForDetails) {
+    return (
+      <div className="space-y-6">
+        {/* Header with back button */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" size="sm" onClick={handleBackToTasks}>
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Back to Tasks
+            </Button>
+            <h1 className="text-3xl font-bold">{selectedTaskForDetails.title} - Task Details</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEdit(selectedTaskForDetails)}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => handleDelete(selectedTaskForDetails.id)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
+        </div>
+
+        {/* Task Details Card */}
+        <Card className="max-w-4xl">
+          <CardHeader>
+            <CardTitle className="text-2xl">{selectedTaskForDetails.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Task Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground min-w-[100px]">Status:</span>
+                      <Badge variant={
+                        selectedTaskForDetails.status === "completed" ? "default" :
+                        selectedTaskForDetails.status === "in_progress" ? "secondary" :
+                        "outline"
+                      }>
+                        {selectedTaskForDetails.status.replace('_', ' ').charAt(0).toUpperCase() + selectedTaskForDetails.status.replace('_', ' ').slice(1)}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground min-w-[100px]">Priority:</span>
+                      <Badge variant={
+                        selectedTaskForDetails.priority === "urgent" ? "destructive" :
+                        selectedTaskForDetails.priority === "high" ? "secondary" :
+                        "outline"
+                      }>
+                        {selectedTaskForDetails.priority.charAt(0).toUpperCase() + selectedTaskForDetails.priority.slice(1)}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground min-w-[100px]">Category:</span>
+                      <span>{selectedTaskForDetails.category.charAt(0).toUpperCase() + selectedTaskForDetails.category.slice(1)}</span>
+                    </div>
+                    {getRelatedEntityName(selectedTaskForDetails) && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground min-w-[100px]">Property:</span>
+                        <span>{getRelatedEntityName(selectedTaskForDetails)}</span>
+                      </div>
+                    )}
+                    {selectedTaskForDetails.assignedTo && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground min-w-[100px]">Assigned To:</span>
+                        <span>{selectedTaskForDetails.assignedTo}</span>
+                      </div>
+                    )}
+                    {selectedTaskForDetails.dueDate && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground min-w-[100px]">Due Date:</span>
+                        <span>{formatDate(selectedTaskForDetails.dueDate)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Document Section */}
+                {uploadedDocument && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Documents</h3>
+                    <div className="flex items-center gap-2 p-3 border rounded-lg">
+                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      <span className="flex-1">{uploadedDocument.name}</span>
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Description</h3>
+                <p className="text-muted-foreground whitespace-pre-wrap">
+                  {selectedTaskForDetails.description}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -420,11 +566,11 @@ export default function Tasks() {
                   </div>
                 ) : (
                   filteredTasks.map((task: Task) => (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow">
+                    <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
                           <CardTitle className="text-lg">{task.title}</CardTitle>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="outline"
                               size="sm"
@@ -493,7 +639,7 @@ export default function Tasks() {
                   </div>
                 ) : (
                   filteredTasks.map((task: Task) => (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow">
+                    <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -526,7 +672,7 @@ export default function Tasks() {
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center space-x-2 ml-4">
+                          <div className="flex items-center space-x-2 ml-4" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="outline"
                               size="sm"
