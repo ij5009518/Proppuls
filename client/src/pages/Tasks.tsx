@@ -26,6 +26,9 @@ const taskFormSchema = z.object({
   category: z.string().min(1, "Category is required"),
   dueDate: z.string().optional(),
   assignedTo: z.string().optional(),
+  communicationMethod: z.enum(["none", "email", "sms", "both"]).default("none"),
+  recipientEmail: z.string().email().optional().or(z.literal("")),
+  recipientPhone: z.string().optional(),
 });
 
 type TaskFormData = z.infer<typeof taskFormSchema>;
@@ -51,6 +54,9 @@ export default function Tasks() {
       category: "general",
       dueDate: "",
       assignedTo: "",
+      communicationMethod: "none",
+      recipientEmail: "",
+      recipientPhone: "",
     },
   });
 
@@ -64,6 +70,9 @@ export default function Tasks() {
       category: "general",
       dueDate: "",
       assignedTo: "",
+      communicationMethod: "none",
+      recipientEmail: "",
+      recipientPhone: "",
     },
   });
 
@@ -519,6 +528,67 @@ export default function Tasks() {
                   )}
                 />
 
+                {/* Communication Settings */}
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="text-sm font-medium">Communication Settings</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="communicationMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Communication Method</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                            <SelectItem value="sms">SMS</SelectItem>
+                            <SelectItem value="both">Both Email & SMS</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {(form.watch("communicationMethod") === "email" || form.watch("communicationMethod") === "both") && (
+                    <FormField
+                      control={form.control}
+                      name="recipientEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recipient Email</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" placeholder="Enter recipient email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {(form.watch("communicationMethod") === "sms" || form.watch("communicationMethod") === "both") && (
+                    <FormField
+                      control={form.control}
+                      name="recipientPhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recipient Phone</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="tel" placeholder="Enter recipient phone number" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+
                 {/* Document Upload Section */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Attach Document</label>
@@ -901,6 +971,67 @@ export default function Tasks() {
                   </FormItem>
                 )}
               />
+
+              {/* Communication Settings */}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="text-sm font-medium">Communication Settings</h3>
+                
+                <FormField
+                  control={editForm.control}
+                  name="communicationMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Communication Method</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="email">Email</SelectItem>
+                          <SelectItem value="sms">SMS</SelectItem>
+                          <SelectItem value="both">Both Email & SMS</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {(editForm.watch("communicationMethod") === "email" || editForm.watch("communicationMethod") === "both") && (
+                  <FormField
+                    control={editForm.control}
+                    name="recipientEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Recipient Email</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" placeholder="Enter recipient email" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {(editForm.watch("communicationMethod") === "sms" || editForm.watch("communicationMethod") === "both") && (
+                  <FormField
+                    control={editForm.control}
+                    name="recipientPhone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Recipient Phone</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" placeholder="Enter recipient phone number" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
 
               {/* Document Upload Section */}
               <div className="space-y-2">
