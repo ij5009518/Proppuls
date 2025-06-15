@@ -1007,6 +1007,60 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Task Communication routes
+  app.get("/api/tasks/:taskId/communications", async (req, res) => {
+    try {
+      const taskId = req.params.taskId;
+      const communications = await storage.getTaskCommunications(taskId);
+      res.json(communications);
+    } catch (error) {
+      console.error("Error fetching task communications:", error);
+      res.status(500).json({ message: "Failed to fetch task communications" });
+    }
+  });
+
+  app.post("/api/tasks/:taskId/communications", async (req, res) => {
+    try {
+      const taskId = req.params.taskId;
+      const communicationData = { ...req.body, taskId };
+      const communication = await storage.createTaskCommunication(communicationData);
+      res.json(communication);
+    } catch (error) {
+      console.error("Error creating task communication:", error);
+      res.status(500).json({ message: "Failed to create task communication" });
+    }
+  });
+
+  // Task History routes
+  app.get("/api/tasks/:taskId/history", async (req, res) => {
+    try {
+      const taskId = req.params.taskId;
+      const history = await storage.getTaskHistory(taskId);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching task history:", error);
+      res.status(500).json({ message: "Failed to fetch task history" });
+    }
+  });
+
+  app.post("/api/tasks/:taskId/send-communication", async (req, res) => {
+    try {
+      const taskId = req.params.taskId;
+      const { subject, message } = req.body;
+      const task = await storage.getTaskById(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+
+      await storage.sendTaskCommunication(task, subject, message);
+      res.json({ success: true, message: "Communication sent successfully" });
+    } catch (error) {
+      console.error("Error sending task communication:", error);
+      res.status(500).json({ message: "Failed to send task communication" });
+    }
+  });
+
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {

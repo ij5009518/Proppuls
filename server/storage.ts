@@ -1,9 +1,9 @@
 import { User, TenantSession, TenantLogin, CreateTenantMaintenanceRequest, Organization } from '../shared/schema';
-import { db, organizations, users, properties, expenses, units, tenants, tenantSessions, tenantHistory, maintenanceRequests, vendors, rentPayments, mortgages, tasks } from './db';
-import { eq, sql, and, gt } from 'drizzle-orm';
+import { db, organizations, users, properties, expenses, units, tenants, tenantSessions, tenantHistory, maintenanceRequests, vendors, rentPayments, mortgages, tasks, taskCommunications, taskHistory } from './db';
+import { eq, sql, and, gt, desc } from 'drizzle-orm';
 import * as crypto from "crypto";
 import * as bcrypt from 'bcrypt';
-import { Property, Expense, Unit, Tenant, TenantHistory, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task } from '../shared/schema';
+import { Property, Expense, Unit, Tenant, TenantHistory, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task, TaskCommunication, TaskHistory } from '../shared/schema';
 import * as nodemailer from 'nodemailer';
 
 interface Session {
@@ -916,6 +916,106 @@ class Storage {
     } catch (error) {
       console.error("Error getting payment summaries:", error);
       throw error;
+    }
+  }
+
+  // Task Communication methods
+  async createTaskCommunication(communicationData: any): Promise<TaskCommunication> {
+    const communication = {
+      id: crypto.randomUUID(),
+      taskId: communicationData.taskId,
+      type: communicationData.type,
+      recipient: communicationData.recipient,
+      subject: communicationData.subject,
+      message: communicationData.message,
+      status: 'pending',
+      createdAt: new Date(),
+      ...communicationData
+    };
+    
+    await db.insert(taskCommunications).values(communication);
+    return communication;
+  }
+
+  async getTaskCommunications(taskId: string): Promise<TaskCommunication[]> {
+    const result = await db.select()
+      .from(taskCommunications)
+      .where(eq(taskCommunications.taskId, taskId))
+      .orderBy(desc(taskCommunications.createdAt));
+    return result;
+  }
+
+  async updateTaskCommunication(id: string, updates: any): Promise<TaskCommunication | null> {
+    const result = await db.update(taskCommunications)
+      .set(updates)
+      .where(eq(taskCommunications.id, id))
+      .returning();
+    return result[0] || null;
+  }
+
+  // Task History methods
+  async createTaskHistory(historyData: any): Promise<TaskHistory> {
+    const history = {
+      id: crypto.randomUUID(),
+      taskId: historyData.taskId,
+      action: historyData.action,
+      field: historyData.field,
+      oldValue: historyData.oldValue,
+      newValue: historyData.newValue,
+      userId: historyData.userId,
+      notes: historyData.notes,
+      createdAt: new Date(),
+      ...historyData
+    };
+    
+    await db.insert(taskHistory).values(history);
+    return history;
+  }
+
+  async getTaskHistory(taskId: string): Promise<TaskHistory[]> {
+    const result = await db.select()
+      .from(taskHistory)
+      .where(eq(taskHistory.taskId, taskId))
+      .orderBy(desc(taskHistory.createdAt));
+    return result;
+  }
+
+  // Enhanced task methods with communication and history tracking
+  async sendTaskCommunication(task: Task, subject: string, message: string): Promise<void> {
+    if (!task.communicationMethod || task.communicationMethod === 'none') return;
+
+    const communications = [];
+
+    if ((task.communicationMethod === 'email' || task.communicationMethod === 'both') && task.recipientEmail) {
+      communications.push({
+        taskId: task.id,
+        type: 'email',
+        recipient: task.recipientEmail,
+        subject: subject,
+        message: message
+      });
+    }
+
+    if ((task.communicationMethod === 'sms' || task.communicationMethod === 'both') && task.recipientPhone) {
+      communications.push({
+        taskId: task.id,
+        type: 'sms',
+        recipient: task.recipientPhone,
+        subject: null,
+        message: message
+      });
+    }
+
+    // Create communication records
+    for (const comm of communications) {
+      await this.createTaskCommunication(comm);
+      
+      // Create history entry
+      await this.createTaskHistory({
+        taskId: task.id,
+        action: 'communication_sent',
+        notes: `${comm.type.toUpperCase()} sent to ${comm.recipient}`
+      });
     }
   }
 }
