@@ -11,19 +11,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { insertTaskSchema, type Task, type InsertTask } from "../../../shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
-import { apiRequest } from "@/lib/queryClient";
-import type { Task, InsertTask } from "shared/schema";
+import { formatDate, getPriorityColor } from "@/lib/utils";
 
-const taskFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  priority: z.enum(["low", "medium", "high", "urgent"]),
-  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
-  category: z.string().min(1, "Category is required"),
+const taskFormSchema = insertTaskSchema.extend({
   dueDate: z.string().optional(),
 });
 
@@ -45,7 +40,9 @@ export default function Tasks() {
       priority: "medium",
       status: "pending",
       category: "general",
-      dueDate: "",
+      assignedTo: "",
+      estimatedHours: 0,
+      actualHours: 0,
     },
   });
 
@@ -57,7 +54,9 @@ export default function Tasks() {
       priority: "medium",
       status: "pending",
       category: "general",
-      dueDate: "",
+      assignedTo: "",
+      estimatedHours: 0,
+      actualHours: 0,
     },
   });
 
@@ -102,13 +101,13 @@ export default function Tasks() {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, taskData }: { id: string; taskData: Partial<InsertTask> }) =>
-      apiRequest("PATCH", `/api/tasks/${id}`, taskData),
+    mutationFn: ({ id, ...taskData }: Partial<Task> & { id: string }) =>
+      apiRequest("PUT", `/api/tasks/${id}`, taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setIsEditDialogOpen(false);
-      setSelectedTask(null);
       editForm.reset();
+      setSelectedTask(null);
       toast({
         title: "Success",
         description: "Task updated successfully",
@@ -151,22 +150,31 @@ export default function Tasks() {
 
   const onEditSubmit = (data: TaskFormData) => {
     if (!selectedTask) return;
+    
     const taskData = {
       ...data,
+      id: selectedTask.id,
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
     };
-    updateTaskMutation.mutate({ id: selectedTask.id, taskData });
+    updateTaskMutation.mutate(taskData);
   };
 
   const handleEdit = (task: Task) => {
     setSelectedTask(task);
     editForm.reset({
       title: task.title,
-      description: task.description,
+      description: task.description || "",
       priority: task.priority,
       status: task.status,
       category: task.category,
+      assignedTo: task.assignedTo || "",
+      estimatedHours: task.estimatedHours || 0,
+      actualHours: task.actualHours || 0,
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "",
+      propertyId: task.propertyId || undefined,
+      unitId: task.unitId || undefined,
+      tenantId: task.tenantId || undefined,
+      vendorId: task.vendorId || undefined,
     });
     setIsEditDialogOpen(true);
   };
@@ -179,46 +187,40 @@ export default function Tasks() {
 
   const getRelatedEntityName = (task: Task) => {
     if (task.propertyId) {
-      const property = Array.isArray(properties) ? properties.find((p: any) => p.id === task.propertyId) : null;
+      const property = properties.find((p: any) => p.id === task.propertyId);
       return property ? `Property: ${property.name}` : "";
     }
     if (task.unitId) {
-      const unit = Array.isArray(units) ? units.find((u: any) => u.id === task.unitId) : null;
+      const unit = units.find((u: any) => u.id === task.unitId);
       return unit ? `Unit: ${unit.name}` : "";
     }
     if (task.tenantId) {
-      const tenant = Array.isArray(tenants) ? tenants.find((t: any) => t.id === task.tenantId) : null;
+      const tenant = tenants.find((t: any) => t.id === task.tenantId);
       return tenant ? `Tenant: ${tenant.firstName} ${tenant.lastName}` : "";
     }
     if (task.vendorId) {
-      const vendor = Array.isArray(vendors) ? vendors.find((v: any) => v.id === task.vendorId) : null;
+      const vendor = vendors.find((v: any) => v.id === task.vendorId);
       return vendor ? `Vendor: ${vendor.name}` : "";
     }
     return "";
   };
 
-  const filteredTasks = Array.isArray(tasks) ? tasks.filter((task: Task) =>
+  const filteredTasks = tasks.filter((task: Task) =>
     task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.category.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  );
 
   const taskCategories = [
     "general",
     "maintenance",
     "inspection",
-    "repair",
-    "cleaning",
-    "landscaping",
+    "lease",
+    "payment",
+    "vendor",
     "legal",
-    "financial",
-    "administrative",
+    "administrative"
   ];
-
-  const formatDate = (date: Date | string) => {
-    const d = new Date(date);
-    return d.toLocaleDateString();
-  };
 
   if (tasksLoading) {
     return <div className="flex justify-center items-center min-h-96">Loading tasks...</div>;
@@ -408,76 +410,199 @@ export default function Tasks() {
         
         <TabsContent value="tasks">
           <div className="space-y-6">
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredTasks.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new task."}
-                    </p>
-                  </div>
-                ) : (
-                  filteredTasks.map((task: Task) => (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-lg">{task.title}</CardTitle>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(task)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(task.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-muted-foreground mb-3">{task.description}</p>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge variant={
-                            task.priority === "urgent" ? "destructive" :
-                            task.priority === "high" ? "secondary" :
-                            task.priority === "medium" ? "outline" :
-                            "outline"
-                          }>
-                            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                          </Badge>
-                          <Badge variant={
-                            task.status === "completed" ? "default" :
-                            task.status === "in_progress" ? "secondary" :
-                            "outline"
-                          }>
-                            {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <span className="block">
-                            Category: {task.category}
-                          </span>
-                          {task.dueDate && (
-                            <span className="text-muted-foreground">
-                              Due: {formatDate(task.dueDate)}
-                            </span>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Task</DialogTitle>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="title"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Title</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
                           )}
-                        </div>
-                        {getRelatedEntityName(task) && (
-                          <div className="mt-2 text-sm text-muted-foreground">
-                            {getRelatedEntityName(task)}
-                          </div>
+                        />
+                        <FormField
+                          control={form.control}
+                          name="category"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Category</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {taskCategories.map((category) => (
+                                    <SelectItem key={category} value={category}>
+                                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                      </CardContent>
-                    </Card>
+                      />
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="priority"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Priority</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="low">Low</SelectItem>
+                                  <SelectItem value="medium">Medium</SelectItem>
+                                  <SelectItem value="high">High</SelectItem>
+                                  <SelectItem value="urgent">Urgent</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="status"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Status</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="in_progress">In Progress</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="dueDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Due Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={createTaskMutation.isPending}>
+                          {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Tasks List */}
+            <div className="grid gap-4">
+              {tasks.length === 0 ? (
+                <div className="text-center py-12">
+                  <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Create your first task to get started.
+                  </p>
+                </div>
+              ) : (
+                tasks.map((task: any) => (
+                  <Card key={task.id}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <div className="flex items-center space-x-2">
+                        <CardTitle className="text-base">{task.title}</CardTitle>
+                        <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                          {task.priority}
+                        </Badge>
+                        <Badge variant="secondary">{task.status.replace('_', ' ')}</Badge>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(task)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(task.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Category: {task.category}
+                        </span>
+                        {task.dueDate && (
+                          <span className="text-muted-foreground">
+                            Due: {formatDate(task.dueDate)}
+                          </span>
+                        )}
+                      </div>
+                      {getRelatedEntityName(task) && (
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          {getRelatedEntityName(task)}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                   ))
                 )}
               </div>
@@ -499,25 +624,26 @@ export default function Tasks() {
                           <div className="flex-1">
                             <h3 className="font-semibold">{task.title}</h3>
                             <p className="text-muted-foreground mt-1">{task.description}</p>
-                            <div className="flex items-center gap-4 mt-3">
-                              <Badge variant={
-                                task.priority === "urgent" ? "destructive" :
-                                task.priority === "high" ? "secondary" :
-                                task.priority === "medium" ? "outline" :
-                                "outline"
-                              }>
+                            <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                task.priority === "urgent" ? "bg-red-100 text-red-800" :
+                                task.priority === "high" ? "bg-orange-100 text-orange-800" :
+                                task.priority === "medium" ? "bg-yellow-100 text-yellow-800" :
+                                "bg-gray-100 text-gray-800"
+                              }`}>
                                 {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                              </Badge>
-                              <Badge variant={
-                                task.status === "completed" ? "default" :
-                                task.status === "in_progress" ? "secondary" :
-                                "outline"
-                              }>
+                              </span>
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                task.status === "completed" ? "bg-green-100 text-green-800" :
+                                task.status === "in_progress" ? "bg-blue-100 text-blue-800" :
+                                task.status === "cancelled" ? "bg-red-100 text-red-800" :
+                                "bg-gray-100 text-gray-800"
+                              }`}>
                                 {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
-                              </Badge>
-                              <span className="text-sm text-muted-foreground">Category: {task.category}</span>
+                              </span>
+                              <span>Category: {task.category}</span>
                               {task.dueDate && (
-                                <span className="text-sm text-muted-foreground">Due: {formatDate(task.dueDate)}</span>
+                                <span>Due: {formatDate(task.dueDate)}</span>
                               )}
                             </div>
                             {getRelatedEntityName(task) && (
@@ -554,6 +680,14 @@ export default function Tasks() {
         
         <TabsContent value="maintenance">
           <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Maintenance Requests</h2>
+              <Button>
+                <Wrench className="mr-2 h-4 w-4" />
+                Add Maintenance Request
+              </Button>
+            </div>
+            
             <div className="text-center py-12">
               <Wrench className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-2 text-sm font-medium">Maintenance functionality</h3>
@@ -565,13 +699,7 @@ export default function Tasks() {
         </TabsContent>
 
         <TabsContent value="calendar">
-          <div className="text-center py-12">
-            <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-medium">Calendar view coming soon</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              View your tasks in a calendar format.
-            </p>
-          </div>
+          <CalendarView tasks={tasks as Task[]} />
         </TabsContent>
       </Tabs>
 
@@ -637,7 +765,7 @@ export default function Tasks() {
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={editForm.control}
                   name="priority"
@@ -684,21 +812,20 @@ export default function Tasks() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={editForm.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Due Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-
-              <FormField
-                control={editForm.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
@@ -712,6 +839,124 @@ export default function Tasks() {
           </Form>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// Calendar component for tasks
+function CalendarView({ tasks }: { tasks: Task[] }) {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  // Generate calendar grid
+  const generateCalendarGrid = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+    
+    return days;
+  };
+
+  const calendarGrid = generateCalendarGrid();
+
+  const getTasksForDate = (date: Date) => {
+    return tasks.filter(task => 
+      task.dueDate && new Date(task.dueDate).toDateString() === date.toDateString()
+    );
+  };
+
+  const previousMonth = () => {
+    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1));
+  };
+
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return (
+    <div className="space-y-4">
+      {/* Calendar Header */}
+      <div className="flex justify-between items-center">
+        <Button variant="outline" onClick={previousMonth}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="text-xl font-semibold">
+          {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+        </h2>
+        <Button variant="outline" onClick={nextMonth}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Day Headers */}
+      <div className="grid grid-cols-7 gap-2">
+        {dayNames.map((day, index) => (
+          <div key={index} className="p-2 text-center text-sm font-medium text-muted-foreground">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-2">
+        {calendarGrid.map((date, index) => {
+          const tasksForDate = date ? getTasksForDate(date) : [];
+          
+          return (
+            <div
+              key={index}
+              className={`min-h-24 p-2 border rounded-lg ${
+                date ? 'bg-card hover:bg-accent cursor-pointer' : 'bg-muted'
+              }`}
+            >
+              {date && (
+                <>
+                  <div className="text-sm font-medium mb-1">
+                    {date.getDate()}
+                  </div>
+                  <div className="space-y-1">
+                    {tasksForDate.slice(0, 2).map((task, taskIndex) => (
+                      <div
+                        key={taskIndex}
+                        className={`text-xs p-1 rounded truncate ${
+                          getPriorityColor(task.priority)
+                        }`}
+                      >
+                        {task.title}
+                      </div>
+                    ))}
+                    {tasksForDate.length > 2 && (
+                      <div className="text-xs text-muted-foreground">
+                        +{tasksForDate.length - 2} more
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
