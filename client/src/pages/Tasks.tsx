@@ -222,10 +222,7 @@ export default function Tasks() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Tasks & Maintenance</h1>
-          <p className="text-muted-foreground">Manage tasks and maintenance requests in one place</p>
-        </div>
+        <h1 className="text-3xl font-bold">Tasks & Maintenance</h1>
       </div>
 
       {/* Tabs for Tasks, Maintenance, and Calendar */}
