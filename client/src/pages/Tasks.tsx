@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload } from "lucide-react";
+import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -31,12 +31,21 @@ const taskFormSchema = z.object({
   recipientPhone: z.string().optional(),
 });
 
+const communicationFormSchema = z.object({
+  method: z.enum(["email", "sms"]),
+  recipient: z.string().min(1, "Recipient is required"),
+  message: z.string().min(1, "Message is required"),
+});
+
 type TaskFormData = z.infer<typeof taskFormSchema>;
+type CommunicationFormData = z.infer<typeof communicationFormSchema>;
 
 export default function Tasks() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [isSendCommunicationOpen, setIsSendCommunicationOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,6 +87,25 @@ export default function Tasks() {
 
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ["/api/tasks"],
+  });
+
+  const { data: taskCommunications = [] } = useQuery({
+    queryKey: ["/api/tasks", selectedTask?.id, "communications"],
+    enabled: !!selectedTask?.id,
+  });
+
+  const { data: taskHistory = [] } = useQuery({
+    queryKey: ["/api/tasks", selectedTask?.id, "history"],
+    enabled: !!selectedTask?.id,
+  });
+
+  const communicationForm = useForm<CommunicationFormData>({
+    resolver: zodResolver(communicationFormSchema),
+    defaultValues: {
+      method: "email",
+      recipient: "",
+      message: "",
+    },
   });
 
   const { data: properties = [] } = useQuery({
@@ -1067,6 +1095,187 @@ export default function Tasks() {
                 </Button>
                 <Button type="submit" disabled={updateTaskMutation.isPending}>
                   {updateTaskMutation.isPending ? "Updating..." : "Update Task"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Task Communications and History Dialog */}
+      <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Task Communications & History
+            </DialogTitle>
+          </DialogHeader>
+          
+          <Tabs defaultValue="communications" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="communications">Communications</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="communications" className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Communications</h3>
+                  <Button
+                    size="sm"
+                    onClick={() => setIsSendCommunicationOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Send className="h-4 w-4" />
+                    Send Communication
+                  </Button>
+                </div>
+                
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  {taskCommunications.map((comm) => (
+                    <div key={comm.id} className="border rounded-lg p-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          {comm.method === 'email' && <Mail className="h-4 w-4 text-blue-500" />}
+                          {comm.method === 'sms' && <Phone className="h-4 w-4 text-green-500" />}
+                          <span className="font-medium capitalize">{comm.method}</span>
+                          <Badge variant={comm.status === 'sent' ? 'default' : comm.status === 'failed' ? 'destructive' : 'secondary'}>
+                            {comm.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {new Date(comm.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2">{comm.recipient}</p>
+                      <p className="text-sm mt-1">{comm.message}</p>
+                    </div>
+                  ))}
+                  {taskCommunications.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-2" />
+                      <p>No communications sent yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="history" className="space-y-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Task History</h3>
+                
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  {taskHistory.map((history) => (
+                    <div key={history.id} className="border rounded-lg p-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-gray-500" />
+                          <span className="font-medium">{history.action}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {new Date(history.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                      {history.previousValues && (
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          <p><strong>Previous:</strong> {JSON.stringify(history.previousValues)}</p>
+                        </div>
+                      )}
+                      {history.newValues && (
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          <p><strong>New:</strong> {JSON.stringify(history.newValues)}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {taskHistory.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Clock className="h-12 w-12 mx-auto mb-2" />
+                      <p>No history available</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Communication Dialog */}
+      <Dialog open={isSendCommunicationOpen} onOpenChange={setIsSendCommunicationOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Communication</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...communicationForm}>
+            <form onSubmit={communicationForm.handleSubmit(onSendCommunication)} className="space-y-4">
+              <FormField
+                control={communicationForm.control}
+                name="method"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Method</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="sms">SMS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={communicationForm.control}
+                name="recipient"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {communicationForm.watch("method") === "email" ? "Email Address" : "Phone Number"}
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type={communicationForm.watch("method") === "email" ? "email" : "tel"}
+                        placeholder={communicationForm.watch("method") === "email" ? "Enter email address" : "Enter phone number"}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={communicationForm.control}
+                name="message"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Message</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="Enter your message" rows={4} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsSendCommunicationOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={sendCommunicationMutation.isPending}>
+                  {sendCommunicationMutation.isPending ? "Sending..." : "Send"}
                 </Button>
               </div>
             </form>
