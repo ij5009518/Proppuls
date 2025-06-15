@@ -505,6 +505,48 @@ export default function Tasks() {
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="assignedTo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assigned To</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter assignee name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Document Upload Section */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Attach Document</label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      onChange={handleDocumentUpload}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      className="flex-1"
+                    />
+                    <Upload className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  {uploadedDocument && (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <Paperclip className="h-4 w-4" />
+                      <span className="text-sm">{uploadedDocument.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setUploadedDocument(null)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancel
@@ -845,6 +887,48 @@ export default function Tasks() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={editForm.control}
+                name="assignedTo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assigned To</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter assignee name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Document Upload Section */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Attach Document</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    onChange={handleDocumentUpload}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    className="flex-1"
+                  />
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                </div>
+                {uploadedDocument && (
+                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                    <Paperclip className="h-4 w-4" />
+                    <span className="text-sm">{uploadedDocument.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setUploadedDocument(null)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                )}
+              </div>
 
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
