@@ -233,8 +233,38 @@ export const tasks = pgTable('tasks', {
   notes: text('notes'),
   isRecurring: boolean('is_recurring').default(false),
   recurrencePeriod: text('recurrence_period'),
+  // Communication settings
+  communicationMethod: text('communication_method').default('none'), // 'none', 'email', 'sms', 'both'
+  recipientEmail: text('recipient_email'),
+  recipientPhone: text('recipient_phone'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const taskCommunications = pgTable('task_communications', {
+  id: text('id').primaryKey(),
+  taskId: text('task_id').notNull(),
+  type: text('type').notNull(), // 'email', 'sms'
+  recipient: text('recipient').notNull(), // email address or phone number
+  subject: text('subject'),
+  message: text('message').notNull(),
+  status: text('status').notNull().default('pending'), // 'pending', 'sent', 'delivered', 'failed'
+  sentAt: timestamp('sent_at'),
+  deliveredAt: timestamp('delivered_at'),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const taskHistory = pgTable('task_history', {
+  id: text('id').primaryKey(),
+  taskId: text('task_id').notNull(),
+  action: text('action').notNull(), // 'created', 'updated', 'status_changed', 'assigned', 'communication_sent'
+  field: text('field'), // field that was changed (for updates)
+  oldValue: text('old_value'),
+  newValue: text('new_value'),
+  userId: text('user_id'), // who made the change
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 // 1. Lease Management System
