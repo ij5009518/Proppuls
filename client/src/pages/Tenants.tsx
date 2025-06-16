@@ -254,7 +254,7 @@ export default function Tenants() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
       setIsPaymentDialogOpen(false);
       paymentForm.reset();
       toast({ title: "Success", description: "Payment recorded successfully" });
@@ -2139,7 +2139,6 @@ export default function Tenants() {
                           onClick={() => generateBillingMutation.mutate()}
                           disabled={generateBillingMutation.isPending}
                         >
-                          <Calendar className="h-4 w-4 mr-2" />
                           {generateBillingMutation.isPending ? "Generating..." : "Generate Monthly Billing"}
                         </Button>
                         <Button
@@ -2158,7 +2157,6 @@ export default function Tenants() {
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                          <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-2" />
                           <div>
                             <p className="text-xs font-medium text-blue-800 dark:text-blue-200 uppercase tracking-wide">Outstanding Balance</p>
                             <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">
