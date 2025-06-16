@@ -138,10 +138,16 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
 
   const onEditSubmit = (data: TaskFormData) => {
     const taskData = {
-      ...data,
+      title: data.title,
+      description: data.description,
       status: data.status as "pending" | "in_progress" | "completed" | "cancelled",
       priority: data.priority as "low" | "medium" | "high" | "urgent",
-      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      category: data.category,
+      assignedTo: data.assignedTo || "",
+      dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
+      communicationMethod: data.communicationMethod || "none",
+      recipientEmail: data.recipientEmail || "",
+      recipientPhone: data.recipientPhone || "",
       propertyId: task.propertyId,
       unitId: task.unitId,
       tenantId: task.tenantId,
