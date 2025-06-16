@@ -924,6 +924,64 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Billing Records routes
+  app.get("/api/billing-records/:tenantId", async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const billingRecords = await storage.getBillingRecordsByTenant(tenantId);
+      res.json(billingRecords);
+    } catch (error) {
+      console.error("Error fetching billing records:", error);
+      res.status(500).json({ message: "Failed to fetch billing records" });
+    }
+  });
+
+  app.post("/api/billing-records", async (req, res) => {
+    try {
+      const billingRecord = await storage.createBillingRecord(req.body);
+      res.json(billingRecord);
+    } catch (error) {
+      console.error("Error creating billing record:", error);
+      res.status(500).json({ message: "Failed to create billing record" });
+    }
+  });
+
+  app.put("/api/billing-records/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const billingRecord = await storage.updateBillingRecord(id, req.body);
+      res.json(billingRecord);
+    } catch (error) {
+      console.error("Error updating billing record:", error);
+      res.status(500).json({ message: "Failed to update billing record" });
+    }
+  });
+
+  app.get("/api/outstanding-balance/:tenantId", async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const outstandingBalance = await storage.calculateOutstandingBalance(tenantId);
+      res.json({ outstandingBalance });
+    } catch (error) {
+      console.error("Error calculating outstanding balance:", error);
+      res.status(500).json({ message: "Failed to calculate outstanding balance" });
+    }
+  });
+
+  app.post("/api/billing-records/generate-monthly", async (req, res) => {
+    try {
+      const generatedBillings = await storage.generateMonthlyBilling();
+      res.json({ 
+        success: true, 
+        generated: generatedBillings.length,
+        billings: generatedBillings 
+      });
+    } catch (error) {
+      console.error("Error generating monthly billing:", error);
+      res.status(500).json({ message: "Failed to generate monthly billing" });
+    }
+  });
+
   // Properties with stats route
   app.get("/api/properties/with-stats", async (req, res) => {
     try {

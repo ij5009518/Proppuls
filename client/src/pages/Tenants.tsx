@@ -115,6 +115,18 @@ export default function Tenants() {
     queryKey: ["/api/rent-payments"],
   });
 
+  // Billing records for selected tenant
+  const { data: billingRecords = [] } = useQuery({
+    queryKey: ["/api/billing-records", selectedTenant?.id],
+    enabled: !!selectedTenant?.id,
+  });
+
+  // Outstanding balance for selected tenant
+  const { data: outstandingBalanceData } = useQuery({
+    queryKey: ["/api/outstanding-balance", selectedTenant?.id],
+    enabled: !!selectedTenant?.id,
+  });
+
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
   });
