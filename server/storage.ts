@@ -379,95 +379,17 @@ class Storage {
     }
   }
 
-  // Automated monthly billing system
-  async checkAndGenerateMonthlyBilling(): Promise<void> {
-    try {
-      // Get all active tenants with lease start dates and monthly rent
-      const activeTenantsQuery = await db.select()
-        .from(tenants)
-        .where(and(
-          eq(tenants.status, 'active'),
-          sql`${tenants.leaseStart} IS NOT NULL`,
-          sql`${tenants.monthlyRent} IS NOT NULL`
-        ));
-
-      for (const tenant of activeTenantsQuery) {
-        if (!tenant.leaseStart || !tenant.monthlyRent) continue;
-
-        const currentDate = new Date();
-        const leaseStartDate = new Date(tenant.leaseStart);
-        
-        // Only generate billing if current date >= lease start date
-        if (currentDate >= leaseStartDate) {
-          await this.generateMonthlyBillingForTenant(tenant);
-        }
-      }
-    } catch (error) {
-      console.error("Error in automated monthly billing check:", error);
-    }
-  }
-
-  private async generateMonthlyBillingForTenant(tenant: any): Promise<void> {
-    if (!tenant.monthlyRent || !tenant.unitId) return;
-
-    try {
-      const currentDate = new Date();
-      const leaseStartDate = new Date(tenant.leaseStart);
-      const monthlyAmount = parseFloat(tenant.monthlyRent);
-
-      // Calculate billing period (YYYY-MM format)
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-      const billingPeriod = `${year}-${month}`;
-
-      // Check if billing record already exists for this period
-      const existingBilling = await db.select()
-        .from(billingRecords)
-        .where(and(
-          eq(billingRecords.tenantId, tenant.id),
-          eq(billingRecords.billingPeriod, billingPeriod)
-        ))
-        .limit(1);
-
-      if (existingBilling.length === 0) {
-        // Generate due date (same day of month as lease start, or last day if not available)
-        const dueDate = new Date(year, currentDate.getMonth(), leaseStartDate.getDate());
-        
-        // If the day doesn't exist in current month (e.g., Feb 31), use last day of month
-        if (dueDate.getMonth() !== currentDate.getMonth()) {
-          dueDate.setDate(0); // This sets to last day of previous month
-          dueDate.setMonth(currentDate.getMonth() + 1);
-        }
-
-        const billingRecord = {
-          id: crypto.randomUUID(),
-          tenantId: tenant.id,
-          unitId: tenant.unitId,
-          amount: monthlyAmount.toString(),
-          billingPeriod,
-          dueDate,
-          status: 'pending',
-          paidAmount: '0',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-
-        await db.insert(billingRecords).values(billingRecord);
-        console.log(`Generated billing record for tenant ${tenant.id}, period ${billingPeriod}`);
-      }
-    } catch (error) {
-      console.error(`Error generating billing for tenant ${tenant.id}:`, error);
-    }
-  }
-
   private async generateRentPayments(tenant: Tenant): Promise<void> {
-    // This method is kept for backwards compatibility with existing rent payment system
     if (!tenant.leaseStart || !tenant.leaseEnd || !tenant.monthlyRent) return;
 
     try {
       const startDate = new Date(tenant.leaseStart);
       const endDate = new Date(tenant.leaseEnd);
       const monthlyAmount = parseFloat(tenant.monthlyRent);
+
+      console.log("Generating rent payments for tenant:", tenant.id);
+      console.log("Lease period:", startDate, "to", endDate);
+      console.log("Monthly amount:", monthlyAmount);
 
       // Clear existing rent payments for this tenant
       await db.delete(rentPayments).where(eq(rentPayments.tenantId, tenant.id));
@@ -494,8 +416,11 @@ class Storage {
         currentDate.setMonth(currentDate.getMonth() + 1);
       }
 
+      console.log("Creating", payments.length, "rent payment records");
+
       if (payments.length > 0) {
         await db.insert(rentPayments).values(payments);
+        console.log("Rent payments created successfully");
       }
     } catch (error) {
       console.error("Error generating rent payments:", error);
@@ -843,82 +768,6 @@ class Storage {
   async deleteMortgage(id: string): Promise<boolean> {
     const result = await db.delete(mortgages).where(eq(mortgages.id, id));
     return result.rowCount > 0;
-  }
-
-  // Billing Records methods
-  async getTenantBillingRecords(tenantId: string): Promise<any[]> {
-    return await db.select().from(billingRecords)
-      .where(eq(billingRecords.tenantId, tenantId))
-      .orderBy(desc(billingRecords.dueDate));
-  }
-
-  async createBillingRecord(billingData: any): Promise<any> {
-    const [record] = await db.insert(billingRecords).values({
-      id: crypto.randomUUID(),
-      ...billingData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
-    return record;
-  }
-
-  async updateBillingRecord(id: string, billingData: any): Promise<any> {
-    const [record] = await db.update(billingRecords)
-      .set({ ...billingData, updatedAt: new Date() })
-      .where(eq(billingRecords.id, id))
-      .returning();
-    return record || null;
-  }
-
-  async recordPayment(billingId: string, paymentAmount: string, paymentMethod?: string): Promise<any> {
-    const billing = await db.select().from(billingRecords)
-      .where(eq(billingRecords.id, billingId))
-      .limit(1);
-    
-    if (!billing[0]) return null;
-
-    const currentPaid = parseFloat(billing[0].paidAmount || '0');
-    const totalAmount = parseFloat(billing[0].amount);
-    const newPaidAmount = currentPaid + parseFloat(paymentAmount);
-    
-    let status = 'pending';
-    if (newPaidAmount >= totalAmount) {
-      status = 'paid';
-    } else if (newPaidAmount > 0) {
-      status = 'partial';
-    }
-
-    const [record] = await db.update(billingRecords)
-      .set({
-        paidAmount: newPaidAmount.toString(),
-        status,
-        paidDate: status === 'paid' ? new Date() : billing[0].paidDate,
-        paymentMethod: paymentMethod || billing[0].paymentMethod,
-        updatedAt: new Date()
-      })
-      .where(eq(billingRecords.id, billingId))
-      .returning();
-    
-    return record;
-  }
-
-  async calculateOutstandingBalance(tenantId: string): Promise<number> {
-    const billings = await db.select().from(billingRecords)
-      .where(eq(billingRecords.tenantId, tenantId));
-    
-    let outstanding = 0;
-    const today = new Date();
-    
-    for (const billing of billings) {
-      const dueDate = new Date(billing.dueDate);
-      if (dueDate <= today) { // Only count bills that are due
-        const totalAmount = parseFloat(billing.amount);
-        const paidAmount = parseFloat(billing.paidAmount || '0');
-        outstanding += (totalAmount - paidAmount);
-      }
-    }
-    
-    return outstanding;
   }
 
   // Task methods
