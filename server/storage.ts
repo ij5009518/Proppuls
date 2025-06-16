@@ -1191,33 +1191,53 @@ class EmailService {
   }
 
   async calculateOutstandingBalance(tenantId: string): Promise<number> {
-    // Get all billing records for the tenant
-    const billingRecordsResult = await db.select()
-      .from(billingRecords)
-      .where(eq(billingRecords.tenantId, tenantId));
-    
-    // Get all rent payments for the tenant
-    const rentPaymentsResult = await db.select()
-      .from(rentPayments)
-      .where(eq(rentPayments.tenantId, tenantId));
-    
-    // Calculate total billed amount
-    let totalBilled = 0;
-    for (const record of billingRecordsResult) {
-      totalBilled += parseFloat(record.amount || '0');
-    }
-    
-    // Calculate total paid amount from rent payments
-    let totalPaid = 0;
-    for (const payment of rentPaymentsResult) {
-      if (payment.status === 'paid' || payment.paidDate) {
-        totalPaid += parseFloat(payment.amount || '0');
+    try {
+      console.log("Calculating outstanding balance for tenant:", tenantId);
+      
+      // Get all billing records for the tenant
+      const billingRecordsResult = await db.select()
+        .from(billingRecords)
+        .where(eq(billingRecords.tenantId, tenantId));
+      
+      console.log("Billing records found:", billingRecordsResult.length);
+      
+      // Get all rent payments for the tenant
+      const rentPaymentsResult = await db.select()
+        .from(rentPayments)
+        .where(eq(rentPayments.tenantId, tenantId));
+      
+      console.log("Rent payments found:", rentPaymentsResult.length);
+      
+      // Calculate total billed amount
+      let totalBilled = 0;
+      for (const record of billingRecordsResult) {
+        const amount = parseFloat(record.amount || '0');
+        totalBilled += amount;
+        console.log("Billing record amount:", amount);
       }
+      
+      // Calculate total paid amount from rent payments
+      let totalPaid = 0;
+      for (const payment of rentPaymentsResult) {
+        if (payment.status === 'paid' || payment.paidDate) {
+          const amount = parseFloat(payment.amount || '0');
+          totalPaid += amount;
+          console.log("Payment amount:", amount, "Status:", payment.status);
+        }
+      }
+      
+      console.log("Total billed:", totalBilled, "Total paid:", totalPaid);
+      
+      // Outstanding balance = Total Billed - Total Paid
+      const outstandingBalance = totalBilled - totalPaid;
+      const finalBalance = Math.max(0, outstandingBalance);
+      
+      console.log("Final outstanding balance:", finalBalance);
+      return finalBalance;
+    } catch (error) {
+      console.error("Error in calculateOutstandingBalance:", error);
+      throw error;
     }
-    
-    // Outstanding balance = Total Billed - Total Paid
-    const outstandingBalance = totalBilled - totalPaid;
-    return Math.max(0, outstandingBalance); // Never return negative balance
   }
 
   async generateMonthlyBilling(): Promise<any[]> {
