@@ -60,6 +60,22 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
     },
   });
 
+  // Reset form when task changes or dialog opens
+  const resetFormWithTaskData = () => {
+    form.reset({
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      status: task.status,
+      category: task.category,
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "",
+      assignedTo: task.assignedTo || "",
+      communicationMethod: task.communicationMethod || "none",
+      recipientEmail: task.recipientEmail || "",
+      recipientPhone: task.recipientPhone || "",
+    });
+  };
+
   // Fetch related data
   const { data: properties } = useQuery({
     queryKey: ["/api/properties"],
@@ -209,25 +225,33 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
 
   return (
     <div className="max-h-screen overflow-y-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Header matching Property Details layout */}
+      <div className="flex items-center justify-between mb-8 pb-4 border-b">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+          <Button variant="ghost" size="sm" onClick={onBack} className="text-sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Tasks
           </Button>
-          <h1 className="text-3xl font-bold">{task.title}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{task.title} - Task Details</h1>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
+        <div className="flex gap-3">
+          <Button variant="outline" size="sm" onClick={() => {
+            resetFormWithTaskData();
+            setIsEditDialogOpen(true);
+          }} className="text-sm">
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </Button>
-          <Button variant="outline" onClick={handleDelete}>
+          <Button variant="outline" size="sm" onClick={handleDelete} className="text-sm text-red-600 hover:text-red-700">
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
           </Button>
         </div>
+      </div>
+
+      {/* Task Information Section Header */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Task Information</h2>
       </div>
 
       {/* Task Details */}
@@ -235,10 +259,7 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
         {/* Left Column - Task Information */}
         <div className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Task Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground min-w-[100px]">Status:</span>
                 <div className="flex items-center gap-2">
@@ -338,7 +359,7 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
           </Card>
 
           {/* Document Section */}
-          {uploadedDocument && (
+          {(uploadedDocument || task.attachmentUrl) && (
             <Card>
               <CardHeader>
                 <CardTitle>Documents</CardTitle>
@@ -346,12 +367,47 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
               <CardContent>
                 <div className="flex items-center gap-2 p-3 border rounded-lg">
                   <Paperclip className="h-4 w-4 text-muted-foreground" />
-                  <span className="flex-1">{uploadedDocument.name}</span>
-                  <Button variant="outline" size="sm">
+                  <span className="flex-1">
+                    {uploadedDocument ? uploadedDocument.name : "Task Document"}
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      if (uploadedDocument) {
+                        const url = URL.createObjectURL(uploadedDocument);
+                        window.open(url, '_blank');
+                      } else if (task.attachmentUrl) {
+                        window.open(task.attachmentUrl, '_blank');
+                      }
+                    }}
+                  >
                     <Eye className="h-4 w-4 mr-1" />
                     View
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      if (uploadedDocument) {
+                        const url = URL.createObjectURL(uploadedDocument);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = uploadedDocument.name;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                      } else if (task.attachmentUrl) {
+                        const a = document.createElement('a');
+                        a.href = task.attachmentUrl;
+                        a.download = 'task-document';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      }
+                    }}
+                  >
                     <Download className="h-4 w-4 mr-1" />
                     Download
                   </Button>
