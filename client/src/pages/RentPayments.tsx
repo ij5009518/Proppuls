@@ -86,6 +86,8 @@ export default function RentPayments() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rent-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
       setIsAddDialogOpen(false);
       form.reset();
       toast({ title: "Success", description: "Payment recorded successfully" });

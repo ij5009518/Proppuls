@@ -700,7 +700,7 @@ class Storage {
         amount: paymentData.amount?.toString() || "0",
         dueDate: paymentData.dueDate ? new Date(paymentData.dueDate) : new Date(),
         paidDate: paymentData.paidDate ? new Date(paymentData.paidDate) : null,
-        status: paymentData.status || 'pending',
+        status: paymentData.paidDate ? 'paid' : (paymentData.status || 'pending'),
         paymentMethod: paymentData.paymentMethod || null,
         notes: paymentData.notes || null,
         createdAt: new Date(),
@@ -1191,16 +1191,33 @@ class EmailService {
   }
 
   async calculateOutstandingBalance(tenantId: string): Promise<number> {
-    const billingRecords = await this.getBillingRecordsByTenant(tenantId);
+    // Get all billing records for the tenant
+    const billingRecordsResult = await db.select()
+      .from(billingRecords)
+      .where(eq(billingRecords.tenantId, tenantId));
     
-    let totalOutstanding = 0;
-    for (const record of billingRecords) {
-      const amountDue = parseFloat(record.amount || '0');
-      const paidAmount = parseFloat(record.paidAmount || '0');
-      totalOutstanding += (amountDue - paidAmount);
+    // Get all rent payments for the tenant
+    const rentPaymentsResult = await db.select()
+      .from(rentPayments)
+      .where(eq(rentPayments.tenantId, tenantId));
+    
+    // Calculate total billed amount
+    let totalBilled = 0;
+    for (const record of billingRecordsResult) {
+      totalBilled += parseFloat(record.amount || '0');
     }
     
-    return totalOutstanding;
+    // Calculate total paid amount from rent payments
+    let totalPaid = 0;
+    for (const payment of rentPaymentsResult) {
+      if (payment.status === 'paid' || payment.paidDate) {
+        totalPaid += parseFloat(payment.amount || '0');
+      }
+    }
+    
+    // Outstanding balance = Total Billed - Total Paid
+    const outstandingBalance = totalBilled - totalPaid;
+    return Math.max(0, outstandingBalance); // Never return negative balance
   }
 
   async generateMonthlyBilling(): Promise<any[]> {
