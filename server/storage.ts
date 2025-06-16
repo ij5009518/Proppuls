@@ -1114,6 +1114,101 @@ class EmailService {
     }).returning();
     return history;
   }
+
+  // Billing Records methods
+  async createBillingRecord(billingData: any): Promise<any> {
+    const [billing] = await db.insert(billingRecords).values({
+      id: crypto.randomUUID(),
+      ...billingData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return billing;
+  }
+
+  async getBillingRecordsByTenant(tenantId: string): Promise<any[]> {
+    const result = await db.select()
+      .from(billingRecords)
+      .where(eq(billingRecords.tenantId, tenantId))
+      .orderBy(desc(billingRecords.dueDate));
+    return result;
+  }
+
+  async updateBillingRecord(id: string, updates: any): Promise<any | null> {
+    const [result] = await db.update(billingRecords)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(billingRecords.id, id))
+      .returning();
+    return result || null;
+  }
+
+  async calculateOutstandingBalance(tenantId: string): Promise<number> {
+    const billingRecords = await this.getBillingRecordsByTenant(tenantId);
+    
+    let totalOutstanding = 0;
+    for (const record of billingRecords) {
+      const amountDue = parseFloat(record.amount || '0');
+      const paidAmount = parseFloat(record.paidAmount || '0');
+      totalOutstanding += (amountDue - paidAmount);
+    }
+    
+    return totalOutstanding;
+  }
+
+  async generateMonthlyBilling(): Promise<any[]> {
+    const today = new Date();
+    const activeTenantsResult = await db.select()
+      .from(tenants)
+      .where(eq(tenants.status, 'active'));
+    
+    const generatedBillings = [];
+    
+    for (const tenant of activeTenantsResult) {
+      // Check if tenant has lease start date and is active
+      if (!tenant.leaseStart || !tenant.monthlyRent) continue;
+      
+      const leaseStart = new Date(tenant.leaseStart);
+      
+      // Check if lease has started
+      if (leaseStart > today) continue;
+      
+      // Calculate the current billing period
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      const billingPeriod = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+      
+      // Check if billing already exists for this period
+      const existingBilling = await db.select()
+        .from(billingRecords)
+        .where(
+          and(
+            eq(billingRecords.tenantId, tenant.id),
+            eq(billingRecords.billingPeriod, billingPeriod)
+          )
+        );
+      
+      if (existingBilling.length > 0) continue;
+      
+      // Calculate due date (same day of month as lease start)
+      const dueDate = new Date(currentYear, currentMonth, leaseStart.getDate());
+      
+      // Create billing record
+      const billingData = {
+        tenantId: tenant.id,
+        unitId: tenant.unitId,
+        amount: tenant.monthlyRent,
+        billingPeriod,
+        dueDate,
+        status: 'pending',
+        paidAmount: '0'
+      };
+      
+      const newBilling = await this.createBillingRecord(billingData);
+      generatedBillings.push(newBilling);
+    }
+    
+    return generatedBillings;
+  }
 }
 
 export const emailService = new EmailService();
