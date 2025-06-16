@@ -96,7 +96,7 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, taskData }: { id: string; taskData: any }) =>
       apiRequest(`/api/tasks/${id}`, {
-        method: "PATCH",
+        method: "PUT",
         body: JSON.stringify(taskData),
       }),
     onSuccess: () => {
@@ -273,21 +273,15 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
             <CardContent className="space-y-3">
               <div>
                 <label className="text-sm font-medium">Status</label>
-                <div className="flex items-center gap-2 mt-1">
-                  {getStatusIcon(task.status)}
-                  <Badge variant={task.status === "completed" ? "default" : "secondary"}>
-                    {task.status.replace("_", " ").charAt(0).toUpperCase() + task.status.replace("_", " ").slice(1)}
-                  </Badge>
-                </div>
+                <Badge className={task.status === "completed" ? "bg-green-100 text-green-800 border-green-200" : task.status === "in_progress" ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-gray-100 text-gray-800 border-gray-200"}>
+                  {task.status.replace("_", " ").charAt(0).toUpperCase() + task.status.replace("_", " ").slice(1)}
+                </Badge>
               </div>
               <div>
                 <label className="text-sm font-medium">Priority</label>
-                <div className="flex items-center gap-2 mt-1">
-                  {getPriorityIcon(task.priority)}
-                  <Badge variant={task.priority === "urgent" ? "destructive" : "outline"}>
-                    {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                  </Badge>
-                </div>
+                <Badge className={task.priority === "urgent" ? "bg-red-100 text-red-800 border-red-200" : task.priority === "high" ? "bg-orange-100 text-orange-800 border-orange-200" : "bg-gray-100 text-gray-800 border-gray-200"}>
+                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                </Badge>
               </div>
               <div>
                 <label className="text-sm font-medium">Category</label>
@@ -332,10 +326,13 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
             <CardHeader>
               <CardTitle className="text-lg">Description</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                {task.description}
-              </p>
+            <CardContent className="space-y-3">
+              <div>
+                <label className="text-sm font-medium">Task Description</label>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {task.description}
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
