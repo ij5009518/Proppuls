@@ -14,6 +14,63 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export function registerRoutes(app: Express) {
+  
+  // User authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      // For now, use a default admin user for demo purposes
+      // In production, this would validate against a real user database
+      const defaultUser = {
+        id: 1,
+        email: "admin@propertyflow.com",
+        password: "admin123", // In production, this would be hashed
+        firstName: "Admin",
+        lastName: "User",
+        role: "admin"
+      };
+
+      if (email === defaultUser.email && password === defaultUser.password) {
+        // Create a session token
+        const token = await storage.createSession("admin-token", defaultUser);
+        
+        res.json({
+          success: true,
+          token: "admin-token",
+          user: {
+            id: defaultUser.id,
+            email: defaultUser.email,
+            firstName: defaultUser.firstName,
+            lastName: defaultUser.lastName,
+            role: defaultUser.role
+          }
+        });
+      } else {
+        res.status(401).json({ message: "Invalid email or password" });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (token) {
+        await storage.deleteSession(token);
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ message: "Logout failed" });
+    }
+  });
   // Create HTTP server
   const server = createServer(app);
 
