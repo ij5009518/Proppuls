@@ -253,6 +253,8 @@ export default function Tenants() {
     mutationFn: (data: any) => apiRequest("POST", "/api/rent-payments", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
       setIsPaymentDialogOpen(false);
       paymentForm.reset();
       toast({ title: "Success", description: "Payment recorded successfully" });
@@ -267,6 +269,8 @@ export default function Tenants() {
       apiRequest("PUT", `/api/rent-payments/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
       setIsEditPaymentDialogOpen(false);
       editPaymentForm.reset();
       toast({ title: "Success", description: "Payment updated successfully" });
