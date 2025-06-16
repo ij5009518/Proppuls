@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Plus, Eye, Edit, Trash2, Grid, List, Upload, Download, FileText, DollarSign, Calendar, CalendarIcon, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone, CheckCircle, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
