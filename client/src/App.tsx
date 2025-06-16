@@ -13,8 +13,6 @@ import Users from '@/pages/Users';
 import Properties from '@/pages/Properties';
 import Units from '@/pages/Units';
 import Tenants from "./pages/Tenants";
-import AddTenant from "./pages/AddTenant";
-import TenantDetails from "./pages/TenantDetails";
 import Tasks from "./pages/Tasks";
 import RentPayments from "./pages/RentPayments";
 import Maintenance from '@/pages/Maintenance';
@@ -82,8 +80,6 @@ function AuthenticatedApp() {
         <Route path="/properties" component={Properties} />
         <Route path="/units" component={Units} />
         <Route path="/tenants" component={Tenants} />
-        <Route path="/tenants/add" component={AddTenant} />
-        <Route path="/tenants/:id" component={TenantDetails} />
         <Route path="/tasks" component={Tasks} />
         <Route path="/rent-payments" component={RentPayments} />
         <Route path="/maintenance" component={Maintenance} />
