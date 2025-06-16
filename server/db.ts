@@ -197,6 +197,22 @@ export const rentPayments = pgTable('rent_payments', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+export const billingRecords = pgTable('billing_records', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull(),
+  unitId: text('unit_id').notNull(),
+  amount: decimal('amount').notNull(),
+  billingPeriod: text('billing_period').notNull(), // "2024-01" format
+  dueDate: timestamp('due_date').notNull(),
+  status: text('status').notNull().default('pending'), // pending, paid, overdue, partial
+  paidAmount: decimal('paid_amount').notNull().default('0'),
+  paidDate: timestamp('paid_date'),
+  paymentMethod: text('payment_method'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const mortgages = pgTable('mortgages', {
   id: text('id').primaryKey(),
   propertyId: text('property_id').notNull(),
@@ -590,6 +606,7 @@ const schema = {
   maintenanceRequests,
   vendors,
   rentPayments,
+  billingRecords,
   mortgages,
   tasks,
   // Advanced feature tables
