@@ -338,7 +338,6 @@ export default function Tasks() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Tasks & Maintenance</h1>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
