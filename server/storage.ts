@@ -45,7 +45,8 @@ class Storage {
       plan: org.plan as "starter" | "professional" | "enterprise",
       maxUsers: org.maxUsers || 10,
       maxProperties: org.maxProperties || 50,
-      monthlyPrice: org.monthlyPrice || 19
+      monthlyPrice: org.monthlyPrice || 19,
+      settings: (org.settings as Record<string, any>) || {}
     }));
   }
 
@@ -93,21 +94,34 @@ class Storage {
       createdAt: new Date(),
       updatedAt: new Date()
     }).returning();
-    return user;
+    return {
+      ...user,
+      role: user.role as "admin" | "manager" | "tenant"
+    };
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
     const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-    return result[0] || null;
+    return result[0] ? {
+      ...result[0],
+      role: result[0].role as "admin" | "manager" | "tenant"
+    } : null;
   }
 
   async getUserById(id: string): Promise<User | null> {
     const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    return result[0] || null;
+    return result[0] ? {
+      ...result[0],
+      role: result[0].role as "admin" | "manager" | "tenant"
+    } : null;
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users);
+    const result = await db.select().from(users);
+    return result.map(user => ({
+      ...user,
+      role: user.role as "admin" | "manager" | "tenant"
+    }));
   }
 
   async updateUser(id: string, userData: Partial<User>): Promise<User | null> {
@@ -115,7 +129,10 @@ class Storage {
       .set({ ...userData, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
-    return user || null;
+    return user ? {
+      ...user,
+      role: user.role as "admin" | "manager" | "tenant"
+    } : null;
   }
 
   async deleteUser(id: string): Promise<boolean> {
