@@ -38,12 +38,29 @@ class Storage {
   }
 
   async getAllOrganizations(): Promise<Organization[]> {
-    return await db.select().from(organizations);
+    const result = await db.select().from(organizations);
+    return result.map(org => ({
+      ...org,
+      status: org.status as "active" | "inactive" | "suspended",
+      plan: org.plan as "starter" | "professional" | "enterprise",
+      maxUsers: org.maxUsers || 10,
+      maxProperties: org.maxProperties || 50,
+      monthlyPrice: org.monthlyPrice || 19
+    }));
   }
 
   async getOrganizationById(id: string): Promise<Organization | null> {
     const result = await db.select().from(organizations).where(eq(organizations.id, id));
-    return result[0] || null;
+    if (!result[0]) return null;
+    return {
+      ...result[0],
+      status: result[0].status as "active" | "inactive" | "suspended",
+      plan: result[0].plan as "starter" | "professional" | "enterprise",
+      maxUsers: result[0].maxUsers || 10,
+      maxProperties: result[0].maxProperties || 50,
+      monthlyPrice: result[0].monthlyPrice || 19,
+      settings: (result[0].settings as Record<string, any>) || {}
+    };
   }
 
   async updateOrganization(id: string, organizationData: any): Promise<Organization | null> {

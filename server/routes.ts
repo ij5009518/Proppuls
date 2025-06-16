@@ -405,6 +405,54 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Billing Records API Routes
+  app.get("/api/billing-records/:tenantId", async (req: AuthenticatedRequest, res) => {
+    try {
+      const { tenantId } = req.params;
+      const billingRecords = await storage.getBillingRecordsByTenant(tenantId);
+      res.json(billingRecords);
+    } catch (error) {
+      console.error("Error fetching billing records:", error);
+      res.status(500).json({ error: "Failed to fetch billing records" });
+    }
+  });
+
+  app.get("/api/outstanding-balance/:tenantId", async (req: AuthenticatedRequest, res) => {
+    try {
+      const { tenantId } = req.params;
+      const balance = await storage.calculateOutstandingBalance(tenantId);
+      res.json({ balance });
+    } catch (error) {
+      console.error("Error calculating outstanding balance:", error);
+      res.status(500).json({ error: "Failed to calculate outstanding balance" });
+    }
+  });
+
+  app.post("/api/billing-records/generate-monthly", async (req: AuthenticatedRequest, res) => {
+    try {
+      const billingRecords = await storage.generateMonthlyBilling();
+      res.json({ success: true, generated: billingRecords.length, billingRecords });
+    } catch (error) {
+      console.error("Error generating monthly billing:", error);
+      res.status(500).json({ error: "Failed to generate monthly billing" });
+    }
+  });
+
+  app.put("/api/billing-records/:id", async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const updatedRecord = await storage.updateBillingRecord(id, updates);
+      if (!updatedRecord) {
+        return res.status(404).json({ error: "Billing record not found" });
+      }
+      res.json(updatedRecord);
+    } catch (error) {
+      console.error("Error updating billing record:", error);
+      res.status(500).json({ error: "Failed to update billing record" });
+    }
+  });
+
   // Add other API routes here as needed
   app.get("/api/test", (req, res) => {
     res.json({ message: "API is working" });
