@@ -139,7 +139,13 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
   const onEditSubmit = (data: TaskFormData) => {
     const taskData = {
       ...data,
+      status: data.status as "pending" | "in_progress" | "completed" | "cancelled",
+      priority: data.priority as "low" | "medium" | "high" | "urgent",
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      propertyId: task.propertyId,
+      unitId: task.unitId,
+      tenantId: task.tenantId,
+      vendorId: task.vendorId,
     };
     updateTaskMutation.mutate({ id: task.id, taskData });
   };
@@ -225,197 +231,192 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
 
   return (
     <div className="max-h-screen overflow-y-auto">
-      {/* Header matching Property Details layout */}
-      <div className="flex items-center justify-between mb-8 pb-4 border-b">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={onBack} className="text-sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Tasks
+      {/* Header matching Property Details layout exactly */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-2xl font-semibold text-gray-900">{task.title} - Task Details</h1>
+          <h1 className="text-3xl font-bold">{task.title} - Task Details</h1>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" size="sm" onClick={() => {
-            resetFormWithTaskData();
-            setIsEditDialogOpen(true);
-          }} className="text-sm">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              resetFormWithTaskData();
+              setIsEditDialogOpen(true);
+            }}
+          >
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDelete} className="text-sm text-red-600 hover:text-red-700">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+          >
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
           </Button>
         </div>
       </div>
 
-      {/* Task Information Section Header */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Task Information</h2>
-      </div>
-
-      {/* Task Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column - Task Information */}
-        <div className="space-y-6">
+      {/* Task Overview matching Property Details layout */}
+      <div className="space-y-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Basic Task Info */}
           <Card>
-            <CardContent className="space-y-4 pt-6">
-              <div className="flex items-center gap-3">
-                <span className="text-muted-foreground min-w-[100px]">Status:</span>
-                <div className="flex items-center gap-2">
+            <CardHeader>
+              <CardTitle className="text-lg">Task Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <div className="flex items-center gap-2 mt-1">
                   {getStatusIcon(task.status)}
                   <Badge variant={task.status === "completed" ? "default" : "secondary"}>
-                    {task.status.replace("_", " ").toUpperCase()}
+                    {task.status.replace("_", " ").charAt(0).toUpperCase() + task.status.replace("_", " ").slice(1)}
                   </Badge>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-muted-foreground min-w-[100px]">Priority:</span>
-                <div className="flex items-center gap-2">
+              <div>
+                <label className="text-sm font-medium">Priority</label>
+                <div className="flex items-center gap-2 mt-1">
                   {getPriorityIcon(task.priority)}
                   <Badge variant={task.priority === "urgent" ? "destructive" : "outline"}>
-                    {task.priority.toUpperCase()}
+                    {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                   </Badge>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-muted-foreground min-w-[100px]">Category:</span>
-                <div className="flex items-center gap-2">
-                  <Tag className="h-4 w-4" />
-                  <span>{task.category.charAt(0).toUpperCase() + task.category.slice(1)}</span>
-                </div>
+              <div>
+                <label className="text-sm font-medium">Category</label>
+                <p className="text-sm text-muted-foreground capitalize">{task.category}</p>
               </div>
               {task.assignedTo && (
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground min-w-[100px]">Assigned To:</span>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span>{task.assignedTo}</span>
-                  </div>
-                </div>
-              )}
-              {task.dueDate && (
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground min-w-[100px]">Due Date:</span>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{formatDate(task.dueDate)}</span>
-                  </div>
-                </div>
-              )}
-              {getRelatedEntityName() && (
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground min-w-[100px]">Related To:</span>
-                  <span>{getRelatedEntityName()}</span>
+                <div>
+                  <label className="text-sm font-medium">Assigned To</label>
+                  <p className="text-sm text-muted-foreground">{task.assignedTo}</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Communication Settings */}
-          {task.communicationMethod && task.communicationMethod !== "none" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Communication Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground min-w-[100px]">Method:</span>
-                  <div className="flex items-center gap-2">
-                    {task.communicationMethod === "email" && <Mail className="h-4 w-4" />}
-                    {task.communicationMethod === "sms" && <Phone className="h-4 w-4" />}
-                    {task.communicationMethod === "both" && <MessageSquare className="h-4 w-4" />}
-                    <span>{task.communicationMethod.toUpperCase()}</span>
-                  </div>
-                </div>
-                {task.recipientEmail && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-muted-foreground min-w-[100px]">Email:</span>
-                    <span>{task.recipientEmail}</span>
-                  </div>
-                )}
-                {task.recipientPhone && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-muted-foreground min-w-[100px]">Phone:</span>
-                    <span>{task.recipientPhone}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Right Column - Description and Documents */}
-        <div className="space-y-6">
+          {/* Task Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Description</CardTitle>
+              <CardTitle className="text-lg">Task Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {task.dueDate && (
+                <div>
+                  <label className="text-sm font-medium">Due Date</label>
+                  <p className="text-sm text-muted-foreground">{formatDate(task.dueDate)}</p>
+                </div>
+              )}
+              {getRelatedEntityName() && (
+                <div>
+                  <label className="text-sm font-medium">Related To</label>
+                  <p className="text-sm text-muted-foreground">{getRelatedEntityName()}</p>
+                </div>
+              )}
+              <div>
+                <label className="text-sm font-medium">Created</label>
+                <p className="text-sm text-muted-foreground">{formatDate(task.createdAt)}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Description */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground whitespace-pre-wrap">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                 {task.description}
               </p>
             </CardContent>
           </Card>
-
-          {/* Document Section */}
-          {(uploadedDocument || task.attachmentUrl) && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 p-3 border rounded-lg">
-                  <Paperclip className="h-4 w-4 text-muted-foreground" />
-                  <span className="flex-1">
-                    {uploadedDocument ? uploadedDocument.name : "Task Document"}
-                  </span>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      if (uploadedDocument) {
-                        const url = URL.createObjectURL(uploadedDocument);
-                        window.open(url, '_blank');
-                      } else if (task.attachmentUrl) {
-                        window.open(task.attachmentUrl, '_blank');
-                      }
-                    }}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      if (uploadedDocument) {
-                        const url = URL.createObjectURL(uploadedDocument);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = uploadedDocument.name;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                      } else if (task.attachmentUrl) {
-                        const a = document.createElement('a');
-                        a.href = task.attachmentUrl;
-                        a.download = 'task-document';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                      }
-                    }}
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    Download
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
+
+        {/* Communication Settings */}
+        {task.communicationMethod && task.communicationMethod !== "none" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Communication Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <label className="text-sm font-medium">Method</label>
+                <div className="flex items-center gap-2 mt-1">
+                  {task.communicationMethod === "email" && <Mail className="h-4 w-4" />}
+                  {task.communicationMethod === "sms" && <Phone className="h-4 w-4" />}
+                  {task.communicationMethod === "both" && <MessageSquare className="h-4 w-4" />}
+                  <span className="text-sm text-muted-foreground">{task.communicationMethod.toUpperCase()}</span>
+                </div>
+              </div>
+              {task.recipientEmail && (
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <p className="text-sm text-muted-foreground">{task.recipientEmail}</p>
+                </div>
+              )}
+              {task.recipientPhone && (
+                <div>
+                  <label className="text-sm font-medium">Phone</label>
+                  <p className="text-sm text-muted-foreground">{task.recipientPhone}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Documents Section */}
+        {task.documentPaths && task.documentPaths.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Attached Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {task.documentPaths.map((docPath, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{docPath.split('/').pop()}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(`/api/documents/view/${docPath.split('/').pop()}`, '_blank')}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const a = document.createElement('a');
+                          a.href = `/api/documents/download/${docPath.split('/').pop()}`;
+                          a.download = docPath.split('/').pop() || 'document';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Edit Task Dialog */}
