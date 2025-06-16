@@ -270,7 +270,7 @@ export default function Tenants() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
       setIsEditPaymentDialogOpen(false);
       editPaymentForm.reset();
       toast({ title: "Success", description: "Payment updated successfully" });
@@ -284,6 +284,8 @@ export default function Tenants() {
     mutationFn: (id: string) => apiRequest("DELETE", `/api/rent-payments/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
       toast({ title: "Success", description: "Payment deleted successfully" });
     },
     onError: () => {
@@ -308,7 +310,7 @@ export default function Tenants() {
     mutationFn: () => apiRequest("POST", "/api/billing-records/generate-monthly"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
       toast({ title: "Success", description: "Monthly billing generated successfully" });
     },
     onError: (error: Error) => {
@@ -341,7 +343,7 @@ export default function Tenants() {
     mutationFn: () => apiRequest("POST", "/api/billing-records/generate-monthly"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
       toast({
         title: "Success",
         description: "Monthly billing generated successfully",
@@ -362,7 +364,7 @@ export default function Tenants() {
       apiRequest("PUT", `/api/billing-records/${id}`, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
       toast({
         title: "Success",
         description: "Payment updated successfully",
