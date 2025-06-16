@@ -307,6 +307,47 @@ export default function Tenants() {
     },
   });
 
+  // Generate monthly billing mutation
+  const generateBillingMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/billing-records/generate-monthly"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      toast({
+        title: "Success",
+        description: "Monthly billing generated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update billing record mutation (for marking payments)
+  const updateBillingMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: any }) =>
+      apiRequest("PUT", `/api/billing-records/${id}`, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      toast({
+        title: "Success",
+        description: "Payment updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const createTaskMutation = useMutation({
     mutationFn: (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
     onSuccess: () => {
@@ -2058,133 +2099,161 @@ export default function Tenants() {
                     })()}
                   </div>
 
-                  {/* Payment History Table */}
+                  {/* Enhanced Payment & Billing Table */}
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h4 className="text-md font-medium">Payment History</h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id) || [];
-                          if (tenantPayments.length > 0) {
-                            // Show all payments logic could be implemented here
-                            console.log("Show all payments for tenant:", selectedTenant.id);
-                          }
-                        }}
-                      >
-                        View All ({rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id).length || 0})
-                      </Button>
+                      <h4 className="text-md font-medium">Monthly Billing & Payment History</h4>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generateBillingMutation.mutate()}
+                          disabled={generateBillingMutation.isPending}
+                        >
+                          <Calendar className="h-4 w-4 mr-2" />
+                          {generateBillingMutation.isPending ? "Generating..." : "Generate Monthly Billing"}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            console.log("Show all billing records for tenant:", selectedTenant.id);
+                          }}
+                        >
+                          View All ({billingRecords.length})
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Outstanding Balance Card */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-2" />
+                          <div>
+                            <p className="text-xs font-medium text-blue-800 dark:text-blue-200 uppercase tracking-wide">Outstanding Balance</p>
+                            <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">
+                              {formatCurrency(outstandingBalanceData?.balance?.toString() || "0")}
+                            </p>
+                          </div>
+                        </div>
+                        {selectedTenant?.monthlyRent && (
+                          <div className="text-right">
+                            <p className="text-xs text-blue-600 dark:text-blue-400">Monthly Rent</p>
+                            <p className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                              {formatCurrency(selectedTenant.monthlyRent)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
+                    {/* Billing & Payment Table with Sticky Headers */}
                     <div className="border rounded-lg overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-gray-50 dark:bg-gray-800">
-                            <TableHead className="font-semibold">Due Date</TableHead>
-                            <TableHead className="font-semibold">Amount</TableHead>
-                            <TableHead className="font-semibold">Status</TableHead>
-                            <TableHead className="font-semibold">Paid Date</TableHead>
-                            <TableHead className="font-semibold">Method</TableHead>
-                            <TableHead className="font-semibold">Notes</TableHead>
-                            <TableHead className="font-semibold">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {(() => {
-                            const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id) || [];
-                            const sortedPayments = tenantPayments
-                              .sort((a: any, b: any) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
-                              .slice(0, 10);
+                      <div className="max-h-96 overflow-y-auto">
+                        <Table>
+                          <TableHeader className="sticky top-0 z-10">
+                            <TableRow className="bg-gray-50 dark:bg-gray-800 border-b-2">
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Billing Date</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Amount Due</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Payment Status</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Paid Date</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Outstanding Balance</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {(() => {
+                              const sortedBillingRecords = billingRecords
+                                .sort((a: any, b: any) => new Date(b.billingDate).getTime() - new Date(a.billingDate).getTime());
 
-                            if (sortedPayments.length === 0) {
-                              return (
-                                <TableRow>
-                                  <TableCell colSpan={7} className="text-center text-gray-500 py-8">
-                                    <div className="flex flex-col items-center space-y-2">
-                                      <DollarSign className="h-8 w-8 text-gray-300" />
-                                      <p>No payment history found</p>
-                                      <p className="text-sm">Payments will appear here once created</p>
+                              if (sortedBillingRecords.length === 0) {
+                                return (
+                                  <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                      No billing records found. Generate monthly billing to start tracking payments.
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              }
+
+                              return sortedBillingRecords.map((record: any, index: number) => (
+                                <TableRow key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                  <TableCell className="font-medium">
+                                    {formatDate(record.billingDate)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className="font-semibold text-green-600 dark:text-green-400">
+                                      {formatCurrency(record.amount)}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge className={record.isPaid ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"}>
+                                      {record.isPaid ? "Paid" : "Unpaid"}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    {record.paidDate ? formatDate(record.paidDate) : "-"}
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className="font-semibold text-blue-600 dark:text-blue-400">
+                                      {formatCurrency(record.outstandingBalance?.toString() || "0")}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center space-x-2">
+                                      {!record.isPaid && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            updateBillingMutation.mutate({
+                                              id: record.id,
+                                              updates: {
+                                                isPaid: true,
+                                                paidDate: new Date().toISOString()
+                                              }
+                                            });
+                                          }}
+                                          disabled={updateBillingMutation.isPending}
+                                        >
+                                          <CheckCircle className="h-3 w-3 mr-1" />
+                                          Mark Paid
+                                        </Button>
+                                      )}
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              console.log("Edit billing record:", record.id);
+                                            }}
+                                          >
+                                            <Edit className="h-4 w-4 mr-2" />
+                                            Edit
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              console.log("Send payment reminder:", record.id);
+                                            }}
+                                          >
+                                            <Mail className="h-4 w-4 mr-2" />
+                                            Send Reminder
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
                                     </div>
                                   </TableCell>
                                 </TableRow>
-                              );
-                            }
-
-                            return sortedPayments.map((payment: any) => (
-                              <TableRow key={payment.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                <TableCell className="font-medium">
-                                  {formatDate(payment.dueDate)}
-                                </TableCell>
-                                <TableCell className="font-semibold text-green-600 dark:text-green-400">
-                                  {formatCurrency(payment.amount?.toString() || "0")}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge 
-                                    className={
-                                      payment.paidDate ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" :
-                                      new Date(payment.dueDate) < new Date() ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400" :
-                                      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                    }
-                                  >
-                                    {payment.paidDate ? "Paid" : 
-                                     new Date(payment.dueDate) < new Date() ? "Overdue" : "Pending"}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-gray-600 dark:text-gray-400">
-                                  {payment.paidDate ? formatDate(payment.paidDate) : "-"}
-                                </TableCell>
-                                <TableCell className="capitalize text-gray-600 dark:text-gray-400">
-                                  {payment.paymentMethod || "-"}
-                                </TableCell>
-                                <TableCell className="text-gray-600 dark:text-gray-400 max-w-[200px] truncate">
-                                  {payment.notes || "-"}
-                                </TableCell>
-                                <TableCell>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          setSelectedPayment(payment);
-                                          editPaymentForm.reset({
-                                            tenantId: payment.tenantId,
-                                            unitId: payment.unitId,
-                                            amount: payment.amount.toString(),
-                                            paymentDate: new Date(payment.paidDate || payment.dueDate),
-                                            paymentMethod: payment.paymentMethod || "CHECK",
-                                            lateFeeAmount: payment.lateFeeAmount ? payment.lateFeeAmount.toString() : "",
-                                            notes: payment.notes || "",
-                                          });
-                                          setIsEditPaymentDialogOpen(true);
-                                        }}
-                                      >
-                                        <Edit className="h-4 w-4 mr-2" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          if (confirm("Are you sure you want to delete this payment?")) {
-                                            deletePaymentMutation.mutate(payment.id);
-                                          }
-                                        }}
-                                        className="text-red-600"
-                                      >
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </TableCell>
-                              </TableRow>
-                            ));
-                          })()}
-                        </TableBody>
-                      </Table>
+                              ));
+                            })()}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
                   </div>
                 </div>
