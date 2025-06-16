@@ -59,6 +59,39 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password, firstName, lastName, role, phone } = req.body;
+      
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "Required fields missing" });
+      }
+
+      // Create a new user
+      const newUser = {
+        id: Date.now(), // Simple ID generation for demo
+        email,
+        firstName,
+        lastName,
+        role: role || "admin",
+        phone: phone || ""
+      };
+
+      // Create a session token
+      const token = `user-token-${Date.now()}`;
+      await storage.createSession(token, newUser);
+      
+      res.json({
+        success: true,
+        token,
+        user: newUser
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
   app.post("/api/auth/logout", async (req, res) => {
     try {
       const token = req.headers.authorization?.replace('Bearer ', '');

@@ -35,7 +35,10 @@ export default function Login() {
     onSuccess: (data) => {
       login(data.token, data.user);
       toast({ title: "Login successful!" });
-      setLocation("/");
+      // Small delay to ensure auth state is updated before redirect
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: (error: Error) => {
       toast({ 
