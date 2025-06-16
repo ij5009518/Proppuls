@@ -287,6 +287,31 @@ export default function Tenants() {
     },
   });
 
+  // Tenant billing records queries and mutations  
+  const { data: tenantBillingRecords = [] } = useQuery({
+    queryKey: ["/api/billing-records", selectedTenant?.id],
+    queryFn: () => selectedTenant ? apiRequest("GET", `/api/billing-records/${selectedTenant.id}`) : [],
+    enabled: !!selectedTenant?.id,
+  });
+
+  const { data: tenantOutstandingBalance = { balance: 0 } } = useQuery({
+    queryKey: ["/api/outstanding-balance", selectedTenant?.id],
+    queryFn: () => selectedTenant ? apiRequest("GET", `/api/outstanding-balance/${selectedTenant.id}`) : { balance: 0 },
+    enabled: !!selectedTenant?.id,
+  });
+
+  const generateMonthlyBillingMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/billing-records/generate-monthly"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      toast({ title: "Success", description: "Monthly billing generated successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: "Failed to generate monthly billing", variant: "destructive" });
+    },
+  });
+
   const sendRentReminderMutation = useMutation({
     mutationFn: (tenantId: string) => apiRequest("POST", "/api/emails/send-rent-reminder", { tenantId }),
     onSuccess: () => {
@@ -2928,13 +2953,13 @@ export default function Tenants() {
                         <div className="text-right">
                           <Badge 
                             className={
-                              history.moveOutReason === 'lease_expired' ? 'bg-green-100 text-green-800' :
-                              history.moveOutReason === 'eviction' ? 'bg-red-100 text-red-800' :
-                              history.moveOutReason === 'early_termination' ? 'bg-yellow-100 text-yellow-800' :
+                              (history as any).moveOutReason === 'lease_expired' ? 'bg-green-100 text-green-800' :
+                              (history as any).moveOutReason === 'eviction' ? 'bg-red-100 text-red-800' :
+                              (history as any).moveOutReason === 'early_termination' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-gray-100 text-gray-800'
                             }
                           >
-                            {history.moveOutReason ? history.moveOutReason.replace('_', ' ') : 'Current'}
+                            {(history as any).moveOutReason ? (history as any).moveOutReason.replace('_', ' ') : 'Current'}
                           </Badge>
                         </div>
                       </div>
