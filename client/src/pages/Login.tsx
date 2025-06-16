@@ -35,7 +35,7 @@ export default function Login() {
     onSuccess: (data) => {
       login(data.token, data.user);
       toast({ title: "Login successful!" });
-      setLocation("/app");
+      setLocation("/");
     },
     onError: (error: Error) => {
       toast({ 
@@ -85,7 +85,8 @@ export default function Login() {
                   type="email"
                   autoComplete="email"
                   required
-                  placeholder="Enter your email"
+                  placeholder="admin@propertyflow.com"
+                  defaultValue="admin@propertyflow.com"
                 />
               </div>
 
@@ -98,7 +99,8 @@ export default function Login() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
-                    placeholder="Enter your password"
+                    placeholder="admin123"
+                    defaultValue="admin123"
                   />
                   <button
                     type="button"
