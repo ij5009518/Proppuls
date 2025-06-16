@@ -320,122 +320,19 @@ export default function Tasks() {
   // Task Details View
   if (showTaskDetails && selectedTaskForDetails) {
     return (
-      <div className="space-y-6">
-        {/* Header with back button */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" onClick={handleBackToTasks}>
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Back to Tasks
-            </Button>
-            <h1 className="text-3xl font-bold">{selectedTaskForDetails.title} - Task Details</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleEdit(selectedTaskForDetails)}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => handleDelete(selectedTaskForDetails.id)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
-          </div>
-        </div>
-
-        {/* Task Details Card */}
-        <Card className="max-w-4xl">
-          <CardHeader>
-            <CardTitle className="text-2xl">{selectedTaskForDetails.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Task Information</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground min-w-[100px]">Status:</span>
-                      <Badge variant={
-                        selectedTaskForDetails.status === "completed" ? "default" :
-                        selectedTaskForDetails.status === "in_progress" ? "secondary" :
-                        "outline"
-                      }>
-                        {selectedTaskForDetails.status.replace('_', ' ').charAt(0).toUpperCase() + selectedTaskForDetails.status.replace('_', ' ').slice(1)}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground min-w-[100px]">Priority:</span>
-                      <Badge variant={
-                        selectedTaskForDetails.priority === "urgent" ? "destructive" :
-                        selectedTaskForDetails.priority === "high" ? "secondary" :
-                        "outline"
-                      }>
-                        {selectedTaskForDetails.priority.charAt(0).toUpperCase() + selectedTaskForDetails.priority.slice(1)}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground min-w-[100px]">Category:</span>
-                      <span>{selectedTaskForDetails.category.charAt(0).toUpperCase() + selectedTaskForDetails.category.slice(1)}</span>
-                    </div>
-                    {getRelatedEntityName(selectedTaskForDetails) && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground min-w-[100px]">Property:</span>
-                        <span>{getRelatedEntityName(selectedTaskForDetails)}</span>
-                      </div>
-                    )}
-                    {selectedTaskForDetails.assignedTo && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground min-w-[100px]">Assigned To:</span>
-                        <span>{selectedTaskForDetails.assignedTo}</span>
-                      </div>
-                    )}
-                    {selectedTaskForDetails.dueDate && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground min-w-[100px]">Due Date:</span>
-                        <span>{formatDate(selectedTaskForDetails.dueDate)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Document Section */}
-                {uploadedDocument && (
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Documents</h3>
-                    <div className="flex items-center gap-2 p-3 border rounded-lg">
-                      <Paperclip className="h-4 w-4 text-muted-foreground" />
-                      <span className="flex-1">{uploadedDocument.name}</span>
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Description</h3>
-                <p className="text-muted-foreground whitespace-pre-wrap">
-                  {selectedTaskForDetails.description}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <TaskDetails 
+        task={selectedTaskForDetails}
+        onBack={handleBackToTasks}
+        onTaskUpdated={() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+          setShowTaskDetails(false);
+          setSelectedTaskForDetails(null);
+        }}
+        onTaskDeleted={() => {
+          setShowTaskDetails(false);
+          setSelectedTaskForDetails(null);
+        }}
+      />
     );
   }
 
@@ -740,25 +637,7 @@ export default function Tasks() {
                   filteredTasks.map((task: Task) => (
                     <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
                       <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-lg">{task.title}</CardTitle>
-                          <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(task)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(task.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
+                        <CardTitle className="text-lg">{task.title}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="text-muted-foreground mb-3">{task.description}</p>
@@ -816,7 +695,7 @@ export default function Tasks() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h3 className="font-semibold">{task.title}</h3>
-                            <p className="text-muted-foreground mt-1">{task.description}</p>
+                            <p className="text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
                             <div className="flex items-center gap-4 mt-3">
                               <Badge variant={
                                 task.priority === "urgent" ? "destructive" :
@@ -843,22 +722,6 @@ export default function Tasks() {
                                 {getRelatedEntityName(task)}
                               </div>
                             )}
-                          </div>
-                          <div className="flex items-center space-x-2 ml-4" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(task)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(task.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
                           </div>
                         </div>
                       </CardContent>
