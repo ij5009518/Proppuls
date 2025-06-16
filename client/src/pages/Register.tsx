@@ -36,7 +36,10 @@ export default function Register() {
     onSuccess: (data) => {
       login(data.token, data.user);
       toast({ title: "Registration successful! Welcome to PropertyFlow!" });
-      setLocation("/app");
+      // Small delay to ensure auth state is updated before redirect
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: (error: Error) => {
       toast({ 
