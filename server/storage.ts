@@ -168,6 +168,7 @@ class Storage {
 
       const insertData = {
         id: propertyId,
+        organizationId: propertyData.organizationId || "default-org",
         name: propertyData.name,
         address: propertyData.address,
         city: propertyData.city,
@@ -184,7 +185,7 @@ class Storage {
 
       console.log("Storage: Insert data:", insertData);
 
-      const [property] = await db.insert(properties).values(insertData).returning();
+      const [property] = await db.insert(properties).values([insertData]).returning();
       console.log("Storage: Property created successfully:", property);
       return property;
     } catch (error) {
@@ -278,16 +279,26 @@ class Storage {
       createdAt: new Date(),
       updatedAt: new Date()
     }).returning();
-    return unit;
+    return {
+      ...unit,
+      status: unit.status as "vacant" | "occupied" | "maintenance"
+    };
   }
 
   async getAllUnits(): Promise<Unit[]> {
-    return await db.select().from(units);
+    const result = await db.select().from(units);
+    return result.map(unit => ({
+      ...unit,
+      status: unit.status as "vacant" | "occupied" | "maintenance"
+    }));
   }
 
   async getUnitById(id: string): Promise<Unit | null> {
     const result = await db.select().from(units).where(eq(units.id, id)).limit(1);
-    return result[0] || null;
+    return result[0] ? {
+      ...result[0],
+      status: result[0].status as "vacant" | "occupied" | "maintenance"
+    } : null;
   }
 
   async updateUnit(id: string, unitData: any): Promise<Unit | null> {
@@ -295,7 +306,10 @@ class Storage {
       .set({ ...unitData, updatedAt: new Date() })
       .where(eq(units.id, id))
       .returning();
-    return unit || null;
+    return unit ? {
+      ...unit,
+      status: unit.status as "vacant" | "occupied" | "maintenance"
+    } : null;
   }
 
   async deleteUnit(id: string): Promise<boolean> {
