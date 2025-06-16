@@ -199,6 +199,22 @@ export const rentPaymentSchema = z.object({
   updatedAt: z.date(),
 });
 
+export const billingRecordSchema = z.object({
+  id: z.string(),
+  tenantId: z.string(),
+  unitId: z.string(),
+  amount: z.string(),
+  billingPeriod: z.string(), // "2024-01" format for January 2024
+  dueDate: z.date(),
+  status: z.enum(["pending", "paid", "overdue", "partial"]),
+  paidAmount: z.string().default("0"),
+  paidDate: z.date().nullable(),
+  paymentMethod: z.string().nullable(),
+  notes: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
 export const mortgageSchema = z.object({
   id: z.string(),
   propertyId: z.string(),

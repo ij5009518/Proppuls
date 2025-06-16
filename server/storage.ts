@@ -1,5 +1,5 @@
 import { User, TenantSession, TenantLogin, CreateTenantMaintenanceRequest, Organization } from '../shared/schema';
-import { db, organizations, users, properties, expenses, units, tenants, tenantSessions, tenantHistory, maintenanceRequests, vendors, rentPayments, mortgages, tasks, taskCommunications, taskHistory } from './db';
+import { db, organizations, users, properties, expenses, units, tenants, tenantSessions, tenantHistory, maintenanceRequests, vendors, rentPayments, billingRecords, mortgages, tasks, taskCommunications, taskHistory } from './db';
 import { eq, sql, and, gt, desc } from 'drizzle-orm';
 import * as crypto from "crypto";
 import * as bcrypt from 'bcrypt';
