@@ -1035,6 +1035,9 @@ export default function Units() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Unit</DialogTitle>
+            <DialogDescription>
+              Update the unit details including specifications, rent amount, and current status.
+            </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
@@ -1178,6 +1181,9 @@ export default function Units() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create Task for Unit {selectedUnit?.unitNumber}</DialogTitle>
+            <DialogDescription>
+              Create a new task or maintenance item for this unit. Specify the category, priority, and assignment details.
+            </DialogDescription>
           </DialogHeader>
           <Form {...taskForm}>
             <form onSubmit={taskForm.handleSubmit(onTaskSubmit)} className="space-y-4">
@@ -1303,6 +1309,9 @@ export default function Units() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Assign Tenant</DialogTitle>
+            <DialogDescription>
+              Select an available tenant to assign to this unit. This will update the unit's occupancy status.
+            </DialogDescription>
           </DialogHeader>
           <Form {...assignTenantForm}>
             <form
@@ -1363,6 +1372,9 @@ export default function Units() {
             <DialogTitle>
               Tenant History - Unit {selectedUnitForHistory?.unitNumber}
             </DialogTitle>
+            <DialogDescription>
+              View the complete rental history for this unit, including previous tenants, lease periods, and move-out details.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-6">
             {tenantHistory.length === 0 ? (
@@ -1427,6 +1439,9 @@ export default function Units() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Update Tenant Status</DialogTitle>
+            <DialogDescription>
+              Change the tenant's status and provide move-out details if applicable.
+            </DialogDescription>
           </DialogHeader>
           <Form {...tenantStatusForm}>
             <form onSubmit={tenantStatusForm.handleSubmit(onTenantStatusSubmit)} className="space-y-4">
