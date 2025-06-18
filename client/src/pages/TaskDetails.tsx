@@ -95,10 +95,7 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
 
   const updateTaskMutation = useMutation({
     mutationFn: ({ id, taskData }: { id: string; taskData: any }) =>
-      apiRequest(`/api/tasks/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(taskData),
-      }),
+      apiRequest("PUT", `/api/tasks/${id}`, taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setIsEditDialogOpen(false);
@@ -118,7 +115,7 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/api/tasks/${id}`, { method: "DELETE" }),
+    mutationFn: (id: string) => apiRequest(`/api/tasks/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       onTaskDeleted();
@@ -268,9 +265,9 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
         </div>
       </div>
 
-      {/* Task Overview matching Property Details layout */}
-      <div className="space-y-6 mt-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Task Overview - Compact Layout */}
+      <div className="space-y-4 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Basic Task Info */}
           <Card>
             <CardHeader>
@@ -302,10 +299,10 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
             </CardContent>
           </Card>
 
-          {/* Task Details */}
+          {/* Task Details & Description */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Task Details</CardTitle>
+              <CardTitle className="text-lg">Details & Description</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {task.dueDate && (
@@ -324,18 +321,9 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
                 <label className="text-sm font-medium">Created</label>
                 <p className="text-sm text-muted-foreground">{formatDate(task.createdAt)}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Description</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Task Description</label>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              <div className="pt-2 border-t">
+                <label className="text-sm font-medium">Description</label>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">
                   {task.description}
                 </p>
               </div>
@@ -375,51 +363,7 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
           </Card>
         )}
 
-        {/* Documents Section */}
-        {task.documentPaths && task.documentPaths.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Attached Documents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {task.documentPaths.map((docPath, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{docPath.split('/').pop()}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(`/api/documents/view/${docPath.split('/').pop()}`, '_blank')}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const a = document.createElement('a');
-                          a.href = `/api/documents/download/${docPath.split('/').pop()}`;
-                          a.download = docPath.split('/').pop() || 'document';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                        }}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+
       </div>
 
       {/* Edit Task Dialog */}
