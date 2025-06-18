@@ -331,37 +331,51 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
           </Card>
         </div>
 
-        {/* Communication Settings */}
-        {task.communicationMethod && task.communicationMethod !== "none" && (
-          <Card>
+        {/* Communication Settings & Attachments */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {task.communicationMethod && task.communicationMethod !== "none" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Communication Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium">Method</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    {task.communicationMethod === "email" && <Mail className="h-4 w-4" />}
+                    {task.communicationMethod === "sms" && <Phone className="h-4 w-4" />}
+                    {task.communicationMethod === "both" && <MessageSquare className="h-4 w-4" />}
+                    <span className="text-sm text-muted-foreground">{task.communicationMethod.toUpperCase()}</span>
+                  </div>
+                </div>
+                {task.recipientEmail && (
+                  <div>
+                    <label className="text-sm font-medium">Email</label>
+                    <p className="text-sm text-muted-foreground">{task.recipientEmail}</p>
+                  </div>
+                )}
+                {task.recipientPhone && (
+                  <div>
+                    <label className="text-sm font-medium">Phone</label>
+                    <p className="text-sm text-muted-foreground">{task.recipientPhone}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Compact Attachments */}
+          <Card className="h-fit">
             <CardHeader>
-              <CardTitle className="text-lg">Communication Settings</CardTitle>
+              <CardTitle className="text-sm">Attachments</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Method</label>
-                <div className="flex items-center gap-2 mt-1">
-                  {task.communicationMethod === "email" && <Mail className="h-4 w-4" />}
-                  {task.communicationMethod === "sms" && <Phone className="h-4 w-4" />}
-                  {task.communicationMethod === "both" && <MessageSquare className="h-4 w-4" />}
-                  <span className="text-sm text-muted-foreground">{task.communicationMethod.toUpperCase()}</span>
-                </div>
+            <CardContent className="p-3">
+              <div className="text-xs text-muted-foreground">
+                No attachments available
               </div>
-              {task.recipientEmail && (
-                <div>
-                  <label className="text-sm font-medium">Email</label>
-                  <p className="text-sm text-muted-foreground">{task.recipientEmail}</p>
-                </div>
-              )}
-              {task.recipientPhone && (
-                <div>
-                  <label className="text-sm font-medium">Phone</label>
-                  <p className="text-sm text-muted-foreground">{task.recipientPhone}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
-        )}
+        </div>
 
 
       </div>
