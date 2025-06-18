@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X } from "lucide-react";
+import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X, History as HistoryIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -90,13 +90,13 @@ export default function Tasks() {
   });
 
   const { data: taskCommunications = [] } = useQuery({
-    queryKey: ["/api/tasks", selectedTask?.id, "communications"],
-    enabled: !!selectedTask?.id,
+    queryKey: ["/api/tasks", selectedTaskForDetails?.id, "communications"],
+    enabled: !!selectedTaskForDetails?.id,
   });
 
   const { data: taskHistory = [] } = useQuery({
-    queryKey: ["/api/tasks", selectedTask?.id, "history"],
-    enabled: !!selectedTask?.id,
+    queryKey: ["/api/tasks", selectedTaskForDetails?.id, "history"],
+    enabled: !!selectedTaskForDetails?.id,
   });
 
   const communicationForm = useForm<CommunicationFormData>({
@@ -1151,6 +1151,224 @@ export default function Tasks() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Task Details Modal */}
+      <Dialog open={isTaskDetailsDialogOpen} onOpenChange={setIsTaskDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <CheckSquare className="h-6 w-6" />
+              {selectedTaskForDetails?.title}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedTaskForDetails && (
+            <div className="space-y-6">
+              {/* Task Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Task Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium">Status</label>
+                      <Badge className={selectedTaskForDetails.status === "completed" ? "bg-green-100 text-green-800 border-green-200" : selectedTaskForDetails.status === "in_progress" ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-gray-100 text-gray-800 border-gray-200"}>
+                        {selectedTaskForDetails.status.replace("_", " ").charAt(0).toUpperCase() + selectedTaskForDetails.status.replace("_", " ").slice(1)}
+                      </Badge>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Priority</label>
+                      <Badge className={selectedTaskForDetails.priority === "urgent" ? "bg-red-100 text-red-800 border-red-200" : selectedTaskForDetails.priority === "high" ? "bg-orange-100 text-orange-800 border-orange-200" : "bg-gray-100 text-gray-800 border-gray-200"}>
+                        {selectedTaskForDetails.priority.charAt(0).toUpperCase() + selectedTaskForDetails.priority.slice(1)}
+                      </Badge>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Category</label>
+                      <p className="text-sm text-muted-foreground capitalize">{selectedTaskForDetails.category}</p>
+                    </div>
+                    {selectedTaskForDetails.assignedTo && (
+                      <div>
+                        <label className="text-sm font-medium">Assigned To</label>
+                        <p className="text-sm text-muted-foreground">{selectedTaskForDetails.assignedTo}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Task Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {selectedTaskForDetails.dueDate && (
+                      <div>
+                        <label className="text-sm font-medium">Due Date</label>
+                        <p className="text-sm text-muted-foreground">{formatDate(selectedTaskForDetails.dueDate)}</p>
+                      </div>
+                    )}
+                    {getRelatedEntityName(selectedTaskForDetails) && (
+                      <div>
+                        <label className="text-sm font-medium">Related To</label>
+                        <p className="text-sm text-muted-foreground">{getRelatedEntityName(selectedTaskForDetails)}</p>
+                      </div>
+                    )}
+                    <div>
+                      <label className="text-sm font-medium">Created</label>
+                      <p className="text-sm text-muted-foreground">{formatDate(selectedTaskForDetails.createdAt)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleEdit(selectedTaskForDetails);
+                        setIsTaskDetailsDialogOpen(false);
+                      }}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Task
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        openTaskHistory(selectedTaskForDetails);
+                        setIsTaskDetailsDialogOpen(false);
+                      }}
+                    >
+                      <Clock className="mr-2 h-4 w-4" />
+                      View History
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start text-red-600 hover:text-red-700"
+                      onClick={() => {
+                        if (confirm("Are you sure you want to delete this task?")) {
+                          handleDelete(selectedTaskForDetails.id);
+                          setIsTaskDetailsDialogOpen(false);
+                        }
+                      }}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Task
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Task Description */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Description</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedTaskForDetails.description}</p>
+                </CardContent>
+              </Card>
+
+              {/* Communications Tab */}
+              <Tabs defaultValue="communications" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="communications">Communications</TabsTrigger>
+                  <TabsTrigger value="history">History</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="communications" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Task Communications</h3>
+                    <Button 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedTask(selectedTaskForDetails);
+                        setIsSendCommunicationOpen(true);
+                        setIsTaskDetailsDialogOpen(false);
+                      }}
+                    >
+                      <Send className="mr-2 h-4 w-4" />
+                      Send Message
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {Array.isArray(taskCommunications) && taskCommunications.length > 0 ? (
+                      taskCommunications.map((comm: any) => (
+                        <Card key={comm.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">
+                                  {comm.method === "email" ? <Mail className="h-3 w-3 mr-1" /> : <Phone className="h-3 w-3 mr-1" />}
+                                  {comm.method.toUpperCase()}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">
+                                  to {comm.recipient}
+                                </span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(comm.sentAt)}
+                              </span>
+                            </div>
+                            <p className="text-sm">{comm.message}</p>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
+                        <p className="mt-2 text-sm text-muted-foreground">No communications yet</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="history" className="space-y-4">
+                  <h3 className="text-lg font-medium">Task History</h3>
+                  
+                  <div className="space-y-4">
+                    {Array.isArray(taskHistory) && taskHistory.length > 0 ? (
+                      taskHistory.map((history: any) => (
+                        <Card key={history.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">{history.action}</Badge>
+                                {history.changedBy && (
+                                  <span className="text-sm text-muted-foreground">
+                                    by {history.changedBy}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(history.changedAt)}
+                              </span>
+                            </div>
+                            {history.changes && (
+                              <p className="text-sm text-muted-foreground">{history.changes}</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <HistoryIcon className="mx-auto h-8 w-8 text-muted-foreground" />
+                        <p className="mt-2 text-sm text-muted-foreground">No history yet</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
