@@ -926,48 +926,94 @@ export default function Units() {
                       </div>
                       <div className="grid gap-3">
                         {unitTasks.map((task) => (
-                          <Card key={task.id} className="compact-task-card">
-                          <CardContent className="p-3">
-                            <div className="flex justify-between items-start gap-3">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-medium text-sm truncate">{task.title}</h4>
-                                  <Badge className={
-                                    task.priority === "urgent" ? "bg-red-100 text-red-800 border-red-200 text-xs" :
-                                    task.priority === "high" ? "bg-orange-100 text-orange-800 border-orange-200 text-xs" :
-                                    task.priority === "medium" ? "bg-yellow-100 text-yellow-800 border-yellow-200 text-xs" :
-                                    "bg-green-100 text-green-800 border-green-200 text-xs"
-                                  }>
-                                    {task.priority}
-                                  </Badge>
-                                  <Badge className={
-                                    task.status === "completed" ? "bg-green-100 text-green-800 border-green-200 text-xs" :
-                                    task.status === "in_progress" ? "bg-blue-100 text-blue-800 border-blue-200 text-xs" :
-                                    task.status === "cancelled" ? "bg-gray-100 text-gray-800 border-gray-200 text-xs" :
-                                    "bg-yellow-100 text-yellow-800 border-yellow-200 text-xs"
-                                  }>
-                                    {task.status.replace('_', ' ')}
-                                  </Badge>
+                          <Card 
+                            key={task.id} 
+                            className="compact-task-card cursor-pointer"
+                            onClick={() => {
+                              setSelectedTask(task);
+                              setIsTaskDetailOpen(true);
+                            }}
+                          >
+                            <CardContent className="p-4">
+                              <div className="grid grid-cols-3 gap-4">
+                                {/* Main Task Info */}
+                                <div className="col-span-2 space-y-3">
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-semibold text-sm">{task.title}</h4>
+                                    <Badge className={`text-xs ${
+                                      task.priority === "urgent" ? "bg-red-100 text-red-800 border-red-200" :
+                                      task.priority === "high" ? "bg-orange-100 text-orange-800 border-orange-200" :
+                                      task.priority === "medium" ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
+                                      "bg-green-100 text-green-800 border-green-200"
+                                    }`}>
+                                      {task.priority}
+                                    </Badge>
+                                    <Badge className={`text-xs ${
+                                      task.status === "completed" ? "bg-green-100 text-green-800 border-green-200" :
+                                      task.status === "in_progress" ? "bg-blue-100 text-blue-800 border-blue-200" :
+                                      task.status === "cancelled" ? "bg-gray-100 text-gray-800 border-gray-200" :
+                                      "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                    }`}>
+                                      {task.status.replace('_', ' ')}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
+                                  
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                      <span className="font-medium">Category:</span>
+                                      <span className="ml-1 capitalize">{task.category}</span>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Communication:</span>
+                                      <span className="ml-1 capitalize">{task.communicationMethod || 'None'}</span>
+                                    </div>
+                                    {task.dueDate && (
+                                      <div>
+                                        <span className="font-medium">Due Date:</span>
+                                        <span className="ml-1">{formatDate(task.dueDate)}</span>
+                                      </div>
+                                    )}
+                                    {task.assignedTo && (
+                                      <div>
+                                        <span className="font-medium">Assigned:</span>
+                                        <span className="ml-1">{task.assignedTo}</span>
+                                      </div>
+                                    )}
+                                    {task.isRecurring && (
+                                      <div>
+                                        <span className="font-medium">Recurring:</span>
+                                        <span className="ml-1 capitalize">{task.recurrencePeriod || 'Yes'}</span>
+                                      </div>
+                                    )}
+                                    <div>
+                                      <span className="font-medium">Created:</span>
+                                      <span className="ml-1">{formatDate(task.createdAt)}</span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <p className="text-xs text-muted-foreground line-clamp-2 mb-1">{task.description}</p>
-                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                  <span className="capitalize">{task.category}</span>
-                                  {task.dueDate && (
-                                    <span>Due: {formatDate(task.dueDate)}</span>
-                                  )}
+                                
+                                {/* Action Buttons */}
+                                <div className="flex flex-col justify-between items-end">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteTaskMutation.mutate(task.id);
+                                    }}
+                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                  <div className="text-xs text-muted-foreground">
+                                    Click to view details
+                                  </div>
                                 </div>
                               </div>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => deleteTaskMutation.mutate(task.id)}
-                                className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
+                            </CardContent>
+                          </Card>
                         ))}
                       </div>
                     </div>
@@ -1448,6 +1494,26 @@ export default function Units() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Task Detail Dialog */}
+      {selectedTask && (
+        <Dialog open={isTaskDetailOpen} onOpenChange={setIsTaskDetailOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <TaskDetails
+              task={selectedTask}
+              onBack={() => setIsTaskDetailOpen(false)}
+              onTaskUpdated={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+                setIsTaskDetailOpen(false);
+              }}
+              onTaskDeleted={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+                setIsTaskDetailOpen(false);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
