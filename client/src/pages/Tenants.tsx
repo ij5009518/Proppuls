@@ -2351,49 +2351,47 @@ export default function Tenants() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="grid gap-4">
+                      <div className="grid gap-3">
                         {tenantTasks.map((task) => (
-                          <Card key={task.id}>
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-semibold">{task.title}</h4>
+                          <Card key={task.id} className="compact-task-card">
+                          <CardContent className="p-3">
+                            <div className="flex justify-between items-start gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-medium text-sm truncate">{task.title}</h4>
                                   <Badge className={
-                                    task.priority === "urgent" ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400" :
-                                    task.priority === "high" ? "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400" :
-                                    task.priority === "medium" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400" :
-                                    "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                                    task.priority === "urgent" ? "bg-red-100 text-red-800 border-red-200 text-xs" :
+                                    task.priority === "high" ? "bg-orange-100 text-orange-800 border-orange-200 text-xs" :
+                                    task.priority === "medium" ? "bg-yellow-100 text-yellow-800 border-yellow-200 text-xs" :
+                                    "bg-green-100 text-green-800 border-green-200 text-xs"
                                   }>
                                     {task.priority}
                                   </Badge>
+                                  <Badge className={
+                                    task.status === "completed" ? "bg-green-100 text-green-800 border-green-200 text-xs" :
+                                    task.status === "in_progress" ? "bg-blue-100 text-blue-800 border-blue-200 text-xs" :
+                                    task.status === "cancelled" ? "bg-gray-100 text-gray-800 border-gray-200 text-xs" :
+                                    "bg-yellow-100 text-yellow-800 border-yellow-200 text-xs"
+                                  }>
+                                    {task.status.replace('_', ' ')}
+                                  </Badge>
                                 </div>
-                                <p className="text-sm text-muted-foreground">{task.description}</p>
-                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground line-clamp-2 mb-1">{task.description}</p>
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                   <span className="capitalize">{task.category}</span>
                                   {task.dueDate && (
                                     <span>Due: {formatDate(task.dueDate)}</span>
                                   )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Badge className={
-                                  task.status === "completed" ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" :
-                                  task.status === "in_progress" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400" :
-                                  task.status === "cancelled" ? "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400" :
-                                  "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                }>
-                                  {task.status.replace('_', ' ')}
-                                </Badge>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => deleteTaskMutation.mutate(task.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => deleteTaskMutation.mutate(task.id)}
+                                className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
                           </CardContent>
                         </Card>

@@ -115,7 +115,7 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/api/tasks/${id}`, "DELETE"),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       onTaskDeleted();
