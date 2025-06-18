@@ -1100,7 +1100,10 @@ export default function Tasks() {
       </Dialog>
 
       {/* Send Communication Dialog */}
-      <Dialog open={isSendCommunicationOpen} onOpenChange={setIsSendCommunicationOpen}>
+      <Dialog open={isSendCommunicationOpen} onOpenChange={(open) => {
+        setIsSendCommunicationOpen(open);
+        // Keep task details dialog open when communication dialog closes
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Send Communication</DialogTitle>
@@ -1305,7 +1308,81 @@ export default function Tasks() {
                   <CardTitle className="text-lg">Description</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedTaskForDetails.description}</p>
+                  {editingDescription ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editingDescriptionValue}
+                        onChange={(e) => setEditingDescriptionValue(e.target.value)}
+                        className="min-h-[80px]"
+                        placeholder="Enter task description..."
+                      />
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={handleSaveDescription}
+                          disabled={updateTaskMutation.isPending}
+                        >
+                          Save
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            setEditingDescription(false);
+                            setEditingDescriptionValue(selectedTaskForDetails.description);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      className="text-sm text-muted-foreground whitespace-pre-wrap cursor-pointer hover:bg-gray-50 p-2 rounded border-dashed border border-transparent hover:border-gray-300 min-h-[40px]"
+                      onClick={() => {
+                        setEditingDescription(true);
+                        setEditingDescriptionValue(selectedTaskForDetails.description);
+                      }}
+                    >
+                      {selectedTaskForDetails.description || "Click to add description..."}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* File Attachments */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Attachments</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                      <input
+                        type="file"
+                        multiple
+                        className="hidden"
+                        id="file-upload"
+                        onChange={handleFileUpload}
+                      />
+                      <label htmlFor="file-upload" className="cursor-pointer">
+                        <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600">
+                          Click to upload files or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          PDF, DOC, JPG, PNG up to 10MB
+                        </p>
+                      </label>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="text-xs text-gray-500 flex items-center">
+                        <Paperclip className="mr-1 h-3 w-3" />
+                        No files attached yet
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 

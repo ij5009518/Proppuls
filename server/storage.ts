@@ -1038,7 +1038,7 @@ class Storage {
     if ((task.communicationMethod === 'email' || task.communicationMethod === 'both') && task.recipientEmail) {
       communications.push({
         taskId: task.id,
-        type: 'email',
+        method: 'email',
         recipient: task.recipientEmail,
         subject: subject,
         message: message
@@ -1048,7 +1048,7 @@ class Storage {
     if ((task.communicationMethod === 'sms' || task.communicationMethod === 'both') && task.recipientPhone) {
       communications.push({
         taskId: task.id,
-        type: 'sms',
+        method: 'sms',
         recipient: task.recipientPhone,
         subject: null,
         message: message
