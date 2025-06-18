@@ -974,12 +974,10 @@ class Storage {
       taskId: communicationData.taskId,
       method: communicationData.method,
       recipient: communicationData.recipient,
-      subject: communicationData.subject,
+      subject: communicationData.subject || null,
       message: communicationData.message,
-      status: 'pending',
       sentAt: new Date(),
-      createdAt: new Date(),
-      ...communicationData
+      createdAt: new Date()
     };
     
     await db.insert(taskCommunications).values(communication);
