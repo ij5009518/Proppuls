@@ -1308,17 +1308,17 @@ export default function Tasks() {
                               <div className="flex items-center gap-2">
                                 <Badge variant="outline">
                                   {comm.method === "email" ? <Mail className="h-3 w-3 mr-1" /> : <Phone className="h-3 w-3 mr-1" />}
-                                  {comm.method.toUpperCase()}
+                                  {comm.method?.toUpperCase() || "UNKNOWN"}
                                 </Badge>
                                 <span className="text-sm text-muted-foreground">
-                                  to {comm.recipient}
+                                  to {comm.recipient || "Unknown"}
                                 </span>
                               </div>
                               <span className="text-xs text-muted-foreground">
-                                {formatDate(comm.sentAt)}
+                                {comm.sentAt ? formatDate(comm.sentAt) : "Unknown date"}
                               </span>
                             </div>
-                            <p className="text-sm">{comm.message}</p>
+                            <p className="text-sm">{comm.message || "No message"}</p>
                           </CardContent>
                         </Card>
                       ))
@@ -1341,7 +1341,7 @@ export default function Tasks() {
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                <Badge variant="outline">{history.action}</Badge>
+                                <Badge variant="outline">{history.action || "Unknown"}</Badge>
                                 {history.changedBy && (
                                   <span className="text-sm text-muted-foreground">
                                     by {history.changedBy}
@@ -1349,7 +1349,7 @@ export default function Tasks() {
                                 )}
                               </div>
                               <span className="text-xs text-muted-foreground">
-                                {formatDate(history.changedAt)}
+                                {history.changedAt ? formatDate(history.changedAt) : "Unknown date"}
                               </span>
                             </div>
                             {history.changes && (
