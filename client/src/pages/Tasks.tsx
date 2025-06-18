@@ -1158,16 +1158,55 @@ export default function Tasks() {
       <Dialog open={isTaskDetailsDialogOpen} onOpenChange={setIsTaskDetailsDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <CheckSquare className="h-6 w-6" />
-              {selectedTaskForDetails?.title}
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                <CheckSquare className="h-6 w-6" />
+                {selectedTaskForDetails?.title}
+              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (selectedTaskForDetails) {
+                      handleEdit(selectedTaskForDetails);
+                      setIsTaskDetailsDialogOpen(false);
+                    }
+                  }}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    openTaskHistory(selectedTaskForDetails!);
+                    setIsTaskDetailsDialogOpen(false);
+                  }}
+                >
+                  <Clock className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (selectedTaskForDetails && confirm("Are you sure you want to delete this task?")) {
+                      handleDelete(selectedTaskForDetails.id);
+                      setIsTaskDetailsDialogOpen(false);
+                    }
+                  }}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </DialogHeader>
           
           {selectedTaskForDetails && (
             <div className="space-y-6">
               {/* Task Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Task Information</CardTitle>
@@ -1219,49 +1258,6 @@ export default function Tasks() {
                       <label className="text-sm font-medium">Created</label>
                       <p className="text-sm text-muted-foreground">{formatDate(selectedTaskForDetails.createdAt)}</p>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Actions</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => {
-                        handleEdit(selectedTaskForDetails);
-                        setIsTaskDetailsDialogOpen(false);
-                      }}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit Task
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => {
-                        openTaskHistory(selectedTaskForDetails);
-                        setIsTaskDetailsDialogOpen(false);
-                      }}
-                    >
-                      <Clock className="mr-2 h-4 w-4" />
-                      View History
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-red-600 hover:text-red-700"
-                      onClick={() => {
-                        if (confirm("Are you sure you want to delete this task?")) {
-                          handleDelete(selectedTaskForDetails.id);
-                          setIsTaskDetailsDialogOpen(false);
-                        }
-                      }}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Task
-                    </Button>
                   </CardContent>
                 </Card>
               </div>
