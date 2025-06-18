@@ -17,7 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import type { Task, InsertTask } from "shared/schema";
-import TaskDetails from "./TaskDetails";
 
 const taskFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -49,7 +48,7 @@ export default function Tasks() {
   const [isSendCommunicationOpen, setIsSendCommunicationOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showTaskDetails, setShowTaskDetails] = useState(false);
+  const [isTaskDetailsDialogOpen, setIsTaskDetailsDialogOpen] = useState(false);
   const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<Task | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
@@ -249,12 +248,7 @@ export default function Tasks() {
 
   const handleTaskClick = (task: Task) => {
     setSelectedTaskForDetails(task);
-    setShowTaskDetails(true);
-  };
-
-  const handleBackToTasks = () => {
-    setShowTaskDetails(false);
-    setSelectedTaskForDetails(null);
+    setIsTaskDetailsDialogOpen(true);
   };
 
   const handleDocumentUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,24 +311,7 @@ export default function Tasks() {
     return <div className="flex justify-center items-center min-h-96">Loading tasks...</div>;
   }
 
-  // Task Details View
-  if (showTaskDetails && selectedTaskForDetails) {
-    return (
-      <TaskDetails 
-        task={selectedTaskForDetails}
-        onBack={handleBackToTasks}
-        onTaskUpdated={() => {
-          queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-          setShowTaskDetails(false);
-          setSelectedTaskForDetails(null);
-        }}
-        onTaskDeleted={() => {
-          setShowTaskDetails(false);
-          setSelectedTaskForDetails(null);
-        }}
-      />
-    );
-  }
+
 
   return (
     <div className="space-y-6">
