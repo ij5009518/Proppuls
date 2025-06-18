@@ -1205,62 +1205,63 @@ export default function Tasks() {
           
           {selectedTaskForDetails && (
             <div className="space-y-6">
-              {/* Task Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Task Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+              {/* Quick Status/Priority Update */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
                     <div>
                       <label className="text-sm font-medium">Status</label>
-                      <Badge className={selectedTaskForDetails.status === "completed" ? "bg-green-100 text-green-800 border-green-200" : selectedTaskForDetails.status === "in_progress" ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-gray-100 text-gray-800 border-gray-200"}>
-                        {selectedTaskForDetails.status.replace("_", " ").charAt(0).toUpperCase() + selectedTaskForDetails.status.replace("_", " ").slice(1)}
-                      </Badge>
+                      <Select 
+                        value={selectedTaskForDetails.status} 
+                        onValueChange={(value) => {
+                          updateTaskMutation.mutate({ 
+                            id: selectedTaskForDetails.id, 
+                            taskData: { ...selectedTaskForDetails, status: value as any }
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <label className="text-sm font-medium">Priority</label>
-                      <Badge className={selectedTaskForDetails.priority === "urgent" ? "bg-red-100 text-red-800 border-red-200" : selectedTaskForDetails.priority === "high" ? "bg-orange-100 text-orange-800 border-orange-200" : "bg-gray-100 text-gray-800 border-gray-200"}>
-                        {selectedTaskForDetails.priority.charAt(0).toUpperCase() + selectedTaskForDetails.priority.slice(1)}
-                      </Badge>
+                      <Select 
+                        value={selectedTaskForDetails.priority} 
+                        onValueChange={(value) => {
+                          updateTaskMutation.mutate({ 
+                            id: selectedTaskForDetails.id, 
+                            taskData: { ...selectedTaskForDetails, priority: value as any }
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium">Category</label>
-                      <p className="text-sm text-muted-foreground capitalize">{selectedTaskForDetails.category}</p>
-                    </div>
-                    {selectedTaskForDetails.assignedTo && (
-                      <div>
-                        <label className="text-sm font-medium">Assigned To</label>
-                        <p className="text-sm text-muted-foreground">{selectedTaskForDetails.assignedTo}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Task Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
                     {selectedTaskForDetails.dueDate && (
                       <div>
                         <label className="text-sm font-medium">Due Date</label>
                         <p className="text-sm text-muted-foreground">{formatDate(selectedTaskForDetails.dueDate)}</p>
                       </div>
                     )}
-                    {getRelatedEntityName(selectedTaskForDetails) && (
-                      <div>
-                        <label className="text-sm font-medium">Related To</label>
-                        <p className="text-sm text-muted-foreground">{getRelatedEntityName(selectedTaskForDetails)}</p>
-                      </div>
-                    )}
-                    <div>
-                      <label className="text-sm font-medium">Created</label>
-                      <p className="text-sm text-muted-foreground">{formatDate(selectedTaskForDetails.createdAt)}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Task Description */}
               <Card>
