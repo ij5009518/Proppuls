@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Unit, InsertUnit, Property, Tenant, Task, InsertTask } from "@shared/schema";
+import TaskDetails from "./TaskDetails";
 
 const unitSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
@@ -65,6 +66,8 @@ export default function Units() {
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: units = [], isLoading } = useQuery<Unit[]>({
