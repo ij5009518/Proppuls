@@ -260,7 +260,7 @@ export const tasks = pgTable('tasks', {
 export const taskCommunications = pgTable('task_communications', {
   id: text('id').primaryKey(),
   taskId: text('task_id').notNull(),
-  type: text('type').notNull(), // 'email', 'sms'
+  method: text('method').notNull(), // 'email', 'sms'
   recipient: text('recipient').notNull(), // email address or phone number
   subject: text('subject'),
   message: text('message').notNull(),

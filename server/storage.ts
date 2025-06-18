@@ -972,11 +972,12 @@ class Storage {
     const communication = {
       id: crypto.randomUUID(),
       taskId: communicationData.taskId,
-      type: communicationData.type,
+      method: communicationData.method,
       recipient: communicationData.recipient,
       subject: communicationData.subject,
       message: communicationData.message,
       status: 'pending',
+      sentAt: new Date(),
       createdAt: new Date(),
       ...communicationData
     };
