@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -391,6 +391,9 @@ export default function Units() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Unit</DialogTitle>
+              <DialogDescription>
+                Create a new unit for one of your properties. Fill in the details below to add this unit to your portfolio.
+              </DialogDescription>
             </DialogHeader>
             <Form {...createForm}>
               <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
@@ -661,6 +664,9 @@ export default function Units() {
           <DialogHeader>
             <div className="flex justify-between items-center pl-[12px] pr-[12px]">
               <DialogTitle>Unit Details</DialogTitle>
+              <DialogDescription className="sr-only">
+                View comprehensive information about this unit including specifications, tenant details, maintenance history, and documents.
+              </DialogDescription>
               {selectedUnit && (
                 <div className="flex space-x-2">
                   <Button
