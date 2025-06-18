@@ -1174,17 +1174,8 @@ export default function Tasks() {
                     }
                   }}
                 >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    openTaskHistory(selectedTaskForDetails!);
-                    setIsTaskDetailsDialogOpen(false);
-                  }}
-                >
-                  <Clock className="h-4 w-4" />
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1197,7 +1188,8 @@ export default function Tasks() {
                   }}
                   className="text-red-600 hover:text-red-700"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
                 </Button>
               </div>
             </div>
@@ -1205,10 +1197,10 @@ export default function Tasks() {
           
           {selectedTaskForDetails && (
             <div className="space-y-6">
-              {/* Quick Status/Priority Update */}
+              {/* Quick Edit Fields */}
               <Card>
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <label className="text-sm font-medium">Status</label>
                       <Select 
@@ -1220,7 +1212,7 @@ export default function Tasks() {
                           });
                         }}
                       >
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1242,7 +1234,7 @@ export default function Tasks() {
                           });
                         }}
                       >
-                        <SelectTrigger className="w-[120px]">
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1253,12 +1245,33 @@ export default function Tasks() {
                         </SelectContent>
                       </Select>
                     </div>
-                    {selectedTaskForDetails.dueDate && (
-                      <div>
-                        <label className="text-sm font-medium">Due Date</label>
-                        <p className="text-sm text-muted-foreground">{formatDate(selectedTaskForDetails.dueDate)}</p>
-                      </div>
-                    )}
+                    <div>
+                      <label className="text-sm font-medium">Due Date</label>
+                      <Input
+                        type="date"
+                        value={selectedTaskForDetails.dueDate ? new Date(selectedTaskForDetails.dueDate).toISOString().split('T')[0] : ""}
+                        onChange={(e) => {
+                          const newDate = e.target.value ? new Date(e.target.value) : undefined;
+                          updateTaskMutation.mutate({ 
+                            id: selectedTaskForDetails.id, 
+                            taskData: { ...selectedTaskForDetails, dueDate: newDate }
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Assigned To</label>
+                      <Input
+                        value={selectedTaskForDetails.assignedTo || ""}
+                        onChange={(e) => {
+                          updateTaskMutation.mutate({ 
+                            id: selectedTaskForDetails.id, 
+                            taskData: { ...selectedTaskForDetails, assignedTo: e.target.value }
+                          });
+                        }}
+                        placeholder="Enter assignee"
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
