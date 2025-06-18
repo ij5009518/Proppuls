@@ -1296,71 +1296,20 @@ export default function Tasks() {
                     </Button>
                   </div>
                   
-                  <div className="space-y-4">
-                    {Array.isArray(taskCommunications) && taskCommunications.length > 0 ? (
-                      taskCommunications.map((comm: any) => (
-                        <Card key={comm.id}>
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline">
-                                  {comm.method === "email" ? <Mail className="h-3 w-3 mr-1" /> : <Phone className="h-3 w-3 mr-1" />}
-                                  {comm.method?.toUpperCase() || "UNKNOWN"}
-                                </Badge>
-                                <span className="text-sm text-muted-foreground">
-                                  to {comm.recipient || "Unknown"}
-                                </span>
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {comm.sentAt ? formatDate(comm.sentAt) : "Unknown date"}
-                              </span>
-                            </div>
-                            <p className="text-sm">{comm.message || "No message"}</p>
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
-                        <p className="mt-2 text-sm text-muted-foreground">No communications yet</p>
-                      </div>
-                    )}
+                  <div className="text-center py-8">
+                    <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
+                    <p className="mt-2 text-sm text-muted-foreground">No communications yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">Communications will appear here when sent</p>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="history" className="space-y-4">
                   <h3 className="text-lg font-medium">Task History</h3>
                   
-                  <div className="space-y-4">
-                    {Array.isArray(taskHistory) && taskHistory.length > 0 ? (
-                      taskHistory.map((history: any) => (
-                        <Card key={history.id}>
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline">{history.action || "Unknown"}</Badge>
-                                {history.changedBy && (
-                                  <span className="text-sm text-muted-foreground">
-                                    by {history.changedBy}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {history.changedAt ? formatDate(history.changedAt) : "Unknown date"}
-                              </span>
-                            </div>
-                            {history.changes && (
-                              <p className="text-sm text-muted-foreground">{history.changes}</p>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <HistoryIcon className="mx-auto h-8 w-8 text-muted-foreground" />
-                        <p className="mt-2 text-sm text-muted-foreground">No history yet</p>
-                      </div>
-                    )}
+                  <div className="text-center py-8">
+                    <HistoryIcon className="mx-auto h-8 w-8 text-muted-foreground" />
+                    <p className="mt-2 text-sm text-muted-foreground">No history yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">Task changes will be tracked here</p>
                   </div>
                 </TabsContent>
               </Tabs>
