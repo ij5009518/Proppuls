@@ -52,6 +52,8 @@ export default function Tasks() {
   const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<Task | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [editingDescriptionValue, setEditingDescriptionValue] = useState("");
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -225,6 +227,27 @@ export default function Tasks() {
   const onSendCommunication = (data: CommunicationFormData) => {
     if (!selectedTask) return;
     sendCommunicationMutation.mutate({ ...data, taskId: selectedTask.id });
+  };
+
+  const handleSaveDescription = () => {
+    if (!selectedTaskForDetails) return;
+    
+    updateTaskMutation.mutate({ 
+      id: selectedTaskForDetails.id, 
+      taskData: { ...selectedTaskForDetails, description: editingDescriptionValue }
+    }, {
+      onSuccess: () => {
+        setEditingDescription(false);
+      }
+    });
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      // TODO: Implement file upload functionality
+      console.log("Files selected:", files);
+    }
   };
 
   const openTaskHistory = (task: Task) => {
@@ -1301,7 +1324,6 @@ export default function Tasks() {
                       onClick={() => {
                         setSelectedTask(selectedTaskForDetails);
                         setIsSendCommunicationOpen(true);
-                        setIsTaskDetailsDialogOpen(false);
                       }}
                     >
                       <Send className="mr-2 h-4 w-4" />
