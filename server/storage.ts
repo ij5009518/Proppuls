@@ -409,14 +409,15 @@ class Storage {
 
       console.log("Storage: Tenant updated successfully:", tenant);
 
-      // Regenerate rent payments if lease dates, rent amount, or status changed
-      if (tenant && (tenantData.leaseStart || tenantData.leaseEnd || tenantData.monthlyRent || tenantData.status)) {
-        if (tenant.leaseStart && tenant.leaseEnd && tenant.monthlyRent) {
-          await this.generateRentPayments(tenant);
-        }
-        // If tenant became active and has monthly rent but no lease dates, generate ongoing payments
-        else if (tenant.status === 'active' && tenant.monthlyRent) {
-          await this.generateOngoingRentPayments(tenant);
+      // Check if we should trigger automated monthly billing
+      if (tenant && tenantData.status === 'active' && tenant.leaseStart && tenant.monthlyRent) {
+        const today = new Date();
+        const leaseStartDate = new Date(tenant.leaseStart);
+        
+        // If lease start date has been reached and tenant is now active, start billing
+        if (leaseStartDate <= today) {
+          console.log("Triggering automated monthly billing for active tenant");
+          await this.initiateMonthlyBilling(tenant);
         }
       }
 

@@ -264,7 +264,6 @@ export const taskCommunications = pgTable('task_communications', {
   recipient: text('recipient').notNull(), // email address or phone number
   subject: text('subject'),
   message: text('message').notNull(),
-  status: text('status').notNull().default('pending'), // 'pending', 'sent', 'delivered', 'failed'
   sentAt: timestamp('sent_at'),
   deliveredAt: timestamp('delivered_at'),
   errorMessage: text('error_message'),

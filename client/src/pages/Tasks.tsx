@@ -635,7 +635,7 @@ export default function Tasks() {
                 ) : (
                   filteredTasks.map((task: Task) => (
                     <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
-                      <CardHeader className="pb-2">
+                      <CardHeader className="flex flex-col space-y-1.5 p-6 pt-[0px] pb-[0px]">
                         <CardTitle className="text-lg">{task.title}</CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -1352,7 +1352,7 @@ export default function Tasks() {
 
               {/* File Attachments */}
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-col space-y-1.5 p-6 pt-[0px] pb-[0px]">
                   <CardTitle className="text-lg">Attachments</CardTitle>
                 </CardHeader>
                 <CardContent>
