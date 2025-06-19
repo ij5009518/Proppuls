@@ -118,17 +118,7 @@ export default function Tenants() {
     queryKey: ["/api/rent-payments"],
   });
 
-  // Billing records for selected tenant
-  const { data: billingRecords = [] } = useQuery({
-    queryKey: ["/api/billing-records", selectedTenant?.id],
-    enabled: !!selectedTenant?.id,
-  });
 
-  // Outstanding balance for selected tenant
-  const { data: outstandingBalanceData } = useQuery({
-    queryKey: ["/api/outstanding-balance", selectedTenant?.id],
-    enabled: !!selectedTenant?.id,
-  });
 
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
@@ -2167,7 +2157,7 @@ export default function Tenants() {
                           <div>
                             <p className="text-xs font-medium text-blue-800 dark:text-blue-200 uppercase tracking-wide">Outstanding Balance</p>
                             <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">
-                              {formatCurrency(outstandingBalanceData?.balance?.toString() || "0")}
+                              {formatCurrency(tenantOutstandingBalance?.balance?.toString() || "0")}
                             </p>
                           </div>
                         </div>
