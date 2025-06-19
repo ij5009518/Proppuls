@@ -233,6 +233,8 @@ export default function Tenants() {
       apiRequest("PUT", `/api/tenants/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
       setIsEditDialogOpen(false);
       toast({ title: "Success", description: "Tenant updated successfully" });
     },
@@ -2153,7 +2155,7 @@ export default function Tenants() {
                             console.log("Show all billing records for tenant:", selectedTenant.id);
                           }}
                         >
-                          View All ({billingRecords.length})
+                          View All ({tenantBillingRecords.length})
                         </Button>
                       </div>
                     </div>
@@ -2196,8 +2198,8 @@ export default function Tenants() {
                           </TableHeader>
                           <TableBody>
                             {(() => {
-                              const sortedBillingRecords = billingRecords
-                                .sort((a: any, b: any) => new Date(b.billingDate).getTime() - new Date(a.billingDate).getTime());
+                              const sortedBillingRecords = tenantBillingRecords
+                                .sort((a: any, b: any) => new Date(b.dueDate || b.createdAt).getTime() - new Date(a.dueDate || a.createdAt).getTime());
 
                               if (sortedBillingRecords.length === 0) {
                                 return (
@@ -2212,7 +2214,7 @@ export default function Tenants() {
                               return sortedBillingRecords.map((record: any, index: number) => (
                                 <TableRow key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                   <TableCell className="font-medium">
-                                    {formatDate(record.billingDate)}
+                                    {formatDate(record.dueDate || record.createdAt)}
                                   </TableCell>
                                   <TableCell>
                                     <span className="font-semibold text-green-600 dark:text-green-400">
@@ -2220,8 +2222,8 @@ export default function Tenants() {
                                     </span>
                                   </TableCell>
                                   <TableCell>
-                                    <Badge className={record.isPaid ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"}>
-                                      {record.isPaid ? "Paid" : "Unpaid"}
+                                    <Badge className={(record.status === 'paid') ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"}>
+                                      {record.status === 'paid' ? "Paid" : "Unpaid"}
                                     </Badge>
                                   </TableCell>
                                   <TableCell>
@@ -2229,25 +2231,26 @@ export default function Tenants() {
                                   </TableCell>
                                   <TableCell>
                                     <span className="font-semibold text-blue-600 dark:text-blue-400">
-                                      {formatCurrency(record.outstandingBalance?.toString() || "0")}
+                                      {formatCurrency(tenantOutstandingBalance?.balance?.toString() || "0")}
                                     </span>
                                   </TableCell>
                                   <TableCell>
                                     <div className="flex items-center space-x-2">
-                                      {!record.isPaid && (
+                                      {record.status !== 'paid' && (
                                         <Button
                                           variant="outline"
                                           size="sm"
                                           onClick={() => {
-                                            updateBillingMutation.mutate({
+                                            updateBillingRecordMutation.mutate({
                                               id: record.id,
                                               updates: {
-                                                isPaid: true,
-                                                paidDate: new Date().toISOString()
+                                                status: 'paid',
+                                                paidDate: new Date().toISOString(),
+                                                paidAmount: record.amount
                                               }
                                             });
                                           }}
-                                          disabled={updateBillingMutation.isPending}
+                                          disabled={updateBillingRecordMutation.isPending}
                                         >
                                           <CheckCircle className="h-3 w-3 mr-1" />
                                           Mark Paid
@@ -2262,15 +2265,18 @@ export default function Tenants() {
                                         <DropdownMenuContent align="end">
                                           <DropdownMenuItem
                                             onClick={() => {
-                                              console.log("Edit billing record:", record.id);
+                                              paymentForm.setValue("tenantId", selectedTenant.id);
+                                              paymentForm.setValue("unitId", selectedTenant.unitId || "");
+                                              paymentForm.setValue("amount", record.amount);
+                                              setIsPaymentDialogOpen(true);
                                             }}
                                           >
-                                            <Edit className="h-4 w-4 mr-2" />
-                                            Edit
+                                            <DollarSign className="h-4 w-4 mr-2" />
+                                            Record Payment
                                           </DropdownMenuItem>
                                           <DropdownMenuItem
                                             onClick={() => {
-                                              console.log("Send payment reminder:", record.id);
+                                              sendRentReminderMutation.mutate(selectedTenant.id);
                                             }}
                                           >
                                             <Mail className="h-4 w-4 mr-2" />
