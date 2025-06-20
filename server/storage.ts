@@ -556,6 +556,11 @@ class Storage {
         return;
       }
 
+      if (!tenant.unitId) {
+        console.log("No unit assigned to tenant, skipping payment generation");
+        return;
+      }
+
       const monthlyAmount = parseFloat(tenant.monthlyRent);
       const today = new Date();
 
@@ -961,6 +966,8 @@ class Storage {
         parseFloat(tenant.monthlyRent) > 0
       );
 
+      console.log(`Found ${activeTenants.length} active tenants with units and monthly rent`);
+
       const today = new Date();
       const results = [];
 
@@ -977,6 +984,7 @@ class Storage {
         });
 
         if (!currentMonthExists) {
+          console.log(`Generating current month payment for tenant: ${tenant.firstName} ${tenant.lastName}`);
           const rentPayment = await this.createRentPayment({
             tenantId: tenant.id,
             unitId: tenant.unitId,
@@ -987,9 +995,12 @@ class Storage {
             notes: `Monthly rent - ${currentMonthDueDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
           });
           results.push(rentPayment);
+        } else {
+          console.log(`Current month payment already exists for tenant: ${tenant.firstName} ${tenant.lastName}`);
         }
       }
 
+      console.log(`Generated ${results.length} new payments`);
       return results;
     } catch (error) {
       console.error("Error generating monthly rent payments:", error);
@@ -1298,6 +1309,11 @@ class Storage {
 
       if (!tenant.monthlyRent) {
         console.log("Missing monthly rent for billing");
+        return;
+      }
+
+      if (!tenant.unitId) {
+        console.log("No unit assigned to tenant, skipping billing generation");
         return;
       }
 
