@@ -646,6 +646,7 @@ const sql = neon(process.env.DATABASE_URL);
 const schema = {
   organizations,
   users,
+  sessions,
   properties,
   units,
   tenants,
