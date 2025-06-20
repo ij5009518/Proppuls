@@ -17,6 +17,12 @@ export const organizations = pgTable('organizations', {
   maxProperties: integer('max_properties').default(50),
   monthlyPrice: integer('monthly_price').default(19),
   settings: jsonb('settings'),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  subscriptionStatus: text('subscription_status').default('active'),
+  currentPeriodStart: timestamp('current_period_start'),
+  currentPeriodEnd: timestamp('current_period_end'),
+  cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -594,13 +600,49 @@ export const permits = pgTable('permits', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+export const subscriptions = pgTable('subscriptions', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull(),
+  stripeSubscriptionId: text('stripe_subscription_id').notNull().unique(),
+  stripeCustomerId: text('stripe_customer_id').notNull(),
+  stripePriceId: text('stripe_price_id').notNull(),
+  status: text('status').notNull(),
+  currentPeriodStart: timestamp('current_period_start').notNull(),
+  currentPeriodEnd: timestamp('current_period_end').notNull(),
+  cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
+  canceledAt: timestamp('canceled_at'),
+  trialStart: timestamp('trial_start'),
+  trialEnd: timestamp('trial_end'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const invoices = pgTable('invoices', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull(),
+  stripeInvoiceId: text('stripe_invoice_id').notNull().unique(),
+  subscriptionId: text('subscription_id').notNull(),
+  amount: integer('amount').notNull(),
+  currency: text('currency').notNull().default('usd'),
+  status: text('status').notNull(),
+  paidAt: timestamp('paid_at'),
+  dueDate: timestamp('due_date'),
+  hostedInvoiceUrl: text('hosted_invoice_url'),
+  invoicePdf: text('invoice_pdf'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 const sql = neon(process.env.DATABASE_URL);
 
 const schema = {
+  organizations,
   users,
   properties,
   units,
   tenants,
+  tenantSessions,
+  tenantHistory,
   expenses,
   maintenanceRequests,
   vendors,
@@ -608,6 +650,8 @@ const schema = {
   billingRecords,
   mortgages,
   tasks,
+  taskCommunications,
+  taskHistory,
   // Advanced feature tables
   leases,
   leaseRenewals,
@@ -626,6 +670,8 @@ const schema = {
   complianceItems,
   evictionProcesses,
   permits,
+  subscriptions,
+  invoices,
 };
 
 export const db = drizzle(sql, { schema });
