@@ -1311,10 +1311,6 @@ class Storage {
       }
 
       const today = new Date();
-      const leaseStartDate = tenant.leaseStart ? new Date(tenant.leaseStart) : today;
-      const monthlyAmount = parseFloat(tenant.monthlyRent);
-
-      // Generate billing for current month
       const currentMonth = today.getMonth();
       const currentYear = today.getFullYear();
       const billingPeriod = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
@@ -1330,9 +1326,8 @@ class Storage {
         );
 
       if (existingBilling.length === 0) {
-        // Calculate due date (use lease start day or 1st of month)
-        const dueDay = tenant.leaseStart ? leaseStartDate.getDate() : 1;
-        const dueDate = new Date(currentYear, currentMonth, dueDay);
+        // Calculate due date (use 1st of month for simplicity)
+        const dueDate = new Date(currentYear, currentMonth, 1);
 
         // Create billing record for current month
         const billingData = {
