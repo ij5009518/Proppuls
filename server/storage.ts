@@ -288,8 +288,17 @@ class Storage {
     };
   }
 
-  async getAllUnits(): Promise<Unit[]> {
-    const result = await db.select().from(units);
+  async getAllUnits(organizationId?: string): Promise<Unit[]> {
+    let query = db.select().from(units);
+    
+    if (organizationId) {
+      // Join with properties to filter by organization
+      query = db.select().from(units)
+        .innerJoin(properties, eq(units.propertyId, properties.id))
+        .where(eq(properties.organizationId, organizationId));
+    }
+    
+    const result = await query;
     return result.map(unit => ({
       ...unit,
       status: unit.status as "vacant" | "occupied" | "maintenance"
@@ -373,7 +382,10 @@ class Storage {
     }
   }
 
-  async getAllTenants(): Promise<Tenant[]> {
+  async getAllTenants(organizationId?: string): Promise<Tenant[]> {
+    if (organizationId) {
+      return await db.select().from(tenants).where(eq(tenants.organizationId, organizationId));
+    }
     return await db.select().from(tenants);
   }
 
