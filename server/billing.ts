@@ -1,5 +1,6 @@
 import { Express } from "express";
 import { AuthenticatedRequest } from "./auth";
+import { storage } from "./storage";
 
 // Pricing configuration
 export const PRICING_PLANS = {
@@ -31,19 +32,15 @@ export function registerBillingRoutes(app: Express) {
   // Get organization billing info
   app.get("/api/billing/info", async (req: AuthenticatedRequest, res) => {
     try {
-      // Demo organization data
-      const organization = {
-        id: "demo-org-1",
-        name: "Demo Organization",
-        plan: "starter",
-        monthlyPrice: 19,
-        subscriptionStatus: "active",
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        cancelAtPeriodEnd: false,
-        stripeSubscriptionId: null,
-        stripeCustomerId: null
-      };
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      // Get actual user organization
+      const organization = await storage.getOrganizationById(req.user.organizationId);
+      if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
 
       const subscription = {
         id: `sub_${organization.id}`,
