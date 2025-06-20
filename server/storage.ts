@@ -559,7 +559,7 @@ class Storage {
       const monthlyAmount = parseFloat(tenant.monthlyRent);
       const today = new Date();
 
-      console.log("Generating ongoing rent payments for active tenant:", tenant.id);
+      console.log("Generating current month rent payment for active tenant:", tenant.id);
       console.log("Monthly amount:", monthlyAmount);
 
       // Get existing payments to avoid duplicates
@@ -567,37 +567,30 @@ class Storage {
         .from(rentPayments)
         .where(eq(rentPayments.tenantId, tenant.id));
 
-      const payments: any[] = [];
+      // Only generate payment for current month
+      const currentMonthDueDate = new Date(today.getFullYear(), today.getMonth(), 1);
 
-      // Generate payments for current month and next 11 months (12 total)
-      for (let i = 0; i < 12; i++) {
-        const dueDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      // Check if payment already exists for current month
+      const currentMonthExists = existingPayments.some((payment: any) => {
+        const paymentDue = new Date(payment.dueDate);
+        return paymentDue.getMonth() === currentMonthDueDate.getMonth() && 
+               paymentDue.getFullYear() === currentMonthDueDate.getFullYear();
+      });
 
-        // Check if payment already exists for this month
-        const paymentExists = existingPayments.some((payment: any) => {
-          const paymentDue = new Date(payment.dueDate);
-          return paymentDue.getMonth() === dueDate.getMonth() && 
-                 paymentDue.getFullYear() === dueDate.getFullYear();
-        });
+      if (!currentMonthExists) {
+        const payment = {
+          id: crypto.randomUUID(),
+          tenantId: tenant.id,
+          unitId: tenant.unitId,
+          amount: monthlyAmount.toString(),
+          dueDate: currentMonthDueDate,
+          status: 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
 
-        if (!paymentExists) {
-          payments.push({
-            id: crypto.randomUUID(),
-            tenantId: tenant.id,
-            unitId: tenant.unitId,
-            amount: monthlyAmount.toString(),
-            dueDate: dueDate,
-            status: 'pending',
-            createdAt: new Date(),
-            updatedAt: new Date()
-          });
-        }
-      }
-
-      console.log("Creating", payments.length, "new ongoing rent payment records");
-
-      if (payments.length > 0) {
-        await db.insert(rentPayments).values(payments);
+        console.log("Creating current month rent payment record");
+        await db.insert(rentPayments).values([payment]);
         console.log("Ongoing rent payments created successfully");
       }
     } catch (error) {
