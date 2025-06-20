@@ -39,6 +39,18 @@ export default function Settings() {
     queryFn: () => apiRequest('GET', '/api/users'),
   });
 
+  // Fetch billing information
+  const { data: billingInfo, isLoading: isLoadingBilling } = useQuery({
+    queryKey: ['/api/billing/info'],
+    queryFn: () => apiRequest('GET', '/api/billing/info'),
+  });
+
+  // Fetch billing history
+  const { data: billingHistory, isLoading: isLoadingHistory } = useQuery({
+    queryKey: ['/api/billing/history'],
+    queryFn: () => apiRequest('GET', '/api/billing/history'),
+  });
+
   // Bulk upload mutation
   const bulkUploadMutation = useMutation({
     mutationFn: async (file: File) => {
