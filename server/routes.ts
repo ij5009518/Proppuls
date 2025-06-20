@@ -688,9 +688,9 @@ export function registerRoutes(app: Express) {
   });
 
   // Mortgages routes
-  app.get("/api/mortgages", async (req, res) => {
+  app.get("/api/mortgages", async (req: AuthenticatedRequest, res) => {
     try {
-      const mortgages = await storage.getAllMortgages();
+      const mortgages = await storage.getAllMortgages(req.user?.organizationId);
       res.json(mortgages);
     } catch (error) {
       console.error("Error fetching mortgages:", error);
@@ -1201,9 +1201,9 @@ export function registerRoutes(app: Express) {
   });
 
   // Tasks routes
-  app.get("/api/tasks", async (req, res) => {
+  app.get("/api/tasks", async (req: AuthenticatedRequest, res) => {
     try {
-      const tasks = await storage.getAllTasks();
+      const tasks = await storage.getAllTasks(req.user?.organizationId);
       res.json(tasks);
     } catch (error) {
       console.error("Error fetching tasks:", error);

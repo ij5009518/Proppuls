@@ -812,7 +812,13 @@ class Storage {
     }
   }
 
-  async getAllMortgages(): Promise<Mortgage[]> {
+  async getAllMortgages(organizationId?: string): Promise<Mortgage[]> {
+    if (organizationId) {
+      // Join with properties to filter by organization
+      return await db.select().from(mortgages)
+        .innerJoin(properties, eq(mortgages.propertyId, properties.id))
+        .where(eq(properties.organizationId, organizationId));
+    }
     return await db.select().from(mortgages);
   }
 
@@ -845,7 +851,13 @@ class Storage {
     return task;
   }
 
-  async getAllTasks(): Promise<Task[]> {
+  async getAllTasks(organizationId?: string): Promise<Task[]> {
+    if (organizationId) {
+      // Join with properties to filter by organization
+      return await db.select().from(tasks)
+        .innerJoin(properties, eq(tasks.propertyId, properties.id))
+        .where(eq(properties.organizationId, organizationId));
+    }
     return await db.select().from(tasks);
   }
 
