@@ -28,6 +28,7 @@ import Organizations from "@/pages/Organizations";
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
 import NotFound from '@/pages/not-found';
 import EmailManager from '@/pages/EmailManager';
 import AdvancedFeatures from '@/pages/AdvancedFeatures';
@@ -58,6 +59,7 @@ function AuthenticatedApp() {
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password" component={ResetPassword} />
         <Route path="/tenant" component={TenantPortal} />
         <Route path="/tenant-portal" component={TenantPortal} />
         <Route component={() => {
