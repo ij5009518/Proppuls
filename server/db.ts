@@ -140,6 +140,7 @@ export const tenantHistory = pgTable('tenant_history', {
 
 export const expenses = pgTable('expenses', {
   id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull(),
   propertyId: text('property_id').notNull(),
   category: text('category').notNull(),
   description: text('description').notNull(),

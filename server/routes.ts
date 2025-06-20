@@ -780,9 +780,13 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/expenses", async (req, res) => {
+  app.post("/api/expenses", async (req: AuthenticatedRequest, res) => {
     try {
-      const expense = await storage.createExpense(req.body);
+      const expenseData = {
+        ...req.body,
+        organizationId: req.user?.organizationId || "default-org"
+      };
+      const expense = await storage.createExpense(expenseData);
       res.json(expense);
     } catch (error) {
       console.error("Error creating expense:", error);
@@ -835,10 +839,10 @@ export function registerRoutes(app: Express) {
         });
       }
 
-      // Add default organizationId if not provided
+      // Ensure tenant is created under the authenticated user's organization
       const tenantData = {
         ...req.body,
-        organizationId: req.body.organizationId || "default-org"
+        organizationId: (req as AuthenticatedRequest).user?.organizationId || req.body.organizationId || "default-org"
       };
 
       const tenant = await storage.createTenant(tenantData);
