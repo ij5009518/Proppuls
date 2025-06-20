@@ -965,30 +965,28 @@ class Storage {
       const results = [];
 
       for (const tenant of activeTenants) {
-        // Generate payments for next 12 months
-        for (let monthOffset = 0; monthOffset < 12; monthOffset++) {
-          const dueDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+        // Only generate payment for current month
+        const currentMonthDueDate = new Date(today.getFullYear(), today.getMonth(), 1);
 
-          // Check if payment already exists for this month
-          const existingPayments = await this.getTenantRentPayments(tenant.id);
-          const paymentExists = existingPayments.some((payment: any) => {
-            const paymentDue = new Date(payment.dueDate);
-            return paymentDue.getMonth() === dueDate.getMonth() && 
-                   paymentDue.getFullYear() === dueDate.getFullYear();
+        // Check if payment already exists for current month
+        const existingPayments = await this.getTenantRentPayments(tenant.id);
+        const currentMonthExists = existingPayments.some((payment: any) => {
+          const paymentDue = new Date(payment.dueDate);
+          return paymentDue.getMonth() === currentMonthDueDate.getMonth() && 
+                 paymentDue.getFullYear() === currentMonthDueDate.getFullYear();
+        });
+
+        if (!currentMonthExists) {
+          const rentPayment = await this.createRentPayment({
+            tenantId: tenant.id,
+            unitId: tenant.unitId,
+            amount: tenant.monthlyRent,
+            dueDate: currentMonthDueDate,
+            status: "pending",
+            paymentMethod: null,
+            notes: `Monthly rent - ${currentMonthDueDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
           });
-
-          if (!paymentExists) {
-            const rentPayment = await this.createRentPayment({
-              tenantId: tenant.id,
-              unitId: tenant.unitId,
-              amount: tenant.monthlyRent,
-              dueDate,
-              status: "pending",
-              paymentMethod: null,
-              notes: `Monthly rent - ${dueDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
-            });
-            results.push(rentPayment);
-          }
+          results.push(rentPayment);
         }
       }
 
