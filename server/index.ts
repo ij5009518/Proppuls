@@ -4,6 +4,8 @@ import { registerAIRoutes } from "./ai";
 import { registerBillingRoutes } from "./billing";
 import { setupVite, serveStatic, log } from "./vite";
 import { authenticateToken } from "./auth";
+import * as cron from "node-cron";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -44,6 +46,9 @@ app.use((req, res, next) => {
   registerAIRoutes(app);
   registerBillingRoutes(app);
 
+  // Setup automatic billing cron jobs
+  setupBillingCronJobs();
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -81,3 +86,54 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 })();
+
+// Billing automation cron jobs
+function setupBillingCronJobs() {
+  // Run automatic billing generation daily at 2 AM
+  cron.schedule('0 2 * * *', async () => {
+    try {
+      console.log('Running daily automatic billing generation...');
+      const result = await storage.generateAutomaticBilling();
+      
+      if (result.generated.length > 0) {
+        console.log(`Generated ${result.generated.length} new billing records`);
+      }
+      
+      if (result.updated.length > 0) {
+        console.log(`Updated ${result.updated.length} records to overdue status`);
+      }
+    } catch (error) {
+      console.error('Error in automatic billing generation:', error);
+    }
+  });
+
+  // Run overdue status updates every 6 hours
+  cron.schedule('0 */6 * * *', async () => {
+    try {
+      console.log('Running overdue status updates...');
+      const updatedRecords = await storage.updateOverdueStatuses();
+      
+      if (updatedRecords.length > 0) {
+        console.log(`Updated ${updatedRecords.length} records to overdue status`);
+      }
+    } catch (error) {
+      console.error('Error updating overdue statuses:', error);
+    }
+  });
+
+  // Run monthly billing generation on the 1st of each month at 3 AM
+  cron.schedule('0 3 1 * *', async () => {
+    try {
+      console.log('Running monthly billing generation...');
+      const generatedBillings = await storage.generateMonthlyBilling();
+      
+      if (generatedBillings.length > 0) {
+        console.log(`Generated ${generatedBillings.length} monthly billing records`);
+      }
+    } catch (error) {
+      console.error('Error in monthly billing generation:', error);
+    }
+  });
+
+  console.log('Billing automation cron jobs setup complete');
+}
