@@ -353,6 +353,26 @@ export default function Tenants() {
     },
   });
 
+  // Run automatic billing mutation
+  const runAutomaticBillingMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/billing-records/run-automatic"),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
+      toast({
+        title: "Success",
+        description: `Generated ${data.generated} new billing records, updated ${data.updated} overdue records`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Update billing record mutation (for marking payments)
   const updateBillingMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: any }) =>
@@ -2165,9 +2185,21 @@ export default function Tenants() {
                                     </span>
                                   </TableCell>
                                   <TableCell>
-                                    <Badge className={(record.status === 'paid') ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"}>
-                                      {record.status === 'paid' ? "Paid" : "Unpaid"}
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <Badge className={
+                                        record.status === 'paid' ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" :
+                                        record.status === 'overdue' ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300" :
+                                        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
+                                      }>
+                                        {record.status === 'paid' ? "Paid" : 
+                                         record.status === 'overdue' ? "Overdue" : "Pending"}
+                                      </Badge>
+                                      {record.status === 'overdue' && record.daysPastDue && (
+                                        <span className="text-xs text-red-600 dark:text-red-400">
+                                          ({record.daysPastDue} days)
+                                        </span>
+                                      )}
+                                    </div>
                                   </TableCell>
                                   <TableCell>
                                     {record.paidDate ? formatDate(record.paidDate) : "-"}

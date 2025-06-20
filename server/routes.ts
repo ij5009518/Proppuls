@@ -648,6 +648,32 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/billing-records/run-automatic", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const result = await storage.generateAutomaticBilling();
+      res.json({ 
+        success: true, 
+        generated: result.generated.length, 
+        updated: result.updated.length,
+        generatedRecords: result.generated,
+        updatedRecords: result.updated
+      });
+    } catch (error) {
+      console.error("Error running automatic billing:", error);
+      res.status(500).json({ error: "Failed to run automatic billing" });
+    }
+  });
+
+  app.post("/api/billing-records/update-overdue", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const updatedRecords = await storage.updateOverdueStatuses();
+      res.json({ success: true, updated: updatedRecords.length, records: updatedRecords });
+    } catch (error) {
+      console.error("Error updating overdue statuses:", error);
+      res.status(500).json({ error: "Failed to update overdue statuses" });
+    }
+  });
+
   // Add other API routes here as needed
   app.get("/api/test", (req, res) => {
     res.json({ message: "API is working" });
