@@ -666,10 +666,14 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/properties", async (req, res) => {
+  app.post("/api/properties", async (req: AuthenticatedRequest, res) => {
     try {
       console.log("Routes: Received property creation request:", req.body);
-      const property = await storage.createProperty(req.body);
+      const propertyData = {
+        ...req.body,
+        organizationId: req.user?.organizationId || "default-org"
+      };
+      const property = await storage.createProperty(propertyData);
       console.log("Routes: Property created successfully:", property);
       res.json(property);
     } catch (error) {
@@ -716,9 +720,13 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/units", async (req, res) => {
+  app.post("/api/units", async (req: AuthenticatedRequest, res) => {
     try {
-      const unit = await storage.createUnit(req.body);
+      const unitData = {
+        ...req.body,
+        organizationId: req.user?.organizationId || "default-org"
+      };
+      const unit = await storage.createUnit(unitData);
       res.json(unit);
     } catch (error) {
       console.error("Error creating unit:", error);
