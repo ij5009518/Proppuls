@@ -67,24 +67,47 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ message: "Required fields missing" });
       }
 
-      // Create a new user
-      const newUser = {
-        id: Date.now(), // Simple ID generation for demo
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create a new organization for this user
+      const organizationName = `${firstName} ${lastName}'s Organization`;
+      const organization = await storage.createOrganization({
+        name: organizationName,
+        domain: null,
+        plan: 'starter',
+        status: 'active',
+        maxUsers: 10,
+        maxProperties: 50,
+        monthlyPrice: 19,
+        settings: {}
+      });
+
+      // Create user with new organization
+      const user = await storage.createUser({
         email,
+        password: hashedPassword,
         firstName,
         lastName,
-        role: role || "admin",
-        phone: phone || ""
-      };
+        role: 'admin', // Make them admin of their own organization
+        phone: phone || null,
+        organizationId: organization.id,
+      });
 
-      // Create a session token
-      const token = `user-token-${Date.now()}`;
-      await storage.createSession(token, newUser);
-      
-      res.json({
-        success: true,
-        token,
-        user: newUser
+      // Create session token
+      const token = crypto.randomBytes(32).toString('hex');
+      await storage.createSession(token, user);
+
+      res.json({ 
+        token, 
+        user: { 
+          id: user.id, 
+          email: user.email, 
+          firstName: user.firstName, 
+          lastName: user.lastName, 
+          role: user.role,
+          organizationId: user.organizationId
+        } 
       });
     } catch (error) {
       console.error("Registration error:", error);

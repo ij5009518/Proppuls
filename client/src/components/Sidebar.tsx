@@ -127,6 +127,11 @@ const menuSections: MenuSection[] = [
         icon: Building2,
       },
       {
+        title: 'Billing',
+        url: '/settings?tab=billing',
+        icon: CreditCard,
+      },
+      {
         title: 'Settings',
         url: '/settings',
         icon: Settings,

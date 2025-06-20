@@ -194,7 +194,10 @@ class Storage {
     }
   }
 
-  async getAllProperties(): Promise<Property[]> {
+  async getAllProperties(organizationId?: string): Promise<Property[]> {
+    if (organizationId) {
+      return await db.select().from(properties).where(eq(properties.organizationId, organizationId));
+    }
     return await db.select().from(properties);
   }
 
