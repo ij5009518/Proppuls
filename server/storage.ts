@@ -265,13 +265,16 @@ class Storage {
 
   // Expense methods
   async createExpense(expenseData: any): Promise<Expense> {
-    const [expense] = await db.insert(expenses).values({
-      id: expenseData.id || crypto.randomUUID(),
-      ...expenseData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
-    return expense;
+    return await withRetry(async () => {
+      const [expense] = await db.insert(expenses).values({
+        id: expenseData.id || crypto.randomUUID(),
+        organizationId: expenseData.organizationId || "default-org",
+        ...expenseData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      return expense;
+    });
   }
 
   async getAllExpenses(organizationId?: string): Promise<Expense[]> {
