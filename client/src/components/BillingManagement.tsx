@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CreditCard, Calendar, AlertTriangle, Check, ExternalLink } from 'lucide-react';
+import { CreditCard, Calendar, AlertTriangle, Check, ExternalLink, Crown, Zap, Building2 } from 'lucide-react';
+
+const PRICING_PLANS = {
+  STARTER: { name: 'Starter', price: 19, features: ['Up to 5 properties', 'Basic reporting', 'Email support'] },
+  PROFESSIONAL: { name: 'Professional', price: 49, features: ['Up to 25 properties', 'Advanced analytics', 'Priority support', 'Tenant portal'] },
+  ENTERPRISE: { name: 'Enterprise', price: 99, features: ['Unlimited properties', 'Custom integrations', '24/7 phone support', 'White-label solution'] }
+};
 
 interface BillingManagementProps {
   billingInfo: any;
@@ -27,6 +33,9 @@ export default function BillingManagement({
   cancelSubscriptionMutation,
   reactivateSubscriptionMutation,
 }: BillingManagementProps) {
+  const [selectedPlan, setSelectedPlan] = useState<string>('');
+  const [showPlanDialog, setShowPlanDialog] = useState(false);
+
   if (isLoadingBilling) {
     return (
       <Card>
@@ -36,6 +45,24 @@ export default function BillingManagement({
       </Card>
     );
   }
+
+  const handlePlanUpgrade = async (planType: string) => {
+    try {
+      await updateSubscriptionMutation.mutateAsync({ plan: planType });
+      setShowPlanDialog(false);
+    } catch (error) {
+      console.error('Failed to update subscription:', error);
+    }
+  };
+
+  const getPlanIcon = (planName: string) => {
+    switch (planName) {
+      case 'Starter': return <Zap className="h-4 w-4" />;
+      case 'Professional': return <Building2 className="h-4 w-4" />;
+      case 'Enterprise': return <Crown className="h-4 w-4" />;
+      default: return <CreditCard className="h-4 w-4" />;
+    }
+  };
 
   return (
     <>
@@ -123,49 +150,60 @@ export default function BillingManagement({
       {/* Available Plans */}
       <Card>
         <CardHeader>
-          <CardTitle>Subscription Plans</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Subscription Plans
+          </CardTitle>
           <CardDescription>
             Choose the plan that best fits your property management needs
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {billingInfo?.availablePlans && Object.entries(billingInfo.availablePlans).map(([planId, plan]: [string, any]) => (
-              <Card key={planId} className={`relative ${billingInfo.organization?.plan === planId ? 'ring-2 ring-primary' : ''}`}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{plan.name}</CardTitle>
-                    {billingInfo.organization?.plan === planId && (
-                      <Badge variant="default">Current</Badge>
-                    )}
-                  </div>
-                  <div className="text-3xl font-bold">${plan.price}<span className="text-sm font-normal text-muted-foreground">/month</span></div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
-                    {plan.features?.map((feature: string, index: number) => (
-                      <li key={index} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  {billingInfo.organization?.plan !== planId && (
-                    <Button
-                      className="w-full"
-                      onClick={() => updateSubscriptionMutation.mutate(planId)}
-                      disabled={updateSubscriptionMutation.isPending}
-                      variant={planId === 'enterprise' ? 'default' : 'outline'}
-                    >
-                      {updateSubscriptionMutation.isPending ? 'Updating...' : 
-                       planId === 'enterprise' ? 'Upgrade' : 
-                       billingInfo.availablePlans?.[billingInfo.organization?.plan]?.price > plan.price ? 'Downgrade' : 'Upgrade'}
-                    </Button>
+            {Object.entries(PRICING_PLANS).map(([planKey, plan]) => {
+              const isCurrentPlan = billingInfo?.organization?.plan === planKey || 
+                                  (planKey === 'STARTER' && !billingInfo?.organization?.plan);
+              return (
+                <Card key={planKey} className={`relative ${isCurrentPlan ? 'ring-2 ring-primary' : ''}`}>
+                  {isCurrentPlan && (
+                    <Badge className="absolute -top-2 left-4 z-10">Current Plan</Badge>
                   )}
-                </CardContent>
-              </Card>
-            ))}
+                  <CardHeader className="text-center">
+                    <div className="flex justify-center mb-2">
+                      {getPlanIcon(plan.name)}
+                    </div>
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    <div className="text-3xl font-bold">${plan.price}<span className="text-sm font-normal text-muted-foreground">/month</span></div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-2">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2 text-sm">
+                          <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    {!isCurrentPlan && (
+                      <Button 
+                        onClick={() => handlePlanUpgrade(planKey)}
+                        disabled={updateSubscriptionMutation.isPending}
+                        className="w-full"
+                      >
+                        {updateSubscriptionMutation.isPending ? 'Updating...' : 
+                         (billingInfo?.organization?.plan && plan.price > (PRICING_PLANS as any)[billingInfo.organization.plan]?.price) 
+                           ? 'Upgrade' : 'Switch Plan'}
+                      </Button>
+                    )}
+                    {isCurrentPlan && (
+                      <Button variant="outline" className="w-full" disabled>
+                        Current Plan
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
