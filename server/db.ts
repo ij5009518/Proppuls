@@ -42,6 +42,14 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+export const sessions = pgTable('sessions', {
+  token: text('token').primaryKey(),
+  userId: text('user_id').notNull(),
+  userData: jsonb('user_data').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  expiresAt: timestamp('expires_at').notNull(),
+});
+
 export const properties = pgTable("properties", {
   id: text("id").primaryKey(),
   organizationId: text("organization_id").notNull(),
