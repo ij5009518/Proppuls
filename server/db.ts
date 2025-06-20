@@ -641,7 +641,11 @@ export const invoices = pgTable('invoices', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-const sql = neon(process.env.DATABASE_URL);
+const sql = neon(process.env.DATABASE_URL, {
+  fetchOptions: {
+    timeout: 30000, // 30 second timeout
+  },
+});
 
 const schema = {
   organizations,
