@@ -770,9 +770,9 @@ export function registerRoutes(app: Express) {
   });
 
   // Expenses routes
-  app.get("/api/expenses", async (req, res) => {
+  app.get("/api/expenses", async (req: AuthenticatedRequest, res) => {
     try {
-      const expenses = await storage.getAllExpenses();
+      const expenses = await storage.getAllExpenses(req.user?.organizationId);
       res.json(expenses);
     } catch (error) {
       console.error("Error fetching expenses:", error);
@@ -1027,9 +1027,9 @@ export function registerRoutes(app: Express) {
   });
 
   // Rent Payments routes
-  app.get("/api/rent-payments", async (req, res) => {
+  app.get("/api/rent-payments", async (req: AuthenticatedRequest, res) => {
     try {
-      const rentPayments = await storage.getAllRentPayments();
+      const rentPayments = await storage.getAllRentPayments(req.user?.organizationId);
       res.json(rentPayments);
     } catch (error) {
       console.error("Error fetching rent payments:", error);
