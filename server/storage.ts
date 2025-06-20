@@ -5,6 +5,7 @@ import * as crypto from "crypto";
 import * as bcrypt from 'bcrypt';
 import { Property, Expense, Unit, Tenant, TenantHistory, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task, TaskCommunication, TaskHistory } from '../shared/schema';
 import * as nodemailer from 'nodemailer';
+import { withRetry, isRetryableError } from './db-retry';
 
 interface Session {
   token: string;
@@ -214,10 +215,12 @@ class Storage {
   }
 
   async getAllProperties(organizationId?: string): Promise<Property[]> {
-    if (organizationId) {
-      return await db.select().from(properties).where(eq(properties.organizationId, organizationId));
-    }
-    return await db.select().from(properties);
+    return await withRetry(async () => {
+      if (organizationId) {
+        return await db.select().from(properties).where(eq(properties.organizationId, organizationId));
+      }
+      return await db.select().from(properties);
+    });
   }
 
   async getPropertyById(id: string): Promise<Property | null> {
@@ -272,7 +275,9 @@ class Storage {
   }
 
   async getAllExpenses(): Promise<Expense[]> {
-    return await db.select().from(expenses);
+    return await withRetry(async () => {
+      return await db.select().from(expenses);
+    });
   }
 
   async getExpenseById(id: string): Promise<Expense | null> {
@@ -753,7 +758,9 @@ class Storage {
   }
 
   async getAllRentPayments(): Promise<RentPayment[]> {
-    return await db.select().from(rentPayments);
+    return await withRetry(async () => {
+      return await db.select().from(rentPayments);
+    });
   }
 
   async getRentPaymentById(id: string): Promise<RentPayment | null> {
