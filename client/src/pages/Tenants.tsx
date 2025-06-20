@@ -2125,7 +2125,106 @@ export default function Tenants() {
                     })()}
                   </div>
 
+                  {/* Enhanced Payment & Billing Table */}
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-md font-medium">Monthly Billing & Payment History</h4>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generateBillingMutation.mutate()}
+                          disabled={generateBillingMutation.isPending}
+                        >
+                          {generateBillingMutation.isPending ? "Generating..." : "Generate Monthly Billing"}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            console.log("Show all billing records for tenant:", selectedTenant.id);
+                          }}
+                        >
+                          View All ({tenantBillingRecords.length})
+                        </Button>
+                      </div>
+                    </div>
 
+                    {/* Outstanding Balance Card */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div>
+                            <p className="text-xs font-medium text-blue-800 dark:text-blue-200 uppercase tracking-wide">Outstanding Balance</p>
+                            <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">
+                              {formatCurrency(tenantOutstandingBalance?.balance?.toString() || "0")}
+                            </p>
+                          </div>
+                        </div>
+                        {selectedTenant?.monthlyRent && (
+                          <div className="text-right">
+                            <p className="text-xs text-blue-600 dark:text-blue-400">Monthly Rent</p>
+                            <p className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                              {formatCurrency(selectedTenant.monthlyRent)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Billing & Payment Table with Sticky Headers */}
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="max-h-96 overflow-y-auto">
+                        <Table>
+                          <TableHeader className="sticky top-0 z-10">
+                            <TableRow className="bg-gray-50 dark:bg-gray-800 border-b-2">
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Billing Date</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Amount Due</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Payment Status</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Paid Date</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {(() => {
+                              const sortedBillingRecords = tenantBillingRecords
+                                .sort((a: any, b: any) => new Date(b.dueDate || b.createdAt).getTime() - new Date(a.dueDate || a.createdAt).getTime());
+
+                              if (sortedBillingRecords.length === 0) {
+                                return (
+                                  <TableRow>
+                                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                                      No billing records found. Generate monthly billing to start tracking payments.
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              }
+
+                              return sortedBillingRecords.map((record: any, index: number) => (
+                                <TableRow key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                  <TableCell className="font-medium">
+                                    {formatDate(record.dueDate || record.createdAt)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className="font-semibold text-green-600 dark:text-green-400">
+                                      {formatCurrency(record.amount)}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge className={(record.status === 'paid') ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"}>
+                                      {record.status === 'paid' ? "Paid" : "Unpaid"}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    {record.paidDate ? formatDate(record.paidDate) : "-"}
+                                  </TableCell>
+                                </TableRow>
+                              ));
+                            })()}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
 
