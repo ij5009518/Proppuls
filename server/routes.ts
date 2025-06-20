@@ -629,7 +629,9 @@ export function registerRoutes(app: Express) {
   // Properties routes
   app.get("/api/properties", async (req: AuthenticatedRequest, res) => {
     try {
+      console.log("DEBUG: Properties request - User:", req.user?.id, "Organization:", req.user?.organizationId);
       const properties = await storage.getAllProperties(req.user?.organizationId);
+      console.log("DEBUG: Properties returned:", properties.length, "items");
       res.json(properties);
     } catch (error) {
       console.error("Error fetching properties:", error);
