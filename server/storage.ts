@@ -274,8 +274,11 @@ class Storage {
     return expense;
   }
 
-  async getAllExpenses(): Promise<Expense[]> {
+  async getAllExpenses(organizationId?: string): Promise<Expense[]> {
     return await withRetry(async () => {
+      if (organizationId) {
+        return await db.select().from(expenses).where(eq(expenses.organizationId, organizationId));
+      }
       return await db.select().from(expenses);
     });
   }
@@ -313,20 +316,37 @@ class Storage {
   }
 
   async getAllUnits(organizationId?: string): Promise<Unit[]> {
-    let query = db.select().from(units);
-    
-    if (organizationId) {
-      // Join with properties to filter by organization
-      query = db.select().from(units)
+    return await withRetry(async () => {
+      if (organizationId) {
+        // Join with properties to filter by organization
+        const result = await db.select({
+          id: units.id,
+          propertyId: units.propertyId,
+          unitNumber: units.unitNumber,
+          bedrooms: units.bedrooms,
+          bathrooms: units.bathrooms,
+          rentAmount: units.rentAmount,
+          squareFootage: units.squareFootage,
+          status: units.status,
+          createdAt: units.createdAt,
+          updatedAt: units.updatedAt
+        })
+        .from(units)
         .innerJoin(properties, eq(units.propertyId, properties.id))
         .where(eq(properties.organizationId, organizationId));
-    }
-    
-    const result = await query;
-    return result.map(unit => ({
-      ...unit,
-      status: unit.status as "vacant" | "occupied" | "maintenance"
-    }));
+        
+        return result.map(unit => ({
+          ...unit,
+          status: unit.status as "vacant" | "occupied" | "maintenance"
+        }));
+      }
+      
+      const result = await db.select().from(units);
+      return result.map(unit => ({
+        ...unit,
+        status: unit.status as "vacant" | "occupied" | "maintenance"
+      }));
+    });
   }
 
   async getUnitById(id: string): Promise<Unit | null> {
@@ -407,10 +427,12 @@ class Storage {
   }
 
   async getAllTenants(organizationId?: string): Promise<Tenant[]> {
-    if (organizationId) {
-      return await db.select().from(tenants).where(eq(tenants.organizationId, organizationId));
-    }
-    return await db.select().from(tenants);
+    return await withRetry(async () => {
+      if (organizationId) {
+        return await db.select().from(tenants).where(eq(tenants.organizationId, organizationId));
+      }
+      return await db.select().from(tenants);
+    });
   }
 
   async getTenantById(id: string): Promise<Tenant | null> {
@@ -757,8 +779,11 @@ class Storage {
     }
   }
 
-  async getAllRentPayments(): Promise<RentPayment[]> {
+  async getAllRentPayments(organizationId?: string): Promise<RentPayment[]> {
     return await withRetry(async () => {
+      if (organizationId) {
+        return await db.select().from(rentPayments).where(eq(rentPayments.organizationId, organizationId));
+      }
       return await db.select().from(rentPayments);
     });
   }
