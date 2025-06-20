@@ -1482,40 +1482,122 @@ class EmailService {
           const leaseStart = new Date(tenant.leaseStart);
           if (leaseStart > today) continue;
           
+          // Generate billing for current month and any missing previous months since lease start
           const currentMonth = today.getMonth();
           const currentYear = today.getFullYear();
-          const billingPeriod = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
           
-          const existingBilling = await db.select()
-            .from(billingRecords)
-            .where(
-              and(
-                eq(billingRecords.tenantId, tenant.id),
-                eq(billingRecords.billingPeriod, billingPeriod)
-              )
-            );
+          // Calculate months since lease started
+          const leaseStartMonth = leaseStart.getMonth();
+          const leaseStartYear = leaseStart.getFullYear();
           
-          if (existingBilling.length > 0) continue;
+          let monthsToGenerate = [];
+          let workingDate = new Date(leaseStartYear, leaseStartMonth, 1);
           
-          const dueDate = new Date(currentYear, currentMonth, leaseStart.getDate());
+          while (workingDate <= new Date(currentYear, currentMonth, 1)) {
+            const billingPeriod = `${workingDate.getFullYear()}-${String(workingDate.getMonth() + 1).padStart(2, '0')}`;
+            monthsToGenerate.push({
+              year: workingDate.getFullYear(),
+              month: workingDate.getMonth(),
+              period: billingPeriod
+            });
+            workingDate.setMonth(workingDate.getMonth() + 1);
+          }
           
-          const billingData = {
-            tenantId: tenant.id,
-            unitId: tenant.unitId,
-            amount: tenant.monthlyRent,
-            billingPeriod: billingPeriod,
-            dueDate: dueDate,
-            status: 'pending',
-            type: 'rent'
-          };
-          
-          const newBilling = await this.createBillingRecord(billingData);
-          generatedBillings.push(newBilling);
+          for (const monthData of monthsToGenerate) {
+            const existingBilling = await db.select()
+              .from(billingRecords)
+              .where(
+                and(
+                  eq(billingRecords.tenantId, tenant.id),
+                  eq(billingRecords.billingPeriod, monthData.period)
+                )
+              );
+            
+            if (existingBilling.length > 0) continue;
+            
+            // Set due date based on lease start day of month
+            const dueDate = new Date(monthData.year, monthData.month, leaseStart.getDate());
+            if (dueDate.getDate() !== leaseStart.getDate()) {
+              // Handle edge case where lease start date doesn't exist in target month (e.g., Jan 31 -> Feb 28)
+              dueDate.setDate(0); // Last day of previous month, then add 1
+              dueDate.setDate(dueDate.getDate() + 1);
+            }
+            
+            const billingData = {
+              tenantId: tenant.id,
+              unitId: tenant.unitId,
+              amount: tenant.monthlyRent,
+              billingPeriod: monthData.period,
+              dueDate: dueDate,
+              status: 'pending',
+              type: 'rent',
+              organizationId: tenant.organizationId
+            };
+            
+            const newBilling = await this.createBillingRecord(billingData);
+            generatedBillings.push(newBilling);
+          }
         }
         
         return generatedBillings;
       } catch (error) {
         console.error("Error generating monthly billing:", error);
+        throw error;
+      }
+    });
+  }
+
+  async updateOverdueStatuses(): Promise<any[]> {
+    return await withRetry(async () => {
+      try {
+        console.log("Updating overdue statuses for billing records");
+        const today = new Date();
+        const gracePeriodDays = 5; // 5 days grace period before marking as overdue
+        
+        const pendingBillings = await db.select()
+          .from(billingRecords)
+          .where(eq(billingRecords.status, 'pending'));
+        
+        const updatedRecords = [];
+        
+        for (const billing of pendingBillings) {
+          const dueDate = new Date(billing.dueDate);
+          const daysPastDue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysPastDue > gracePeriodDays) {
+            const updatedBilling = await this.updateBillingRecord(billing.id, {
+              status: 'overdue',
+              daysPastDue: daysPastDue
+            });
+            updatedRecords.push(updatedBilling);
+          }
+        }
+        
+        return updatedRecords;
+      } catch (error) {
+        console.error("Error updating overdue statuses:", error);
+        throw error;
+      }
+    });
+  }
+
+  async generateAutomaticBilling(): Promise<{ generated: any[], updated: any[] }> {
+    return await withRetry(async () => {
+      try {
+        console.log("Running automatic billing generation and overdue updates");
+        
+        // Generate new monthly billing records
+        const generatedBillings = await this.generateMonthlyBilling();
+        
+        // Update overdue statuses
+        const updatedOverdue = await this.updateOverdueStatuses();
+        
+        return {
+          generated: generatedBillings,
+          updated: updatedOverdue
+        };
+      } catch (error) {
+        console.error("Error in automatic billing:", error);
         throw error;
       }
     });

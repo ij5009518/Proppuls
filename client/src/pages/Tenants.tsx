@@ -2126,52 +2126,7 @@ export default function Tenants() {
                   </div>
 
                   {/* Enhanced Payment & Billing Table */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-md font-medium">Monthly Billing & Payment History</h4>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => generateBillingMutation.mutate()}
-                          disabled={generateBillingMutation.isPending}
-                        >
-                          {generateBillingMutation.isPending ? "Generating..." : "Generate Monthly Billing"}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            console.log("Show all billing records for tenant:", selectedTenant.id);
-                          }}
-                        >
-                          View All ({tenantBillingRecords.length})
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Outstanding Balance Card */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div>
-                            <p className="text-xs font-medium text-blue-800 dark:text-blue-200 uppercase tracking-wide">Outstanding Balance</p>
-                            <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">
-                              {formatCurrency(tenantOutstandingBalance?.balance?.toString() || "0")}
-                            </p>
-                          </div>
-                        </div>
-                        {selectedTenant?.monthlyRent && (
-                          <div className="text-right">
-                            <p className="text-xs text-blue-600 dark:text-blue-400">Monthly Rent</p>
-                            <p className="text-lg font-semibold text-blue-800 dark:text-blue-200">
-                              {formatCurrency(selectedTenant.monthlyRent)}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
+                  <div className="space-y-4">                    
                     {/* Billing & Payment Table with Sticky Headers */}
                     <div className="border rounded-lg overflow-hidden">
                       <div className="max-h-96 overflow-y-auto">
