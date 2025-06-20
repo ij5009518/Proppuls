@@ -643,7 +643,7 @@ export const invoices = pgTable('invoices', {
 
 const sql = neon(process.env.DATABASE_URL, {
   fetchOptions: {
-    timeout: 30000, // 30 second timeout
+    timeout: 15000, // 15 second timeout
   },
 });
 
