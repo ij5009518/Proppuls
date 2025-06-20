@@ -24,30 +24,52 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
-      // For now, use a default admin user for demo purposes
-      // In production, this would validate against a real user database
-      const defaultUser = {
-        id: 1,
-        email: "admin@propertyflow.com",
-        password: "admin123", // In production, this would be hashed
-        firstName: "Admin",
-        lastName: "User",
-        role: "admin"
-      };
-
-      if (email === defaultUser.email && password === defaultUser.password) {
-        // Create a session token
-        const token = await storage.createSession("admin-token", defaultUser);
+      // Try to authenticate with registered users first
+      const user = await storage.getUserByEmail(email);
+      if (user && user.password && await bcrypt.compare(password, user.password)) {
+        const token = crypto.randomBytes(32).toString('hex');
+        await storage.createSession(token, user);
         
         res.json({
           success: true,
-          token: "admin-token",
+          token,
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+            organizationId: user.organizationId
+          }
+        });
+        return;
+      }
+
+      // Fallback to demo admin user
+      const defaultUser = {
+        id: "demo-user-1",
+        email: "admin@propertyflow.com",
+        password: "admin123",
+        firstName: "Admin",
+        lastName: "User",
+        role: "admin",
+        organizationId: "demo-org-1"
+      };
+
+      if (email === defaultUser.email && password === defaultUser.password) {
+        const token = crypto.randomBytes(32).toString('hex');
+        await storage.createSession(token, defaultUser);
+        
+        res.json({
+          success: true,
+          token,
           user: {
             id: defaultUser.id,
             email: defaultUser.email,
             firstName: defaultUser.firstName,
             lastName: defaultUser.lastName,
-            role: defaultUser.role
+            role: defaultUser.role,
+            organizationId: defaultUser.organizationId
           }
         });
       } else {

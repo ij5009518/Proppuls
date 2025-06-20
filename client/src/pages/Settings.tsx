@@ -25,6 +25,10 @@ export default function Settings() {
   const [uploadResults, setUploadResults] = useState<any>(null);
   const [selectedDataType, setSelectedDataType] = useState<string>('properties');
   
+  // Get tab from URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const defaultTab = urlParams.get('tab') || 'data-management';
+  
   // Email settings state
   const [emailSettings, setEmailSettings] = useState({
     automaticRentReminders: true,
@@ -341,16 +345,16 @@ export default function Settings() {
         </div>
       </div>
 
-      <Tabs defaultValue="bulk-upload" className="space-y-6">
+      <Tabs defaultValue={defaultTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="bulk-upload">Bulk Upload</TabsTrigger>
+          <TabsTrigger value="data-management">Data Management</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="email">Email Settings</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="general">General Settings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="bulk-upload" className="space-y-6">
+        <TabsContent value="data-management" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
