@@ -601,7 +601,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Billing Records API Routes
-  app.get("/api/billing-records/:tenantId", authenticateToken, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/billing-records/:tenantId", async (req, res) => {
     try {
       const { tenantId } = req.params;
       const billingRecords = await storage.getBillingRecordsByTenant(tenantId);
@@ -612,7 +612,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/outstanding-balance/:tenantId", authenticateToken, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/outstanding-balance/:tenantId", async (req, res) => {
     try {
       const { tenantId } = req.params;
       const balance = await storage.calculateOutstandingBalance(tenantId);
