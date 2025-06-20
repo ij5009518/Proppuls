@@ -87,16 +87,34 @@ export function registerRoutes(app: Express) {
   });
 
   app.post("/api/auth/register", async (req, res) => {
+    // Set 15 second timeout for registration
+    const timeoutId = setTimeout(() => {
+      if (!res.headersSent) {
+        res.status(408).json({ 
+          message: "Registration timeout - please try again", 
+          error: "Database connection timeout" 
+        });
+      }
+    }, 15000);
+
     try {
       const { email, password, firstName, lastName, role, phone } = req.body;
       
       if (!email || !password || !firstName || !lastName) {
+        clearTimeout(timeoutId);
         return res.status(400).json({ message: "Required fields missing" });
       }
 
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(email);
+      // Check if user already exists with timeout
+      const existingUser = await Promise.race([
+        storage.getUserByEmail(email),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database timeout')), 10000)
+        )
+      ]);
+      
       if (existingUser) {
+        clearTimeout(timeoutId);
         return res.status(400).json({ message: "User already exists" });
       }
 
@@ -150,6 +168,7 @@ export function registerRoutes(app: Express) {
       const token = crypto.randomBytes(32).toString('hex');
       await storage.createSession(token, user);
 
+      clearTimeout(timeoutId);
       res.json({ 
         token, 
         user: { 
@@ -162,11 +181,19 @@ export function registerRoutes(app: Express) {
         } 
       });
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("Registration error:", error);
-      res.status(500).json({ 
-        message: "Registration failed", 
-        error: error.message 
-      });
+      
+      if (!res.headersSent) {
+        const message = error.message?.includes('timeout') || error.message?.includes('Control plane') 
+          ? "Registration timeout - please try again in a few moments" 
+          : "Registration failed";
+        
+        res.status(500).json({ 
+          message, 
+          error: error.message 
+        });
+      }
     }
   });
 
