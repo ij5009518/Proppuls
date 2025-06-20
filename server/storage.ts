@@ -425,6 +425,12 @@ class Storage {
         await this.generateOngoingRentPayments(tenant);
       }
 
+      // Generate initial billing record for active tenants with monthly rent
+      if (tenant.status === 'active' && tenant.monthlyRent && parseFloat(tenant.monthlyRent) > 0) {
+        console.log("Generating initial billing record for new active tenant:", tenant.id);
+        await this.initiateMonthlyBilling(tenant);
+      }
+
       return tenant;
     } catch (error) {
       console.error("Storage: Error creating tenant:", error);
