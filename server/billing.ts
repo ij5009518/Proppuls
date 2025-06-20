@@ -54,7 +54,7 @@ export function registerBillingRoutes(app: Express) {
         currentPeriodEnd: org.currentPeriodEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         cancelAtPeriodEnd: org.cancelAtPeriodEnd || false,
         plan: org.plan,
-        amount: org.monthlyPrice * 100, // Convert to cents
+        amount: (org.monthlyPrice ?? 19) * 100, // Convert to cents
       };
 
       res.json({
@@ -88,7 +88,7 @@ export function registerBillingRoutes(app: Express) {
       const mockInvoices = [
         {
           id: `inv_${Date.now()}`,
-          amount: org.monthlyPrice * 100,
+          amount: (org.monthlyPrice ?? 19) * 100,
           currency: 'usd',
           status: 'paid',
           paidAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -100,7 +100,7 @@ export function registerBillingRoutes(app: Express) {
         },
         {
           id: `inv_${Date.now() - 1}`,
-          amount: org.monthlyPrice * 100,
+          amount: (org.monthlyPrice ?? 19) * 100,
           currency: 'usd',
           status: 'paid',
           paidAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
