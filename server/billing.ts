@@ -104,6 +104,10 @@ export function registerBillingRoutes(app: Express) {
   // Update subscription
   app.post("/api/billing/update-subscription", async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const { planId } = req.body;
       
       if (!PRICING_PLANS[planId as keyof typeof PRICING_PLANS]) {
@@ -112,10 +116,23 @@ export function registerBillingRoutes(app: Express) {
 
       const plan = PRICING_PLANS[planId as keyof typeof PRICING_PLANS];
       
+      // Update organization with new plan
+      const updatedOrg = await storage.updateOrganization(req.user.organizationId, {
+        plan: planId,
+        monthlyPrice: plan.price,
+        maxUsers: plan.maxUsers,
+        maxProperties: plan.maxProperties,
+      });
+
+      if (!updatedOrg) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+      
       res.json({
         success: true,
         message: `Successfully updated to ${plan.name} plan`,
         plan: planId,
+        organization: updatedOrg,
       });
     } catch (error) {
       console.error("Error updating subscription:", error);
