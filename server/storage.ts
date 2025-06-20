@@ -1300,53 +1300,54 @@ class Storage {
       }
     });
   }
-    async initiateMonthlyBilling(tenant: any): Promise<void> {
+
+  async initiateMonthlyBilling(tenant: any): Promise<void> {
     try {
       console.log("Initiating monthly billing for tenant:", tenant.id);
 
-      if (!tenant.leaseStart || !tenant.monthlyRent) {
-        console.log("Missing lease start or monthly rent for billing");
+      if (!tenant.monthlyRent) {
+        console.log("Missing monthly rent for billing");
         return;
       }
 
       const today = new Date();
-      const leaseStartDate = new Date(tenant.leaseStart);
+      const leaseStartDate = tenant.leaseStart ? new Date(tenant.leaseStart) : today;
       const monthlyAmount = parseFloat(tenant.monthlyRent);
 
-      // Generate billing for current month if lease has started
-      if (leaseStartDate <= today) {
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        const billingPeriod = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+      // Generate billing for current month
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      const billingPeriod = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
 
-        // Check if billing already exists for this period
-        const existingBilling = await db.select()
-          .from(billingRecords)
-          .where(
-            and(
-              eq(billingRecords.tenantId, tenant.id),
-              eq(billingRecords.billingPeriod, billingPeriod)
-            )
-          );
+      // Check if billing already exists for this period
+      const existingBilling = await db.select()
+        .from(billingRecords)
+        .where(
+          and(
+            eq(billingRecords.tenantId, tenant.id),
+            eq(billingRecords.billingPeriod, billingPeriod)
+          )
+        );
 
-        if (existingBilling.length === 0) {
-          // Calculate due date (lease anniversary date)
-          const dueDate = new Date(currentYear, currentMonth, leaseStartDate.getDate());
+      if (existingBilling.length === 0) {
+        // Calculate due date (use lease start day or 1st of month)
+        const dueDay = tenant.leaseStart ? leaseStartDate.getDate() : 1;
+        const dueDate = new Date(currentYear, currentMonth, dueDay);
 
-          // Create billing record for current month
-          const billingData = {
-            tenantId: tenant.id,
-            unitId: tenant.unitId,
-            amount: tenant.monthlyRent,
-            billingPeriod,
-            dueDate,
-            status: 'unpaid',
-            paidAmount: '0'
-          };
+        // Create billing record for current month
+        const billingData = {
+          tenantId: tenant.id,
+          unitId: tenant.unitId,
+          amount: tenant.monthlyRent,
+          billingPeriod,
+          dueDate,
+          status: 'pending',
+          type: 'rent',
+          organizationId: tenant.organizationId
+        };
 
-          await this.createBillingRecord(billingData);
-          console.log("Created billing record for period:", billingPeriod);
-        }
+        await this.createBillingRecord(billingData);
+        console.log("Created billing record for period:", billingPeriod);
       }
     } catch (error) {
       console.error("Error in initiateMonthlyBilling:", error);
@@ -1625,6 +1626,71 @@ class EmailService {
     return await withRetry(async () => {
       const history = await db.select().from(tenantHistory).where(eq(tenantHistory.unitId, unitId));
       return history;
+    });
+  }
+
+  async generateAutomaticBilling(): Promise<{ generated: any[], updated: any[] }> {
+    return await withRetry(async () => {
+      try {
+        console.log("Running automatic billing process");
+        
+        // Generate new billing records
+        const generated = await this.generateMonthlyBilling();
+        
+        // Update overdue statuses
+        const updated = await this.updateOverdueStatuses();
+        
+        return { generated, updated };
+      } catch (error) {
+        console.error("Error in automatic billing process:", error);
+        throw error;
+      }
+    });
+  }
+
+  async updateOverdueStatuses(): Promise<any[]> {
+    return await withRetry(async () => {
+      try {
+        console.log("Updating overdue statuses for billing records");
+        const today = new Date();
+        const gracePeriod = 5; // 5 day grace period
+        
+        // Find pending billing records that are past due date + grace period
+        const overdueRecords = await db.select()
+          .from(billingRecords)
+          .where(
+            and(
+              eq(billingRecords.status, 'pending'),
+              lt(billingRecords.dueDate, new Date(today.getTime() - gracePeriod * 24 * 60 * 60 * 1000))
+            )
+          );
+        
+        const updatedRecords = [];
+        
+        for (const record of overdueRecords) {
+          const dueDate = new Date(record.dueDate);
+          const daysPastDue = Math.floor((today.getTime() - dueDate.getTime()) / (24 * 60 * 60 * 1000));
+          
+          if (daysPastDue > gracePeriod) {
+            const [updatedRecord] = await db.update(billingRecords)
+              .set({ 
+                status: 'overdue',
+                daysPastDue: daysPastDue,
+                updatedAt: new Date()
+              })
+              .where(eq(billingRecords.id, record.id))
+              .returning();
+            
+            updatedRecords.push(updatedRecord);
+          }
+        }
+        
+        console.log(`Updated ${updatedRecords.length} records to overdue status`);
+        return updatedRecords;
+      } catch (error) {
+        console.error("Error updating overdue statuses:", error);
+        throw error;
+      }
     });
   }
 }
