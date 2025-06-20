@@ -306,16 +306,18 @@ class Storage {
 
   // Unit methods
   async createUnit(unitData: any): Promise<Unit> {
-    const [unit] = await db.insert(units).values({
-      id: unitData.id || crypto.randomUUID(),
-      ...unitData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
-    return {
-      ...unit,
-      status: unit.status as "vacant" | "occupied" | "maintenance"
-    };
+    return await withRetry(async () => {
+      const [unit] = await db.insert(units).values({
+        id: unitData.id || crypto.randomUUID(),
+        ...unitData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      return {
+        ...unit,
+        status: unit.status as "vacant" | "occupied" | "maintenance"
+      };
+    });
   }
 
   async getAllUnits(organizationId?: string): Promise<Unit[]> {
@@ -1427,6 +1429,170 @@ class EmailService {
     }
     
     return generatedBillings;
+  }
+
+  // Billing Records Management
+  async getBillingRecordsByTenant(tenantId: string): Promise<any[]> {
+    return await withRetry(async () => {
+      const records = await db.select().from(billingRecords).where(eq(billingRecords.tenantId, tenantId));
+      return records;
+    });
+  }
+
+  async createBillingRecord(billingData: any): Promise<any> {
+    return await withRetry(async () => {
+      const [record] = await db.insert(billingRecords).values({
+        id: crypto.randomUUID(),
+        ...billingData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      return record;
+    });
+  }
+
+  async updateBillingRecord(id: string, updates: any): Promise<any | null> {
+    return await withRetry(async () => {
+      const [record] = await db.update(billingRecords)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(billingRecords.id, id))
+        .returning();
+      return record || null;
+    });
+  }
+
+  async calculateOutstandingBalance(tenantId: string): Promise<number> {
+    return await withRetry(async () => {
+      try {
+        console.log("Calculating outstanding balance for tenant:", tenantId);
+        
+        // Get all billing records for the tenant
+        const billings = await db.select()
+          .from(billingRecords)
+          .where(eq(billingRecords.tenantId, tenantId));
+        
+        // Calculate total billed amount
+        let totalBilled = 0;
+        for (const billing of billings) {
+          const amount = parseFloat(billing.amount || '0');
+          totalBilled += amount;
+          console.log("Billing amount:", amount, "Status:", billing.status);
+        }
+        
+        // Get all rent payments for the tenant
+        const payments = await db.select()
+          .from(rentPayments)
+          .where(eq(rentPayments.tenantId, tenantId));
+        
+        // Calculate total paid amount
+        let totalPaid = 0;
+        for (const payment of payments) {
+          if (payment.status === 'paid' || payment.paidDate) {
+            const amount = parseFloat(payment.amount || '0');
+            totalPaid += amount;
+            console.log("Payment amount:", amount, "Status:", payment.status);
+          }
+        }
+        
+        console.log("Total billed:", totalBilled, "Total paid:", totalPaid);
+        
+        // Outstanding balance = Total Billed - Total Paid
+        const outstandingBalance = totalBilled - totalPaid;
+        const finalBalance = Math.max(0, outstandingBalance);
+        
+        console.log("Final outstanding balance:", finalBalance);
+        return finalBalance;
+      } catch (error) {
+        console.error("Error calculating outstanding balance:", error);
+        throw error;
+      }
+    });
+  }
+
+  async generateMonthlyBilling(): Promise<any[]> {
+    return await withRetry(async () => {
+      try {
+        console.log("Generating monthly billing for all active tenants");
+        const today = new Date();
+        const activeTenantsResult = await db.select()
+          .from(tenants)
+          .where(eq(tenants.status, 'active'));
+        
+        const generatedBillings = [];
+        
+        for (const tenant of activeTenantsResult) {
+          // Check if tenant has lease start date and is active
+          if (!tenant.leaseStart || !tenant.monthlyRent) continue;
+          
+          const leaseStart = new Date(tenant.leaseStart);
+          
+          // Check if lease has started
+          if (leaseStart > today) continue;
+          
+          // Calculate the current billing period
+          const currentMonth = today.getMonth();
+          const currentYear = today.getFullYear();
+          const billingPeriod = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+          
+          // Check if billing already exists for this period
+          const existingBilling = await db.select()
+            .from(billingRecords)
+            .where(
+              and(
+                eq(billingRecords.tenantId, tenant.id),
+                eq(billingRecords.billingPeriod, billingPeriod)
+              )
+            );
+          
+          if (existingBilling.length > 0) continue;
+          
+          // Calculate due date (same day of month as lease start)
+          const dueDate = new Date(currentYear, currentMonth, leaseStart.getDate());
+          
+          // Create billing record
+          const billingData = {
+            tenantId: tenant.id,
+            unitId: tenant.unitId,
+            amount: tenant.monthlyRent,
+            billingPeriod: billingPeriod,
+            dueDate: dueDate,
+            status: 'pending',
+            type: 'rent'
+          };
+          
+          const newBilling = await this.createBillingRecord(billingData);
+          generatedBillings.push(newBilling);
+          
+          console.log("Generated billing for tenant:", tenant.id, "Amount:", tenant.monthlyRent);
+        }
+        
+        console.log("Total billings generated:", generatedBillings.length);
+        return generatedBillings;
+      } catch (error) {
+        console.error("Error generating monthly billing:", error);
+        throw error;
+      }
+    });
+  }
+
+  // Tenant History Management
+  async createTenantHistory(historyData: any): Promise<any> {
+    return await withRetry(async () => {
+      const [history] = await db.insert(tenantHistory).values({
+        id: crypto.randomUUID(),
+        ...historyData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      return history;
+    });
+  }
+
+  async getTenantHistoryByUnit(unitId: string): Promise<any[]> {
+    return await withRetry(async () => {
+      const history = await db.select().from(tenantHistory).where(eq(tenantHistory.unitId, unitId));
+      return history;
+    });
   }
 }
 
