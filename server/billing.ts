@@ -1,6 +1,4 @@
 import { Express } from "express";
-import { db, organizations } from "./db";
-import { eq } from "drizzle-orm";
 import { AuthenticatedRequest } from "./auth";
 
 // Pricing configuration
@@ -33,32 +31,32 @@ export function registerBillingRoutes(app: Express) {
   // Get organization billing info
   app.get("/api/billing/info", async (req: AuthenticatedRequest, res) => {
     try {
-      const user = req.user;
-      if (!user?.organizationId) {
-        return res.status(401).json({ message: "Organization not found" });
-      }
+      // Demo organization data
+      const organization = {
+        id: "demo-org-1",
+        name: "Demo Organization",
+        plan: "starter",
+        monthlyPrice: 19,
+        subscriptionStatus: "active",
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        cancelAtPeriodEnd: false,
+        stripeSubscriptionId: null,
+        stripeCustomerId: null
+      };
 
-      const [org] = await db.select()
-        .from(organizations)
-        .where(eq(organizations.id, user.organizationId));
-
-      if (!org) {
-        return res.status(404).json({ message: "Organization not found" });
-      }
-
-      // Simulate subscription info based on organization data
       const subscription = {
-        id: org.stripeSubscriptionId || `sub_${org.id}`,
-        status: org.subscriptionStatus || 'active',
-        currentPeriodStart: org.currentPeriodStart || new Date(),
-        currentPeriodEnd: org.currentPeriodEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        cancelAtPeriodEnd: org.cancelAtPeriodEnd || false,
-        plan: org.plan,
-        amount: (org.monthlyPrice ?? 19) * 100, // Convert to cents
+        id: `sub_${organization.id}`,
+        status: 'active',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        cancelAtPeriodEnd: false,
+        plan: organization.plan,
+        amount: organization.monthlyPrice * 100,
       };
 
       res.json({
-        organization: org,
+        organization,
         subscription,
         availablePlans: PRICING_PLANS,
       });
@@ -68,27 +66,14 @@ export function registerBillingRoutes(app: Express) {
     }
   });
 
-  // Get billing history (mock data for now)
+  // Get billing history
   app.get("/api/billing/history", async (req: AuthenticatedRequest, res) => {
     try {
-      const user = req.user;
-      if (!user?.organizationId) {
-        return res.status(401).json({ message: "Organization not found" });
-      }
-
-      const [org] = await db.select()
-        .from(organizations)
-        .where(eq(organizations.id, user.organizationId));
-
-      if (!org) {
-        return res.json({ invoices: [] });
-      }
-
-      // Mock billing history - in production this would come from Stripe
-      const mockInvoices = [
+      // Mock billing history for demo
+      const invoices = [
         {
           id: `inv_${Date.now()}`,
-          amount: (org.monthlyPrice ?? 19) * 100,
+          amount: 1900,
           currency: 'usd',
           status: 'paid',
           paidAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -100,7 +85,7 @@ export function registerBillingRoutes(app: Express) {
         },
         {
           id: `inv_${Date.now() - 1}`,
-          amount: (org.monthlyPrice ?? 19) * 100,
+          amount: 1900,
           currency: 'usd',
           status: 'paid',
           paidAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
@@ -112,47 +97,24 @@ export function registerBillingRoutes(app: Express) {
         },
       ];
 
-      res.json({ invoices: mockInvoices });
+      res.json({ invoices });
     } catch (error) {
       console.error("Error fetching billing history:", error);
       res.status(500).json({ message: "Failed to fetch billing history" });
     }
   });
 
-  // Update subscription (upgrade/downgrade)
+  // Update subscription
   app.post("/api/billing/update-subscription", async (req: AuthenticatedRequest, res) => {
     try {
       const { planId } = req.body;
-      const user = req.user;
       
-      if (!user?.organizationId) {
-        return res.status(401).json({ message: "Organization not found" });
-      }
-
       if (!PRICING_PLANS[planId as keyof typeof PRICING_PLANS]) {
         return res.status(400).json({ message: "Invalid plan selected" });
       }
 
-      const [org] = await db.select()
-        .from(organizations)
-        .where(eq(organizations.id, user.organizationId));
-
-      if (!org) {
-        return res.status(404).json({ message: "Organization not found" });
-      }
-
       const plan = PRICING_PLANS[planId as keyof typeof PRICING_PLANS];
       
-      // Update organization with new plan
-      await db.update(organizations)
-        .set({
-          plan: planId,
-          monthlyPrice: plan.price,
-          maxUsers: plan.maxUsers,
-          maxProperties: plan.maxProperties,
-        })
-        .where(eq(organizations.id, org.id));
-
       res.json({
         success: true,
         message: `Successfully updated to ${plan.name} plan`,
@@ -168,28 +130,7 @@ export function registerBillingRoutes(app: Express) {
   app.post("/api/billing/cancel-subscription", async (req: AuthenticatedRequest, res) => {
     try {
       const { cancelAtPeriodEnd = true } = req.body;
-      const user = req.user;
       
-      if (!user?.organizationId) {
-        return res.status(401).json({ message: "Organization not found" });
-      }
-
-      const [org] = await db.select()
-        .from(organizations)
-        .where(eq(organizations.id, user.organizationId));
-
-      if (!org) {
-        return res.status(404).json({ message: "Organization not found" });
-      }
-
-      // Update organization cancellation status
-      await db.update(organizations)
-        .set({
-          cancelAtPeriodEnd: cancelAtPeriodEnd,
-          subscriptionStatus: cancelAtPeriodEnd ? 'active' : 'canceled',
-        })
-        .where(eq(organizations.id, org.id));
-
       res.json({
         success: true,
         message: cancelAtPeriodEnd 
@@ -205,28 +146,6 @@ export function registerBillingRoutes(app: Express) {
   // Reactivate subscription
   app.post("/api/billing/reactivate-subscription", async (req: AuthenticatedRequest, res) => {
     try {
-      const user = req.user;
-      
-      if (!user?.organizationId) {
-        return res.status(401).json({ message: "Organization not found" });
-      }
-
-      const [org] = await db.select()
-        .from(organizations)
-        .where(eq(organizations.id, user.organizationId));
-
-      if (!org) {
-        return res.status(404).json({ message: "Organization not found" });
-      }
-
-      // Reactivate subscription
-      await db.update(organizations)
-        .set({
-          cancelAtPeriodEnd: false,
-          subscriptionStatus: 'active',
-        })
-        .where(eq(organizations.id, org.id));
-
       res.json({
         success: true,
         message: "Subscription reactivated successfully",
