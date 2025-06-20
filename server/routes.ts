@@ -7,7 +7,7 @@ import multer from "multer";
 import { parse } from "csv-parse/sync";
 import { emailService } from "./email";
 import Stripe from "stripe";
-import { AuthenticatedRequest } from "./auth";
+import { AuthenticatedRequest, authenticateToken } from "./auth";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -627,7 +627,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Properties routes
-  app.get("/api/properties", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/properties", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       console.log("DEBUG: Properties request - User:", req.user?.id, "Organization:", req.user?.organizationId);
       const properties = await storage.getAllProperties(req.user?.organizationId);

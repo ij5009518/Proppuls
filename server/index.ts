@@ -40,9 +40,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Register auth routes first (without middleware)
   const server = await registerRoutes(app);
-  
   registerAIRoutes(app);
   registerBillingRoutes(app);
 
