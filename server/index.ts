@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { registerAIRoutes } from "./ai";
+import { registerBillingRoutes } from "./billing";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
