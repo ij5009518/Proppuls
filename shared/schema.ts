@@ -71,6 +71,8 @@ export const userSchema = z.object({
   role: z.enum(["admin", "manager", "tenant"]),
   phone: z.string().nullable(),
   isActive: z.boolean(),
+  resetToken: z.string().nullable().optional(),
+  resetExpires: z.date().nullable().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
