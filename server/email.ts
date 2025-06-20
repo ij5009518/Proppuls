@@ -114,31 +114,53 @@ class EmailService {
     });
   }
 
-  async sendWelcomeEmail(to: string, tenantName: string, propertyName: string, unitNumber: string): Promise<boolean> {
+  async sendWelcomeEmail(to: string, userName: string, organizationName: string, unitNumber: string): Promise<boolean> {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Welcome to ${propertyName}!</h2>
-        <p>Dear ${tenantName},</p>
-        <p>Welcome to your new home! We're excited to have you as a tenant.</p>
+        <h2 style="color: #333;">Welcome to Property Management Platform!</h2>
+        <p>Dear ${userName},</p>
+        <p>Welcome! Your account has been successfully created.</p>
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-          <h3 style="margin-top: 0;">Your Unit Details:</h3>
-          <p><strong>Property:</strong> ${propertyName}</p>
-          <p><strong>Unit:</strong> ${unitNumber}</p>
+          <h3 style="margin-top: 0;">Account Details:</h3>
+          <p><strong>Organization:</strong> ${organizationName}</p>
+          <p><strong>Email:</strong> ${to}</p>
         </div>
-        <p>Important reminders:</p>
-        <ul>
-          <li>Rent is due on the 1st of each month</li>
-          <li>For maintenance requests, please contact us through the tenant portal</li>
-          <li>Emergency contact: [Your emergency number]</li>
-        </ul>
-        <p>We hope you enjoy your new home!</p>
+        <p>You can now log in to your account and start managing your properties.</p>
+        <p>If you have any questions, please don't hesitate to contact our support team.</p>
         <p>Best regards,<br>Property Management Team</p>
       </div>
     `;
 
     return this.sendEmail({
       to,
-      subject: `Welcome to ${propertyName} - Unit ${unitNumber}`,
+      subject: `Welcome to Property Management Platform`,
+      html,
+    });
+  }
+
+  async sendPasswordResetEmail(to: string, userName: string, resetToken: string): Promise<boolean> {
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+    
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Password Reset Request</h2>
+        <p>Dear ${userName},</p>
+        <p>We received a request to reset your password for your Property Management Platform account.</p>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <p>Click the button below to reset your password:</p>
+          <a href="${resetUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px 0;">Reset Password</a>
+          <p style="margin-top: 15px; font-size: 14px; color: #666;">Or copy and paste this link in your browser:</p>
+          <p style="font-size: 14px; word-break: break-all;">${resetUrl}</p>
+        </div>
+        <p><strong>This link will expire in 1 hour.</strong></p>
+        <p>If you didn't request this password reset, please ignore this email.</p>
+        <p>Best regards,<br>Property Management Team</p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to,
+      subject: `Password Reset Request`,
       html,
     });
   }

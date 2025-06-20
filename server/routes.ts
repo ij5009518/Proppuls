@@ -53,8 +53,12 @@ export function registerRoutes(app: Express) {
         password: "admin123",
         firstName: "Admin",
         lastName: "User",
-        role: "admin",
-        organizationId: "demo-org-1"
+        role: "admin" as const,
+        organizationId: "demo-org-1",
+        phone: null,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
 
       if (email === defaultUser.email && password === defaultUser.password) {
@@ -90,6 +94,12 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ message: "Required fields missing" });
       }
 
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+
       // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -106,16 +116,35 @@ export function registerRoutes(app: Express) {
         settings: {}
       });
 
-      // Create user with new organization
+      // Create user with new organization - with all required fields
+      const userId = crypto.randomUUID();
       const user = await storage.createUser({
+        id: userId,
         email,
         password: hashedPassword,
         firstName,
         lastName,
-        role: 'admin', // Make them admin of their own organization
+        role: 'admin',
         phone: phone || null,
         organizationId: organization.id,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
       });
+
+      // Send welcome email
+      try {
+        const { emailService } = await import('./email');
+        await emailService.sendWelcomeEmail(
+          email, 
+          `${firstName} ${lastName}`, 
+          organizationName,
+          'New Account'
+        );
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+        // Don't fail registration if email fails
+      }
 
       // Create session token
       const token = crypto.randomBytes(32).toString('hex');
@@ -134,7 +163,10 @@ export function registerRoutes(app: Express) {
       });
     } catch (error) {
       console.error("Registration error:", error);
-      res.status(500).json({ message: "Registration failed" });
+      res.status(500).json({ 
+        message: "Registration failed", 
+        error: error.message 
+      });
     }
   });
 
@@ -1721,6 +1753,90 @@ export function registerRoutes(app: Express) {
         message: "Bulk upload failed",
         error: error.message 
       });
+    }
+  });
+
+  // Forgot password route
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Return success even if user doesn't exist for security
+        return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+
+      // Store reset token in user record (you'd typically store this in a separate table)
+      await storage.updateUser(user.id, {
+        resetToken,
+        resetExpires
+      });
+
+      // Send password reset email
+      try {
+        const { emailService } = await import('./email');
+        await emailService.sendPasswordResetEmail(
+          email,
+          `${user.firstName} ${user.lastName}`,
+          resetToken
+        );
+      } catch (emailError) {
+        console.error("Failed to send reset email:", emailError);
+        return res.status(500).json({ message: "Failed to send reset email" });
+      }
+
+      res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Failed to process password reset request" });
+    }
+  });
+
+  // Reset password route
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+
+      // Find user with valid reset token
+      const users = await storage.getAllUsers();
+      const user = users.find(u => 
+        u.resetToken === token && 
+        u.resetExpires && 
+        new Date(u.resetExpires) > new Date()
+      );
+
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update user password and clear reset token
+      await storage.updateUser(user.id, {
+        password: hashedPassword,
+        resetToken: null,
+        resetExpires: null
+      });
+
+      res.json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Failed to reset password" });
     }
   });
 
