@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Upload, Download, Users, Trash2, Edit2, Plus, FileSpreadsheet, Info, ChevronDown, Mail, Clock, Settings2 } from 'lucide-react';
+import { Upload, Download, Users, Trash2, Edit2, Plus, FileSpreadsheet, Info, ChevronDown, Mail, Clock, Settings2, CreditCard, Calendar, AlertTriangle, Check, ExternalLink } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { User } from '@shared/schema';
@@ -720,17 +720,17 @@ export default function Settings() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {billingInfo?.subscription && (
+                  {(billingInfo as any)?.subscription && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-4">
                         <div>
                           <Label className="text-sm font-medium text-muted-foreground">Current Plan</Label>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="default" className="text-sm">
-                              {billingInfo.availablePlans[billingInfo.organization.plan]?.name || billingInfo.organization.plan}
+                              {(billingInfo as any).availablePlans[(billingInfo as any).organization.plan]?.name || (billingInfo as any).organization.plan}
                             </Badge>
                             <span className="text-2xl font-bold">
-                              ${billingInfo.organization.monthlyPrice || 19}/month
+                              ${(billingInfo as any).organization.monthlyPrice || 19}/month
                             </span>
                           </div>
                         </div>
