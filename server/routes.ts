@@ -7,6 +7,7 @@ import multer from "multer";
 import { parse } from "csv-parse/sync";
 import { emailService } from "./email";
 import Stripe from "stripe";
+import { AuthenticatedRequest } from "./auth";
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -644,9 +645,9 @@ export function registerRoutes(app: Express) {
   });
 
   // Units routes
-  app.get("/api/units", async (req, res) => {
+  app.get("/api/units", async (req: AuthenticatedRequest, res) => {
     try {
-      const units = await storage.getAllUnits();
+      const units = await storage.getAllUnits(req.user?.organizationId);
       res.json(units);
     } catch (error) {
       console.error("Error fetching units:", error);
@@ -751,9 +752,9 @@ export function registerRoutes(app: Express) {
   });
 
   // Tenants routes
-  app.get("/api/tenants", async (req, res) => {
+  app.get("/api/tenants", async (req: AuthenticatedRequest, res) => {
     try {
-      const tenants = await storage.getAllTenants();
+      const tenants = await storage.getAllTenants(req.user?.organizationId);
       res.json(tenants);
     } catch (error) {
       console.error("Error fetching tenants:", error);
