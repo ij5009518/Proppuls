@@ -594,9 +594,9 @@ export function registerRoutes(app: Express) {
   });
 
   // Properties routes
-  app.get("/api/properties", async (req, res) => {
+  app.get("/api/properties", async (req: AuthenticatedRequest, res) => {
     try {
-      const properties = await storage.getAllProperties();
+      const properties = await storage.getAllProperties(req.user?.organizationId);
       res.json(properties);
     } catch (error) {
       console.error("Error fetching properties:", error);
@@ -1166,9 +1166,9 @@ export function registerRoutes(app: Express) {
   });
 
   // Properties with stats route
-  app.get("/api/properties/with-stats", async (req, res) => {
+  app.get("/api/properties/with-stats", async (req: AuthenticatedRequest, res) => {
     try {
-      const properties = await storage.getAllProperties();
+      const properties = await storage.getAllProperties(req.user?.organizationId);
       res.json(properties);
     } catch (error) {
       console.error("Error fetching properties with stats:", error);

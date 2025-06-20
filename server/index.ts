@@ -3,17 +3,21 @@ import { registerRoutes } from "./routes";
 import { registerAIRoutes } from "./ai";
 import { registerBillingRoutes } from "./billing";
 import { setupVite, serveStatic, log } from "./vite";
+import { authenticateToken } from "./auth";
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Debug middleware to see what's being received
+// Authentication middleware for API routes (except auth routes)
 app.use('/api/*', (req, res, next) => {
-  console.log(`=== API MIDDLEWARE HIT FOR ${req.path} ===`);
-  console.log('Method:', req.method);
-  console.log('Body:', JSON.stringify(req.body, null, 2));
-  next();
+  // Skip auth for login/register routes
+  if (req.path === '/api/auth/login' || req.path === '/api/auth/register') {
+    return next();
+  }
+  
+  // Apply authentication
+  authenticateToken(req as any, res, next);
 });
 
 app.use((req, res, next) => {
