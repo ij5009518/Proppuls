@@ -1,0 +1,79 @@
+_app-29c9053914371f94.js:38 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+_app-29c9053914371f94.js:38 [LaunchDarkly] LaunchDarkly client initialized
+PropertyPulse:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+_app-29c9053914371f94.js:38 Adding extension: GPT-Replit - ChatGPT in your Repl. Object
+9Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.Understand this error
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'battery'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+framework-9874b90f57cc6250.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-9874b90f57cc6250.js:1Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'battery'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warning
+register:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 (Unauthorized)Understand this error
+register:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 (Unauthorized)Understand this error
+register:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 (Unauthorized)Understand this error
+Register.tsx:21 
+            
+            
+           POST https://5c27ddf0-dc04-4f35-9cbc-53d5c5b578b1-00-39qn8gw5ivh2d.worf.replit.dev/api/auth/register 401 (Unauthorized)
