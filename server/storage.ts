@@ -782,9 +782,85 @@ class Storage {
       console.log("Formatted rent payment data:", insertData);
 
       const [payment] = await db.insert(rentPayments).values(insertData).returning();
+      
+      // If payment is marked as paid, update corresponding billing records
+      if (insertData.paidDate && insertData.status === 'paid') {
+        await this.updateBillingRecordsForPayment(insertData.tenantId, parseFloat(insertData.amount));
+      }
+      
       return payment;
     } catch (error) {
       console.error("Error creating rent payment:", error);
+      throw error;
+    }
+  }
+
+  async updateBillingRecordsForPayment(tenantId: string, paymentAmount: number): Promise<void> {
+    try {
+      console.log(`Updating billing records for tenant ${tenantId} with payment amount ${paymentAmount}`);
+      
+      // Get unpaid billing records for this tenant, ordered by due date
+      const unpaidBillings = await db.select()
+        .from(billingRecords)
+        .where(and(
+          eq(billingRecords.tenantId, tenantId),
+          eq(billingRecords.status, 'pending')
+        ))
+        .orderBy(billingRecords.dueDate);
+
+      let remainingPayment = paymentAmount;
+      
+      for (const billing of unpaidBillings) {
+        if (remainingPayment <= 0) break;
+        
+        const billingAmount = parseFloat(billing.amount || '0');
+        
+        if (remainingPayment >= billingAmount) {
+          // Payment covers this billing record completely
+          await db.update(billingRecords)
+            .set({ 
+              status: 'paid',
+              paidDate: new Date(),
+              updatedAt: new Date()
+            })
+            .where(eq(billingRecords.id, billing.id));
+          
+          remainingPayment -= billingAmount;
+          console.log(`Marked billing record ${billing.id} as paid (${billingAmount})`);
+        } else {
+          // Partial payment - create a new billing record for remaining amount
+          const remainingAmount = billingAmount - remainingPayment;
+          
+          // Mark original as paid with the payment amount
+          await db.update(billingRecords)
+            .set({ 
+              status: 'paid',
+              amount: remainingPayment.toString(),
+              paidDate: new Date(),
+              updatedAt: new Date()
+            })
+            .where(eq(billingRecords.id, billing.id));
+          
+          // Create new billing record for remaining amount
+          await db.insert(billingRecords).values({
+            id: crypto.randomUUID(),
+            tenantId: billing.tenantId,
+            amount: remainingAmount.toString(),
+            dueDate: billing.dueDate,
+            status: 'pending',
+            description: billing.description,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+          
+          remainingPayment = 0;
+          console.log(`Split billing record ${billing.id}: paid ${remainingPayment}, remaining ${remainingAmount}`);
+        }
+      }
+      
+      console.log(`Payment processing complete. Remaining payment amount: ${remainingPayment}`);
+    } catch (error) {
+      console.error("Error updating billing records for payment:", error);
       throw error;
     }
   }
