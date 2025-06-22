@@ -248,8 +248,9 @@ export default function Tenants() {
     mutationFn: (data: any) => apiRequest("POST", "/api/rent-payments", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records", selectedTenant?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       setIsPaymentDialogOpen(false);
       paymentForm.reset();
       toast({ title: "Success", description: "Payment recorded successfully" });
@@ -567,11 +568,12 @@ export default function Tenants() {
       tenantId: data.tenantId,
       unitId: data.unitId,
       amount: parseFloat(data.amount),
-      dueDate: data.paymentDate.toISOString(),
-      paidDate: data.paymentDate.toISOString(),
+      dueDate: new Date().toISOString(), // Current month due date
+      paidDate: data.paymentDate.toISOString(), // Actual payment date
       paymentMethod: data.paymentMethod,
       lateFeeAmount: data.lateFeeAmount ? parseFloat(data.lateFeeAmount) : 0,
       notes: data.notes || "",
+      status: "paid" // Mark as paid since we're recording a payment
     };
     createPaymentMutation.mutate(submitData);
   };
@@ -2161,7 +2163,7 @@ export default function Tenants() {
                           </TableHeader>
                           <TableBody>
                             {(() => {
-                              const sortedBillingRecords = tenantBillingRecords
+                              const sortedBillingRecords = (Array.isArray(tenantBillingRecords) ? tenantBillingRecords : [])
                                 .sort((a: any, b: any) => new Date(b.dueDate || b.createdAt).getTime() - new Date(a.dueDate || a.createdAt).getTime());
 
                               if (sortedBillingRecords.length === 0) {
