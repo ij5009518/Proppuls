@@ -118,7 +118,26 @@ export default function Tenants() {
     queryKey: ["/api/rent-payments"],
   });
 
-
+  // Fetch outstanding balances for all tenants
+  const { data: tenantOutstandingBalances } = useQuery({
+    queryKey: ["/api/outstanding-balances"],
+    queryFn: async () => {
+      if (!tenants) return {};
+      const balances: Record<string, number> = {};
+      await Promise.all(
+        tenants.map(async (tenant: Tenant) => {
+          try {
+            const response = await apiRequest("GET", `/api/outstanding-balance/${tenant.id}`);
+            balances[tenant.id] = response.balance || 0;
+          } catch (error) {
+            balances[tenant.id] = 0;
+          }
+        })
+      );
+      return balances;
+    },
+    enabled: !!tenants,
+  });
 
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
@@ -205,6 +224,8 @@ export default function Tenants() {
     mutationFn: (data: any) => apiRequest("POST", "/api/tenants", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
       setIsAddDialogOpen(false);
       form.reset();
       setUploadedIdDocument(null);
@@ -250,6 +271,7 @@ export default function Tenants() {
       queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records", selectedTenant?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       setIsPaymentDialogOpen(false);
       paymentForm.reset();
@@ -1358,14 +1380,15 @@ export default function Tenants() {
                       </div>
                       <div className="text-right">
                         {(() => {
-                          // Calculate outstanding balance from billing records instead of rent payments
-                          const tenantBillingRecords = Array.isArray(tenantBillingRecords) ? tenantBillingRecords.filter((record: any) => record.tenantId === tenant.id) : [];
-                          const totalOutstanding = tenantBillingRecords
-                            .filter((record: any) => record.status === 'pending')
-                            .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
-                          const totalOverdue = tenantBillingRecords
-                            .filter((record: any) => record.status === 'pending' && new Date(record.dueDate) < new Date())
-                            .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
+                          // Use the outstanding balance data for accurate calculations
+                          const outstandingBalance = tenantOutstandingBalances?.[tenant.id] || 0;
+                          const totalOutstanding = outstandingBalance;
+                          
+                          // Calculate overdue from rent payments for now (we can enhance this later)
+                          const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === tenant.id) || [];
+                          const totalOverdue = tenantPayments
+                            .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
+                            .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
 
                           if (totalOverdue > 0) {
                             return (
@@ -2124,7 +2147,7 @@ export default function Tenants() {
                                   {formatCurrency(outstandingBalance.toString())}
                                 </p>
                                 <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                                  {outstandingBalance > 0 ? "1 pending" : "0 pending"}
+                                  {outstandingBalance > 0 ? "pending" : "0 pending"}
                                 </p>
                               </div>
                             </div>
