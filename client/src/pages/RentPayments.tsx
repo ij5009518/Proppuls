@@ -1,94 +1,88 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, Search, Filter, Download, Calendar, DollarSign, Clock, AlertTriangle } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, DollarSign, Calendar, Clock, Check, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { RentPayment, InsertRentPayment, Tenant, Unit, Property } from "@shared/schema";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import type { RentPayment, Tenant, Unit } from "@shared/schema";
 
 const rentPaymentSchema = z.object({
-  tenantId: z.number().min(1, "Tenant is required"),
-  unitId: z.number().min(1, "Unit is required"),
+  tenantId: z.string().min(1, "Tenant is required"),
+  unitId: z.string().min(1, "Unit is required"),
   amount: z.string().min(1, "Amount is required"),
-  dueDate: z.date(),
-  paidDate: z.date().optional(),
-  status: z.string().min(1, "Status is required"),
-  paymentMethod: z.string().optional(),
+  paymentDate: z.date(),
+  dueDate: z.date().optional(),
+  paymentMethod: z.enum(["CASH", "CHECK", "CREDIT_CARD", "BANK_TRANSFER", "OTHER"]),
+  lateFeeAmount: z.string().optional(),
   notes: z.string().optional(),
 });
 
 export default function RentPayments() {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<RentPayment | null>(null);
+
   const { toast } = useToast();
 
   const { data: rentPayments, isLoading: paymentsLoading } = useQuery({
-    queryKey: ["rent-payments"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/rent-payments");
-      return response.json();
-    },
+    queryKey: ["/api/rent-payments"],
   });
 
-  const { data: tenants } = useQuery({
-    queryKey: ["tenants"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/tenants");
-      return response.json();
-    },
-  });
-
-  const { data: units } = useQuery({
-    queryKey: ["units"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/units");
-      return response.json();
-    },
-  });
-
-  const { data: properties } = useQuery({
-    queryKey: ["properties"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/properties");
-      return response.json();
-    },
-  });
+  const { data: tenants } = useQuery({ queryKey: ["/api/tenants"] });
+  const { data: units } = useQuery({ queryKey: ["/api/units"] });
 
   const form = useForm<z.infer<typeof rentPaymentSchema>>({
     resolver: zodResolver(rentPaymentSchema),
     defaultValues: {
-      status: "pending",
-      paymentMethod: "bank_transfer",
+      tenantId: "",
+      unitId: "",
+      amount: "",
+      paymentDate: new Date(),
+      paymentMethod: "CHECK",
+      lateFeeAmount: "",
+      notes: "",
+    },
+  });
+
+  const editForm = useForm<z.infer<typeof rentPaymentSchema>>({
+    resolver: zodResolver(rentPaymentSchema),
+    defaultValues: {
+      tenantId: "",
+      unitId: "",
+      amount: "",
+      paymentDate: new Date(),
+      paymentMethod: "CHECK",
+      lateFeeAmount: "",
+      notes: "",
     },
   });
 
   const createPaymentMutation = useMutation({
-    mutationFn: async (data: InsertRentPayment) => {
-      const response = await apiRequest("POST", "/api/rent-payments", data);
-      return response.json();
-    },
+    mutationFn: (data: any) => apiRequest("POST", "/api/rent-payments", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rent-payments"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
-      setIsAddDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      setIsCreateDialogOpen(false);
       form.reset();
       toast({ title: "Success", description: "Payment recorded successfully" });
     },
@@ -98,14 +92,14 @@ export default function RentPayments() {
   });
 
   const updatePaymentMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<InsertRentPayment> }) => {
-      const response = await apiRequest("PUT", `/api/rent-payments/${id}`, data);
-      return response.json();
-    },
+    mutationFn: ({ id, data }: { id: string; data: any }) => 
+      apiRequest("PUT", `/api/rent-payments/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rent-payments"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      setIsEditDialogOpen(false);
+      editForm.reset();
       toast({ title: "Success", description: "Payment updated successfully" });
     },
     onError: () => {
@@ -114,9 +108,12 @@ export default function RentPayments() {
   });
 
   const deletePaymentMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/rent-payments/${id}`),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/rent-payments/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["rent-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      setIsViewDialogOpen(false);
       toast({ title: "Success", description: "Payment deleted successfully" });
     },
     onError: () => {
@@ -124,87 +121,80 @@ export default function RentPayments() {
     },
   });
 
-  const handleView = (payment: RentPayment) => {
-    setSelectedPayment(payment);
-    // You can add a view dialog here if needed
-  };
-
-  const handleEdit = (payment: RentPayment) => {
-    setSelectedPayment(payment);
-    form.reset({
-      tenantId: payment.tenantId,
-      unitId: payment.unitId,
-      amount: payment.amount.toString(),
-      dueDate: new Date(payment.dueDate),
-      paidDate: payment.paidDate ? new Date(payment.paidDate) : undefined,
-      status: payment.status,
-      paymentMethod: payment.paymentMethod || "",
-      notes: payment.notes || "",
-    });
-    setIsAddDialogOpen(true);
-  };
-
-  const onSubmit = (values: z.infer<typeof rentPaymentSchema>) => {
-    const data: InsertRentPayment = {
-      ...values,
-      amount: parseFloat(values.amount),
-      dueDate: new Date(values.dueDate),
-      paidDate: values.paidDate ? new Date(values.paidDate) : null,
-      paymentMethod: values.paymentMethod as "cash" | "check" | "bank_transfer" | "credit_card",
-      status: values.status as "pending" | "paid" | "overdue" | "partial",
-      notes: values.notes || "",
+  const onCreateSubmit = (data: z.infer<typeof rentPaymentSchema>) => {
+    const dueDate = data.dueDate || (() => {
+      const calculated = new Date(data.paymentDate);
+      calculated.setDate(calculated.getDate() + 30);
+      return calculated;
+    })();
+    
+    const submitData = {
+      tenantId: data.tenantId,
+      unitId: data.unitId,
+      amount: parseFloat(data.amount),
+      dueDate: dueDate.toISOString(),
+      paidDate: data.paymentDate.toISOString(),
+      paymentMethod: data.paymentMethod,
+      lateFeeAmount: data.lateFeeAmount ? parseFloat(data.lateFeeAmount) : 0,
+      notes: data.notes || "",
+      status: "paid"
     };
-    createPaymentMutation.mutate(data);
+    createPaymentMutation.mutate(submitData);
   };
 
-  const getTenantName = (tenantId: number) => {
-    const tenant = tenants?.find(t => t.id === tenantId);
+  const onEditSubmit = (data: z.infer<typeof rentPaymentSchema>) => {
+    if (!selectedPayment) return;
+    
+    const dueDate = data.dueDate || (() => {
+      const calculated = new Date(data.paymentDate);
+      calculated.setDate(calculated.getDate() + 30);
+      return calculated;
+    })();
+    
+    const submitData = {
+      tenantId: data.tenantId,
+      unitId: data.unitId,
+      amount: parseFloat(data.amount),
+      dueDate: dueDate.toISOString(),
+      paidDate: data.paymentDate.toISOString(),
+      paymentMethod: data.paymentMethod,
+      lateFeeAmount: data.lateFeeAmount ? parseFloat(data.lateFeeAmount) : 0,
+      notes: data.notes || "",
+    };
+    updatePaymentMutation.mutate({ id: selectedPayment.id, data: submitData });
+  };
+
+  const getTenantName = (tenantId: string) => {
+    const tenant = tenants?.find((t: Tenant) => t.id === tenantId);
     return tenant ? `${tenant.firstName} ${tenant.lastName}` : "Unknown Tenant";
   };
 
-  const getUnitInfo = (unitId: number) => {
-    const unit = units?.find(u => u.id === unitId);
-    if (!unit) return "Unknown Unit";
-    const property = properties?.find(p => p.id === unit.propertyId);
-    return `${property?.name || "Unknown Property"} - Unit ${unit.unitNumber}`;
+  const getUnitNumber = (unitId: string) => {
+    const unit = units?.find((u: Unit) => u.id === unitId);
+    return unit ? `Unit ${unit.unitNumber || unit.id.slice(0, 8)}` : "Unknown Unit";
   };
 
-  const filteredPayments = rentPayments?.filter(payment => {
-    const matchesSearch = getTenantName(payment.tenantId).toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         getUnitInfo(payment.unitId).toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }) || [];
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "paid":
-        return "default";
-      case "pending":
-        return "secondary";
-      case "overdue":
-        return "destructive";
-      case "partial":
-        return "outline";
-      default:
-        return "outline";
-    }
-  };
-
-  const totalRevenue = rentPayments?.filter(p => p.status === "paid").reduce((sum, p) => sum + p.amount, 0) || 0;
-  const pendingAmount = rentPayments?.filter(p => p.status === "pending").reduce((sum, p) => sum + p.amount, 0) || 0;
-  const overdueAmount = rentPayments?.filter(p => p.status === "overdue").reduce((sum, p) => sum + p.amount, 0) || 0;
+  const filteredPayments = rentPayments?.filter((payment: RentPayment) =>
+    getTenantName(payment.tenantId).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    getUnitNumber(payment.unitId).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (paymentsLoading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Rent Payments</h1>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Rent Payments</h1>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i} className="animate-pulse">
-              <CardContent className="p-5">
-                <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
-                <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded"></div>
+              <CardContent className="p-6">
+                <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded mb-4"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -217,332 +207,149 @@ export default function RentPayments() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Rent Payments</h1>
-        <div className="flex space-x-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Record Payment
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Record New Payment</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="tenantId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tenant</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(value)}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select tenant" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {tenants?.map((tenant) => (
-                              <SelectItem key={tenant.id} value={tenant.id.toString()}>
-                                {tenant.firstName} {tenant.lastName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="unitId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Unit</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(value)}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select unit" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {units?.map((unit) => (
-                              <SelectItem key={unit.id} value={unit.id.toString()}>
-                                {getUnitInfo(unit.id)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amount</FormLabel>
-                        <FormControl>
-                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="paid">Paid</SelectItem>
-                            <SelectItem value="overdue">Overdue</SelectItem>
-                            <SelectItem value="partial">Partial</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="paymentMethod"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payment Method</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="cash">Cash</SelectItem>
-                            <SelectItem value="check">Check</SelectItem>
-                            <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                            <SelectItem value="credit_card">Credit Card</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={createPaymentMutation.isPending}>
-                      Record Payment
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-        </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Record Payment
+        </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <DollarSign className="h-8 w-8 text-green-600" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-muted-foreground truncate">
-                    Total Revenue
-                  </dt>
-                  <dd className="text-lg font-medium text-slate-900 dark:text-foreground">
-                    {formatCurrency(totalRevenue)}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Clock className="h-8 w-8 text-yellow-600" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-muted-foreground truncate">
-                    Pending Payments
-                  </dt>
-                  <dd className="text-lg font-medium text-slate-900 dark:text-foreground">
-                    {formatCurrency(pendingAmount)}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-8 w-8 text-red-600" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-muted-foreground truncate">
-                    Overdue Amount
-                  </dt>
-                  <dd className="text-lg font-medium text-slate-900 dark:text-foreground">
-                    {formatCurrency(overdueAmount)}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Calendar className="h-8 w-8 text-blue-600" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-muted-foreground truncate">
-                    Total Payments
-                  </dt>
-                  <dd className="text-lg font-medium text-slate-900 dark:text-foreground">
-                    {filteredPayments.length}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-            <Input
-              placeholder="Search by tenant or unit..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="overdue">Overdue</SelectItem>
-            <SelectItem value="partial">Partial</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="flex rounded-md shadow-sm">
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-            className="rounded-r-none"
-          >
-            <List className="h-4 w-4" />
-          </Button>
+      <div className="flex justify-between items-center">
+        <Input
+          placeholder="Search payments..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
+        <div className="flex items-center space-x-2">
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
             size="sm"
             onClick={() => setViewMode("grid")}
-            className="rounded-l-none"
           >
             <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+          >
+            <List className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Payments Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Rent Payments</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {viewMode === "grid" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredPayments?.map((payment: RentPayment) => (
+            <Card 
+              key={payment.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => {
+                setSelectedPayment(payment);
+                setIsViewDialogOpen(true);
+              }}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">{getTenantName(payment.tenantId)}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{getUnitNumber(payment.unitId)}</p>
+                  </div>
+                  <Badge className={payment.status === 'paid' ? 
+                    "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" :
+                    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
+                  }>
+                    {payment.status === 'paid' ? 'Paid' : 'Pending'}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Amount:</span>
+                    <span className="font-semibold text-green-600">
+                      {formatCurrency(payment.amount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Payment Date:</span>
+                    <span className="text-sm">
+                      {payment.paidDate ? formatDate(payment.paidDate) : "Not paid"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Method:</span>
+                    <span className="text-sm">{payment.paymentMethod || "N/A"}</span>
+                  </div>
+                  {payment.notes && (
+                    <div className="pt-2 border-t">
+                      <p className="text-xs text-muted-foreground">{payment.notes}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Tenant</TableHead>
                 <TableHead>Unit</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Paid Date</TableHead>
+                <TableHead>Payment Date</TableHead>
+                <TableHead>Method</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Payment Method</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPayments.map((payment) => (
-                <TableRow key={payment.id}>
-                  <TableCell className="font-medium">
-                    {getTenantName(payment.tenantId)}
-                  </TableCell>
-                  <TableCell>{getUnitInfo(payment.unitId)}</TableCell>
+              {filteredPayments?.map((payment: RentPayment) => (
+                <TableRow 
+                  key={payment.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => {
+                    setSelectedPayment(payment);
+                    setIsViewDialogOpen(true);
+                  }}
+                >
+                  <TableCell className="font-medium">{getTenantName(payment.tenantId)}</TableCell>
+                  <TableCell>{getUnitNumber(payment.unitId)}</TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                  <TableCell>{formatDate(payment.dueDate)}</TableCell>
                   <TableCell>
-                    {payment.paidDate ? formatDate(payment.paidDate) : "-"}
+                    {payment.paidDate ? formatDate(payment.paidDate) : "Not paid"}
                   </TableCell>
+                  <TableCell>{payment.paymentMethod || "N/A"}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusBadgeVariant(payment.status)}>
-                      {payment.status}
+                    <Badge className={payment.status === 'paid' ? 
+                      "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" :
+                      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
+                    }>
+                      {payment.status === 'paid' ? 'Paid' : 'Pending'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="capitalize">
-                    {payment.paymentMethod ? payment.paymentMethod.replace("_", " ") : "Not set"}
-                  </TableCell>
                   <TableCell>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
+                    <div className="flex space-x-1">
+                      <Button
                         size="sm"
-                        onClick={() => handleView(payment)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEdit(payment)}
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPayment(payment);
+                          editForm.setValue("tenantId", payment.tenantId);
+                          editForm.setValue("unitId", payment.unitId);
+                          editForm.setValue("amount", payment.amount);
+                          editForm.setValue("paymentDate", new Date(payment.paidDate || payment.dueDate));
+                          editForm.setValue("dueDate", payment.dueDate ? new Date(payment.dueDate) : undefined);
+                          editForm.setValue("paymentMethod", payment.paymentMethod || "CHECK");
+                          editForm.setValue("lateFeeAmount", payment.lateFeeAmount?.toString() || "");
+                          editForm.setValue("notes", payment.notes || "");
+                          setIsEditDialogOpen(true);
+                        }}
                       >
                         <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deletePaymentMutation.mutate(payment.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -550,8 +357,517 @@ export default function RentPayments() {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      )}
+
+      {/* Create Payment Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record New Payment</DialogTitle>
+            <DialogDescription>Record a new rent payment</DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="tenantId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tenant</FormLabel>
+                    <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      const tenant = tenants?.find((t: Tenant) => t.id === value);
+                      if (tenant) {
+                        form.setValue("unitId", tenant.unitId || "");
+                        form.setValue("amount", tenant.monthlyRent || "");
+                      }
+                    }} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select tenant" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {tenants?.map((tenant: Tenant) => (
+                          <SelectItem key={tenant.id} value={tenant.id}>
+                            {tenant.firstName} {tenant.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="paymentDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Payment Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date: Date) => date > new Date() || date < new Date("1900-01-01")}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Due Date (Optional)</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a due date</span>
+                              )}
+                              <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Leave blank to use 30 days from payment date
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Method</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="CHECK">Check</SelectItem>
+                        <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+                        <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                        <SelectItem value="OTHER">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lateFeeAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Late Fee Amount (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Payment notes..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createPaymentMutation.isPending}>
+                  {createPaymentMutation.isPending ? "Recording..." : "Record Payment"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Payment Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Payment</DialogTitle>
+            <DialogDescription>Update payment details</DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="tenantId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tenant</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select tenant" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {tenants?.map((tenant: Tenant) => (
+                          <SelectItem key={tenant.id} value={tenant.id}>
+                            {tenant.firstName} {tenant.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="paymentDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Payment Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date: Date) => date > new Date() || date < new Date("1900-01-01")}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Due Date (Optional)</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a due date</span>
+                              )}
+                              <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Leave blank to use 30 days from payment date
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={editForm.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Method</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="CHECK">Check</SelectItem>
+                        <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+                        <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                        <SelectItem value="OTHER">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="lateFeeAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Late Fee Amount (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Payment notes..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updatePaymentMutation.isPending}>
+                  {updatePaymentMutation.isPending ? "Updating..." : "Update Payment"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Payment Dialog */}
+      {selectedPayment && (
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Payment Details</DialogTitle>
+              <DialogDescription>
+                Payment information for {getTenantName(selectedPayment.tenantId)}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Tenant</label>
+                  <p className="text-sm text-muted-foreground">{getTenantName(selectedPayment.tenantId)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Unit</label>
+                  <p className="text-sm text-muted-foreground">{getUnitNumber(selectedPayment.unitId)}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Amount</label>
+                  <p className="text-sm text-muted-foreground">{formatCurrency(selectedPayment.amount)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Status</label>
+                  <Badge className={selectedPayment.status === 'paid' ? 
+                    "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" :
+                    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
+                  }>
+                    {selectedPayment.status === 'paid' ? 'Paid' : 'Pending'}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Payment Date</label>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedPayment.paidDate ? formatDate(selectedPayment.paidDate) : "Not paid"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Due Date</label>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedPayment.dueDate ? formatDate(selectedPayment.dueDate) : "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Payment Method</label>
+                  <p className="text-sm text-muted-foreground">{selectedPayment.paymentMethod || "N/A"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Late Fee</label>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedPayment.lateFeeAmount ? formatCurrency(selectedPayment.lateFeeAmount.toString()) : "$0.00"}
+                  </p>
+                </div>
+              </div>
+
+              {selectedPayment.notes && (
+                <div>
+                  <label className="text-sm font-medium">Notes</label>
+                  <p className="text-sm text-muted-foreground">{selectedPayment.notes}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsViewDialogOpen(false);
+                    editForm.setValue("tenantId", selectedPayment.tenantId);
+                    editForm.setValue("unitId", selectedPayment.unitId);
+                    editForm.setValue("amount", selectedPayment.amount);
+                    editForm.setValue("paymentDate", new Date(selectedPayment.paidDate || selectedPayment.dueDate));
+                    editForm.setValue("dueDate", selectedPayment.dueDate ? new Date(selectedPayment.dueDate) : undefined);
+                    editForm.setValue("paymentMethod", selectedPayment.paymentMethod || "CHECK");
+                    editForm.setValue("lateFeeAmount", selectedPayment.lateFeeAmount?.toString() || "");
+                    editForm.setValue("notes", selectedPayment.notes || "");
+                    setIsEditDialogOpen(true);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => deletePaymentMutation.mutate(selectedPayment.id)}
+                  disabled={deletePaymentMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {deletePaymentMutation.isPending ? "Deleting..." : "Delete"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

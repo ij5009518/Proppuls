@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Eye, Edit, Trash2, Grid, List, Upload, Download, FileText, DollarSign, Calendar, CalendarIcon, Clock, AlertTriangle, CheckSquare, Shield, MessageSquare, History, Mail, Phone, CheckCircle, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,12 +29,27 @@ import TaskDetails from "./TaskDetails";
 
 // Component to display outstanding balance for a tenant
 function OutstandingBalanceDisplay({ tenantId }: { tenantId: string }) {
-  const { data: tenantOutstandingBalance } = useQuery({
+  const { data: tenantOutstandingBalance, isLoading: balanceLoading, refetch } = useQuery({
     queryKey: [`/api/outstanding-balance/${tenantId}`],
     enabled: !!tenantId,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 0, // Always consider data stale
+    cacheTime: 0, // Don't cache
   });
   
-  const { data: rentPayments } = useQuery({ queryKey: ["/api/rent-payments"] });
+  const { data: rentPayments } = useQuery({ 
+    queryKey: ["/api/rent-payments"],
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000,
+    staleTime: 0,
+    cacheTime: 0,
+  });
+  
+  // Force refetch when component mounts
+  React.useEffect(() => {
+    refetch();
+  }, [refetch]);
   
   const totalOutstanding = tenantOutstandingBalance?.balance || 0;
   
@@ -42,6 +58,17 @@ function OutstandingBalanceDisplay({ tenantId }: { tenantId: string }) {
   const totalPaid = tenantPayments
     .filter((payment: any) => payment.paidDate)
     .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+  
+  if (balanceLoading) {
+    return (
+      <div className="text-center">
+        <div className="space-y-1">
+          <div className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-4 w-20 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="text-center">
