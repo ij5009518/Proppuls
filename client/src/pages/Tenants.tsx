@@ -26,6 +26,43 @@ import { format } from "date-fns";
 import type { Tenant, InsertTenant, Unit, RentPayment, InsertRentPayment, Task, InsertTask, TenantHistory } from "@shared/schema";
 import TaskDetails from "./TaskDetails";
 
+// Component to display outstanding balance for a tenant
+function OutstandingBalanceDisplay({ tenantId }: { tenantId: string }) {
+  const { data: tenantOutstandingBalance } = useQuery({
+    queryKey: [`/api/outstanding-balance/${tenantId}`],
+    enabled: !!tenantId,
+  });
+  
+  const { data: rentPayments } = useQuery({ queryKey: ["/api/rent-payments"] });
+  
+  const totalOutstanding = tenantOutstandingBalance?.balance || 0;
+  
+  // Calculate total paid
+  const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === tenantId) || [];
+  const totalPaid = tenantPayments
+    .filter((payment: any) => payment.paidDate)
+    .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+  
+  return (
+    <div className="text-center">
+      <div className="space-y-1">
+        <div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Total Paid</div>
+          <div className="font-medium text-green-600 dark:text-green-400">
+            {formatCurrency(totalPaid.toString())}
+          </div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Outstanding</div>
+          <div className="font-medium text-blue-600 dark:text-blue-400">
+            {formatCurrency(totalOutstanding.toString())}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const tenantSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -298,10 +335,8 @@ export default function Tenants() {
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      // Invalidate outstanding balance for all tenants
-      filteredTenants.forEach(tenant => {
-        queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${tenant.id}`] });
-      });
+      // Invalidate outstanding balance queries globally
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
       setIsPaymentDialogOpen(false);
       paymentForm.reset();
       toast({ title: "Success", description: "Payment recorded successfully" });
@@ -320,10 +355,8 @@ export default function Tenants() {
       queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant?.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
-      // Invalidate outstanding balance for all tenants
-      filteredTenants.forEach(tenant => {
-        queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${tenant.id}`] });
-      });
+      // Invalidate outstanding balance queries globally
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
       setIsEditPaymentDialogOpen(false);
       editPaymentForm.reset();
       toast({ title: "Success", description: "Payment updated successfully" });
@@ -438,10 +471,8 @@ export default function Tenants() {
       queryClient.invalidateQueries({ queryKey: [`/api/billing-records/${selectedTenant?.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant?.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
-      // Invalidate outstanding balance for all tenants
-      filteredTenants.forEach(tenant => {
-        queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${tenant.id}`] });
-      });
+      // Invalidate outstanding balance queries globally
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance"] });
       setIsEditBillingDialogOpen(false);
       billingRecordForm.reset();
       toast({
