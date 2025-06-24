@@ -612,6 +612,16 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/billing-records", async (req, res) => {
+    try {
+      const billingRecord = await storage.createBillingRecord(req.body);
+      res.json(billingRecord);
+    } catch (error) {
+      console.error("Error creating billing record:", error);
+      res.status(500).json({ error: "Failed to create billing record" });
+    }
+  });
+
   app.get("/api/outstanding-balance/:tenantId", async (req, res) => {
     try {
       const { tenantId } = req.params;
