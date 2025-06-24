@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Eye, Edit, Trash2, Grid, List, CheckSquare, Home, Bed, Bath, Maximize, DollarSign, Users, FileText, Wrench, History } from "lucide-react";
@@ -69,6 +68,7 @@ export default function Units() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
   const { toast } = useToast();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { data: units = [], isLoading } = useQuery<Unit[]>({
     queryKey: ["/api/units"],
@@ -362,16 +362,16 @@ export default function Units() {
     setIsTenantStatusDialogOpen(true);
   };
 
-  const filteredUnits = units.filter(
-    (unit) => {
-      const tenant = getTenantForUnit(unit.id);
-      const tenantName = tenant ? `${tenant.firstName} ${tenant.lastName}` : "";
+  const filteredUnits = units?.filter((unit: Unit) => {
+    const tenant = getTenantForUnit(unit.id);
+    const tenantName = tenant ? `${tenant.firstName} ${tenant.lastName}` : "";
 
-      return unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = unit.unitNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
              getPropertyName(unit.propertyId).toLowerCase().includes(searchTerm.toLowerCase()) ||
              tenantName.toLowerCase().includes(searchTerm.toLowerCase());
-    }
-  );
+    const matchesStatus = statusFilter === "all" || unit.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  }) || [];
 
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-96">Loading units...</div>;
@@ -534,12 +534,25 @@ export default function Units() {
         </Dialog>
       </div>
       <div className="flex justify-between items-center">
-        <Input
-          placeholder="Search units, properties, or tenants..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
+        <div className="flex items-center space-x-4">
+          <Input
+            placeholder="Search units, properties, or tenants..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Units</SelectItem>
+              <SelectItem value="occupied">Occupied</SelectItem>
+              <SelectItem value="vacant">Vacant</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center space-x-2">
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
@@ -963,9 +976,9 @@ export default function Units() {
                                       {task.status.replace('_', ' ')}
                                     </Badge>
                                   </div>
-                                  
+
                                   <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
-                                  
+
                                   <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div>
                                       <span className="font-medium">Category:</span>
@@ -999,7 +1012,7 @@ export default function Units() {
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 {/* Action Buttons */}
                                 <div className="flex flex-col justify-between items-end">
                                   <Button

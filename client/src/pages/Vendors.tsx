@@ -300,34 +300,34 @@ export default function Vendors() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-          <Input
-            placeholder="Search vendors..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+            <Input
+              placeholder="Search vendors..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 max-w-sm"
+            />
+          </div>
+          <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filter by service type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Service Types</SelectItem>
+              <SelectItem value="plumbing">Plumbing</SelectItem>
+              <SelectItem value="electrical">Electrical</SelectItem>
+              <SelectItem value="hvac">HVAC</SelectItem>
+              <SelectItem value="landscaping">Landscaping</SelectItem>
+              <SelectItem value="cleaning">Cleaning</SelectItem>
+              <SelectItem value="maintenance">General Maintenance</SelectItem>
+              <SelectItem value="security">Security</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-
-        <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
-          <SelectTrigger className="w-[200px]">
-            <Filter className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Filter by service type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Service Types</SelectItem>
-            <SelectItem value="plumbing">Plumbing</SelectItem>
-            <SelectItem value="electrical">Electrical</SelectItem>
-            <SelectItem value="hvac">HVAC</SelectItem>
-            <SelectItem value="landscaping">Landscaping</SelectItem>
-            <SelectItem value="cleaning">Cleaning</SelectItem>
-            <SelectItem value="maintenance">General Maintenance</SelectItem>
-            <SelectItem value="security">Security</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Vendors Grid */}
