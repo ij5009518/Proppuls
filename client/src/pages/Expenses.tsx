@@ -130,6 +130,25 @@ export default function Expenses() {
 
   const editForm = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
+    defaultValues: {
+      propertyId: "",
+      category: "",
+      description: "",
+      amount: "",
+      date: new Date().toISOString().split('T')[0],
+      isRecurring: false,
+      recurrencePeriod: "monthly",
+      vendorName: "",
+      notes: "",
+      policyEffectiveDate: "",
+      policyExpirationDate: "",
+      accountNumber: "",
+      startDate: "",
+      endDate: "",
+      meterReadingStart: "",
+      meterReadingEnd: "",
+      usageAmount: "",
+    },
   });
 
   const vendorForm = useForm<VendorFormData>({
@@ -206,8 +225,17 @@ export default function Expenses() {
       amount: expense.amount.toString(),
       date: expense.date.split('T')[0],
       isRecurring: expense.isRecurring,
+      recurrencePeriod: expense.recurrencePeriod || "monthly",
       vendorName: expense.vendorName || "",
       notes: expense.notes || "",
+      policyEffectiveDate: expense.policyEffectiveDate || "",
+      policyExpirationDate: expense.policyExpirationDate || "",
+      accountNumber: expense.accountNumber || "",
+      startDate: expense.startDate || "",
+      endDate: expense.endDate || "",
+      meterReadingStart: expense.meterReadingStart || "",
+      meterReadingEnd: expense.meterReadingEnd || "",
+      usageAmount: expense.usageAmount || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -228,16 +256,7 @@ export default function Expenses() {
     createVendorMutation.mutate(data);
   };
 
-  const categories = [
-    "Maintenance & Repairs",
-    "Utilities",
-    "Insurance",
-    "Property Management",
-    "Legal & Professional",
-    "Marketing & Advertising",
-    "Supplies",
-    "Other"
-  ];
+
 
   return (
     <div className="space-y-6">
@@ -250,7 +269,7 @@ export default function Expenses() {
               Add Expense
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Expense</DialogTitle>
             </DialogHeader>
@@ -294,9 +313,9 @@ export default function Expenses() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
+                          {Object.entries(expenseCategories).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>
+                              {label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -665,9 +684,9 @@ export default function Expenses() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                {Object.entries(expenseCategories).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -753,12 +772,62 @@ export default function Expenses() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Expense</DialogTitle>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(handleUpdateExpense)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="propertyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select property" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.isArray(properties) && properties.map((property: any) => (
+                          <SelectItem key={property.id} value={property.id}>
+                            {property.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.entries(expenseCategories).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={editForm.control}
                 name="description"
@@ -773,14 +842,252 @@ export default function Expenses() {
                 )}
               />
 
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Amount</FormLabel>
+                      <FormControl>
+                        <Input placeholder="0.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={editForm.control}
-                name="amount"
+                name="vendorName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount</FormLabel>
+                    <FormLabel>Vendor (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="0.00" {...field} />
+                      <Input placeholder="Vendor name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Conditional fields based on category */}
+              {(editForm.watch("category") === "insurance" || editForm.watch("category") === "taxes") && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="policyEffectiveDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {editForm.watch("category") === "insurance" ? "Policy Effective Date" : "Tax Period Start"}
+                          </FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="policyExpirationDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {editForm.watch("category") === "insurance" ? "Policy Expiration Date" : "Tax Period End"}
+                          </FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={editForm.control}
+                    name="accountNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {editForm.watch("category") === "insurance" ? "Policy Number" : "Account Number"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder={editForm.watch("category") === "insurance" ? "Policy number" : "Account number"} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* Utility-specific fields */}
+              {(editForm.watch("category") === "utilities" || editForm.watch("category") === "water" || 
+                editForm.watch("category") === "sewer" || editForm.watch("category") === "sanitation") && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Service Period Start</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="endDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Service Period End</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={editForm.control}
+                    name="accountNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Service Account Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Utility account number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Meter readings for water, sewer utilities */}
+                  {(editForm.watch("category") === "water" || editForm.watch("category") === "sewer") && (
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField
+                        control={editForm.control}
+                        name="meterReadingStart"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Starting Meter Reading</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Previous reading" type="number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={editForm.control}
+                        name="meterReadingEnd"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Ending Meter Reading</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Current reading" type="number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={editForm.control}
+                        name="usageAmount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Usage Amount</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Gallons/units used" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* Recurring expense fields */}
+              <FormField
+                control={editForm.control}
+                name="isRecurring"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Recurring Expense</FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        This expense repeats on a regular schedule
+                      </div>
+                    </div>
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="rounded border border-input"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              {editForm.watch("isRecurring") && (
+                <FormField
+                  control={editForm.control}
+                  name="recurrencePeriod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Frequency</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select frequency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="quarterly">Quarterly</SelectItem>
+                          <SelectItem value="yearly">Yearly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={editForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Additional notes" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
