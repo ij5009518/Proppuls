@@ -1,5 +1,5 @@
 import { User, TenantSession, TenantLogin, CreateTenantMaintenanceRequest, Organization } from '../shared/schema';
-import { db, organizations, users, properties, expenses, units, tenants, tenantSessions, tenantHistory, maintenanceRequests, vendors, rentPayments, billingRecords, mortgages, tasks, taskCommunications, taskHistory, sessions } from './db';
+import { db, organizations, users, properties, expenses, units, tenants, tenantSessions, tenantHistory, maintenanceRequests, vendors, rentPayments, billingRecords, mortgages, tasks, taskCommunications, taskHistory, sessions, passwordResets } from './db';
 import { eq, sql, and, gt, desc, or, isNotNull } from 'drizzle-orm';
 import * as crypto from "crypto";
 import * as bcrypt from 'bcrypt';
@@ -178,6 +178,75 @@ class Storage {
 
   async deleteSession(sessionId: string): Promise<void> {
     await db.delete(sessions).where(eq(sessions.token, sessionId));
+  }
+
+  // Password Reset methods
+  async createPasswordResetToken(email: string): Promise<string> {
+    return await withRetry(async () => {
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour expiry
+
+      await db.insert(passwordResets).values({
+        email,
+        token,
+        expiresAt,
+        createdAt: new Date()
+      });
+
+      return token;
+    });
+  }
+
+  async validatePasswordResetToken(token: string): Promise<{ email: string; id: number } | null> {
+    return await withRetry(async () => {
+      const resetResult = await db.select()
+        .from(passwordResets)
+        .where(eq(passwordResets.token, token))
+        .limit(1);
+
+      if (resetResult.length === 0) {
+        return null;
+      }
+
+      const reset = resetResult[0];
+      
+      // Check if token is expired
+      if (new Date(reset.expiresAt) < new Date()) {
+        return null;
+      }
+
+      // Check if token was already used
+      if (reset.usedAt) {
+        return null;
+      }
+
+      return {
+        email: reset.email,
+        id: reset.id
+      };
+    });
+  }
+
+  async markPasswordResetTokenUsed(resetId: number): Promise<void> {
+    await withRetry(async () => {
+      await db.update(passwordResets)
+        .set({ usedAt: new Date() })
+        .where(eq(passwordResets.id, resetId));
+    });
+  }
+
+  async updateUserPassword(email: string, hashedPassword: string): Promise<boolean> {
+    return await withRetry(async () => {
+      const result = await db.update(users)
+        .set({ 
+          password: hashedPassword,
+          updatedAt: new Date()
+        })
+        .where(eq(users.email, email));
+      
+      return result.rowCount > 0;
+    });
   }
 
   // Property methods

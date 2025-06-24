@@ -87,6 +87,127 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Forgot Password Route
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      console.log("Password reset requested for:", email);
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        return res.json({ 
+          success: true, 
+          message: "If an account with that email exists, we've sent a password reset link." 
+        });
+      }
+
+      // Create password reset token
+      const resetToken = await storage.createPasswordResetToken(email);
+      
+      // Send reset email
+      const emailSent = await emailService.sendPasswordResetEmail(
+        email, 
+        user.firstName, 
+        resetToken
+      );
+
+      if (!emailSent) {
+        console.error("Failed to send password reset email to:", email);
+        return res.status(500).json({ message: "Failed to send reset email" });
+      }
+
+      console.log("Password reset email sent to:", email);
+
+      res.json({ 
+        success: true, 
+        message: "If an account with that email exists, we've sent a password reset link." 
+      });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Failed to process password reset request" });
+    }
+  });
+
+  // Reset Password Route
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password are required" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
+
+      // Validate reset token
+      const resetData = await storage.validatePasswordResetToken(token);
+      if (!resetData) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Update user password
+      const updated = await storage.updateUserPassword(resetData.email, hashedPassword);
+      if (!updated) {
+        return res.status(500).json({ message: "Failed to update password" });
+      }
+
+      // Mark token as used
+      await storage.markPasswordResetTokenUsed(resetData.id);
+
+      // Get user info for confirmation email
+      const user = await storage.getUserByEmail(resetData.email);
+      if (user) {
+        // Send confirmation email
+        await emailService.sendPasswordResetConfirmation(resetData.email, user.firstName);
+      }
+
+      console.log("Password successfully reset for:", resetData.email);
+
+      res.json({ 
+        success: true, 
+        message: "Password has been reset successfully. You can now log in with your new password." 
+      });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  // Validate Reset Token Route
+  app.get("/api/auth/validate-reset-token/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+
+      const resetData = await storage.validatePasswordResetToken(token);
+      if (!resetData) {
+        return res.status(400).json({ 
+          valid: false, 
+          message: "Invalid or expired reset token" 
+        });
+      }
+
+      res.json({ 
+        valid: true, 
+        email: resetData.email 
+      });
+    } catch (error) {
+      console.error("Validate reset token error:", error);
+      res.status(500).json({ valid: false, message: "Failed to validate token" });
+    }
+  });
+
   app.post("/api/auth/register", async (req, res) => {
     // Set 15 second timeout for registration
     const timeoutId = setTimeout(() => {

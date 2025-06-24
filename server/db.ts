@@ -50,6 +50,15 @@ export const sessions = pgTable('sessions', {
   expiresAt: timestamp('expires_at').notNull(),
 });
 
+export const passwordResets = pgTable('password_resets', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const properties = pgTable("properties", {
   id: text("id").primaryKey(),
   organizationId: text("organization_id").notNull(),

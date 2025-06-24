@@ -149,12 +149,12 @@ export default function ResetPassword() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col space-y-2">
-                <Link href="/forgot-password">
+                <Link to="/forgot-password">
                   <Button className="w-full">
                     Request New Reset Link
                   </Button>
                 </Link>
-                <Link href="/login">
+                <Link to="/login">
                   <Button variant="outline" className="w-full">
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Login
@@ -279,7 +279,7 @@ export default function ResetPassword() {
             {!submitResult?.success && (
               <div className="flex items-center justify-center space-x-1 text-sm">
                 <ArrowLeft className="h-4 w-4" />
-                <Link href="/login">
+                <Link to="/login">
                   <a className="text-blue-600 hover:text-blue-800 hover:underline">
                     Back to Login
                   </a>
