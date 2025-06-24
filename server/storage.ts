@@ -952,11 +952,20 @@ class Storage {
               eq(rentPayments.tenantId, payment.tenantId),
               eq(rentPayments.status, 'paid'),
               isNotNull(rentPayments.paidDate)
-            ));
+            ))
+            .orderBy(rentPayments.paidDate);
 
+          console.log(`Found ${allTenantPayments.length} paid payments to reapply`);
+          
           for (const tenantPayment of allTenantPayments) {
+            console.log(`Reapplying payment of ${tenantPayment.amount} for tenant ${tenantPayment.tenantId}`);
             await this.updateBillingRecordsForPayment(tenantPayment.tenantId, parseFloat(tenantPayment.amount || '0'));
           }
+        } else if (payment.status === 'paid' && payment.paidDate) {
+          // If this is a paid payment but amount didn't change, still update billing records
+          console.log("Updating billing records for existing paid payment");
+          await this.updateBillingRecordsForPayment(payment.tenantId, parseFloat(payment.amount || '0'));
+        }
         }
 
         return payment || null;
@@ -1364,20 +1373,25 @@ class Storage {
       try {
         console.log("Calculating outstanding balance for tenant:", tenantId);
 
-        // Get only pending billing records for the tenant
-        const pendingBillings = await db.select()
+        // Get pending and partial billing records for the tenant
+        const outstandingBillings = await db.select()
           .from(billingRecords)
           .where(and(
             eq(billingRecords.tenantId, tenantId),
-            eq(billingRecords.status, 'pending')
+            or(
+              eq(billingRecords.status, 'pending'),
+              eq(billingRecords.status, 'partial')
+            )
           ));
 
-        // Calculate total outstanding amount from pending bills
+        // Calculate total outstanding amount from pending and partial bills
         let outstandingBalance = 0;
-        for (const billing of pendingBillings) {
+        for (const billing of outstandingBillings) {
           const amount = parseFloat(billing.amount || '0');
-          outstandingBalance += amount;
-          console.log("Pending billing amount:", amount);
+          const paidAmount = parseFloat(billing.paidAmount || '0');
+          const remainingAmount = amount - paidAmount;
+          outstandingBalance += remainingAmount;
+          console.log(`Billing record ${billing.status}: total ${amount}, paid ${paidAmount}, outstanding ${remainingAmount}`);
         }
 
         console.log("Final outstanding balance:", outstandingBalance);
