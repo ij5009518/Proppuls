@@ -142,6 +142,9 @@ A comprehensive property management and financial intelligence platform that pro
   - Corrected revenue calculations and occupancy rates to reflect actual tenant and unit data
   - Resolved data isolation issues - users now see only their organization's authentic data
   - Dashboard displays real revenue ($11,800) from actual paid rent payments with proper tenant-unit relationships
+  - Fixed mortgage data integration - dashboard now shows $900K total mortgage balance with $5,890 monthly payments
+  - Cleaned up authentication system to prevent creation of incorrect organization IDs
+  - Disabled registration system for demo to ensure consistent data isolation
 
 ## Changelog
 
