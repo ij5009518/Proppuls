@@ -2083,8 +2083,6 @@ export default function Tenants() {
                     </Button>
                   </div>
 
-
-
                   {/* Unified Payment & Bill History */}
                   <div className="space-y-4">
                     <h4 className="text-md font-semibold">Payment & Bill History</h4>
