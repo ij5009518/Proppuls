@@ -162,13 +162,20 @@ class EmailService {
   }
 
   async sendPasswordResetEmail(to: string, userName: string, resetToken: string): Promise<boolean> {
-    // Use the correct Replit app URL
-    const baseUrl = process.env.REPLIT_DOMAINS 
-      ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` 
-      : 'https://stallwart-failed-ping.replit.app';
+    // Use multiple URL options for better compatibility
+    const replitDomain = process.env.REPLIT_DOMAINS?.split(',')[0];
+    const possibleUrls = [
+      replitDomain ? `https://${replitDomain}` : null,
+      'https://stallwart-failed-ping.replit.app',
+      `https://${process.env.REPL_SLUG || 'stallwart-failed-ping'}.${process.env.REPL_OWNER || 'replit'}.repl.co`
+    ].filter(Boolean);
+    
+    const baseUrl = possibleUrls[0];
     const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
     
     console.log('Password reset URL generated:', resetUrl);
+    console.log('Available URL options:', possibleUrls);
+    console.log('Token for manual access:', resetToken);
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
