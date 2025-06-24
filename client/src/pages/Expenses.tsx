@@ -16,7 +16,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, DollarSign, Receipt, Calendar, Filter, Building } from "lucide-react";
 
-// Schema with all category-specific fields
+// Schema
 const expenseSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
   category: z.string().min(1, "Category is required"),
@@ -24,40 +24,11 @@ const expenseSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   date: z.string().min(1, "Date is required"),
   isRecurring: z.boolean().default(false),
-  recurrencePeriod: z.enum(["monthly", "quarterly", "yearly"]).optional(),
   vendorName: z.string().optional(),
   notes: z.string().optional(),
-  // Utility-specific fields
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  accountNumber: z.string().optional(),
-  meterReadingStart: z.string().optional(),
-  meterReadingEnd: z.string().optional(),
-  usageAmount: z.string().optional(),
-  // Insurance and Tax specific fields
-  policyEffectiveDate: z.string().optional(),
-  policyExpirationDate: z.string().optional(),
 });
 
 type ExpenseFormData = z.infer<typeof expenseSchema>;
-
-// Expense categories
-const expenseCategories = {
-  maintenance: "Maintenance & Repairs",
-  utilities: "Utilities",
-  water: "Water",
-  sewer: "Sewer",
-  sanitation: "Sanitation/Trash",
-  insurance: "Insurance",
-  taxes: "Property Taxes",
-  management: "Property Management",
-  legal: "Legal & Professional",
-  marketing: "Marketing & Advertising",
-  supplies: "Supplies & Materials",
-  landscaping: "Landscaping",
-  improvements: "Capital Improvements",
-  other: "Other"
-};
 
 const vendorSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -115,41 +86,13 @@ export default function Expenses() {
       amount: "",
       date: new Date().toISOString().split('T')[0],
       isRecurring: false,
-      recurrencePeriod: "monthly",
       vendorName: "",
       notes: "",
-      startDate: "",
-      endDate: "",
-      accountNumber: "",
-      meterReadingStart: "",
-      meterReadingEnd: "",
-      usageAmount: "",
-      policyEffectiveDate: "",
-      policyExpirationDate: "",
     },
   });
 
   const editForm = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
-    defaultValues: {
-      propertyId: "",
-      category: "",
-      description: "",
-      amount: "",
-      date: new Date().toISOString().split('T')[0],
-      isRecurring: false,
-      recurrencePeriod: "monthly",
-      vendorName: "",
-      notes: "",
-      startDate: "",
-      endDate: "",
-      accountNumber: "",
-      meterReadingStart: "",
-      meterReadingEnd: "",
-      usageAmount: "",
-      policyEffectiveDate: "",
-      policyExpirationDate: "",
-    },
   });
 
   const vendorForm = useForm<VendorFormData>({
@@ -270,7 +213,7 @@ export default function Expenses() {
               Add Expense
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Expense</DialogTitle>
             </DialogHeader>
@@ -362,200 +305,6 @@ export default function Expenses() {
                       <FormLabel>Date</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={createForm.control}
-                  name="vendorName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vendor (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Vendor name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Utility-specific fields */}
-                {(createForm.watch("category") === "utilities" || createForm.watch("category") === "water" || 
-                  createForm.watch("category") === "sewer" || createForm.watch("category") === "sanitation") && (
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={createForm.control}
-                        name="startDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Service Period Start</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="endDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Service Period End</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={createForm.control}
-                        name="accountNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Account Number</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Account number" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="usageAmount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Usage Amount</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Gallons/units used" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* Insurance and Tax specific fields */}
-                {(createForm.watch("category") === "insurance" || createForm.watch("category") === "taxes") && (
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={createForm.control}
-                        name="policyEffectiveDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {createForm.watch("category") === "insurance" ? "Policy Effective Date" : "Tax Period Start"}
-                            </FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="policyExpirationDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              {createForm.watch("category") === "insurance" ? "Policy Expiration Date" : "Tax Period End"}
-                            </FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormField
-                      control={createForm.control}
-                      name="accountNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {createForm.watch("category") === "insurance" ? "Policy Number" : "Tax Account Number"}
-                          </FormLabel>
-                          <FormControl>
-                            <Input placeholder="Account/Policy number" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </>
-                )}
-
-                {/* Recurring expense toggle */}
-                <FormField
-                  control={createForm.control}
-                  name="isRecurring"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Recurring Expense</FormLabel>
-                        <div className="text-sm text-muted-foreground">
-                          This expense repeats on a regular schedule
-                        </div>
-                      </div>
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="rounded border border-input"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                {/* Recurring period field */}
-                {createForm.watch("isRecurring") && (
-                  <FormField
-                    control={createForm.control}
-                    name="recurrencePeriod"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recurrence Period</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                            <SelectItem value="quarterly">Quarterly</SelectItem>
-                            <SelectItem value="yearly">Yearly</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <FormField
-                  control={createForm.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Additional notes" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
