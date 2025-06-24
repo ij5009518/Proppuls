@@ -140,6 +140,8 @@ A comprehensive property management and financial intelligence platform that pro
   - Removed demo credentials from login page for security
   - Fixed dashboard KPI calculations to show accurate data based on organization scope
   - Corrected revenue calculations and occupancy rates to reflect actual tenant and unit data
+  - Resolved data isolation issues - users now see only their organization's authentic data
+  - Dashboard displays real revenue ($11,800) from actual paid rent payments with proper tenant-unit relationships
 
 ## Changelog
 
