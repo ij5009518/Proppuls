@@ -2114,12 +2114,22 @@ export default function Tenants() {
                         .filter((payment: any) => payment.paidDate)
                         .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
                       
-                      // Calculate outstanding from billing records for accuracy
+                      // Use outstanding balance from API
                       const outstandingBalance = tenantOutstandingBalance?.balance || 0;
                       
-                      const overdueAmount = tenantPayments
-                        .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
-                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+                      // Calculate overdue from billing records that are past due
+                      const overdueAmount = (tenantBillingRecords || [])
+                        .filter((record: any) => record.status === 'pending' && new Date(record.dueDate) < new Date())
+                        .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
+
+                      console.log('Payment Summary Debug:', {
+                        selectedTenantId: selectedTenant.id,
+                        totalPaid,
+                        outstandingBalance,
+                        overdueAmount,
+                        tenantOutstandingBalance,
+                        tenantBillingRecords
+                      });
 
                       return (
                         <>
@@ -2162,7 +2172,7 @@ export default function Tenants() {
                                   {formatCurrency(overdueAmount.toString())}
                                 </p>
                                 <p className="text-xs text-red-600 dark:text-red-400">
-                                  {tenantPayments.filter((p: any) => !p.paidDate && new Date(p.dueDate) < new Date()).length} overdue
+                                  {overdueAmount > 0 ? "overdue bills" : "0 overdue"}
                                 </p>
                               </div>
                             </div>
