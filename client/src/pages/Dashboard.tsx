@@ -50,16 +50,32 @@ export default function Dashboard() {
 
   // Auto-generate monthly rent payments on component mount
   const { mutate: generateRentPayments } = useMutation({
-    mutationFn: () => fetch("/api/rent-payments/generate-monthly", { method: "POST" }).then(res => res.json()),
+    mutationFn: async () => {
+      const response = await fetch("/api/rent-payments/generate-monthly", { 
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error('Failed to generate payments');
+      return response.json();
+    },
     onSuccess: () => {
       // Refresh payment summaries after generation
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/payment-summaries"] });
+    },
+    onError: (error) => {
+      console.log("Payment generation skipped:", error.message);
     }
   });
 
   // Generate payments on first load
   React.useEffect(() => {
-    generateRentPayments();
+    const token = localStorage.getItem('token');
+    if (token) {
+      generateRentPayments();
+    }
   }, []);
 
   const getStatusBadgeVariant = (status: string) => {

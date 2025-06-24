@@ -1193,12 +1193,14 @@ class Storage {
   }
 
   // Get payment summaries for dashboard
-  async getPaymentSummaries() {
+  async getPaymentSummaries(organizationId?: string) {
     try {
-      const payments = await this.getAllRentPayments();
+      const payments = await this.getAllRentPayments(organizationId);
+      const expenses = await this.getAllExpenses(organizationId);
       const today = new Date();
       const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
 
       const totalRevenue = payments
         .filter((p: any) => p.paidDate)
@@ -1210,6 +1212,20 @@ class Storage {
           return paidDate && paidDate >= currentMonth && paidDate < nextMonth;
         })
         .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+
+      const lastMonthRevenue = payments
+        .filter((p: any) => {
+          const paidDate = p.paidDate ? new Date(p.paidDate) : null;
+          return paidDate && paidDate >= lastMonth && paidDate < currentMonth;
+        })
+        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+
+      const currentMonthExpenses = expenses
+        .filter((e: any) => {
+          const expenseDate = new Date(e.date);
+          return expenseDate >= currentMonth && expenseDate < nextMonth;
+        })
+        .reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0);
 
       const outstandingBalance = payments
         .filter((p: any) => !p.paidDate && new Date(p.dueDate) <= today)
@@ -1231,16 +1247,31 @@ class Storage {
       return {
         totalRevenue,
         currentMonthRevenue,
+        lastMonthRevenue,
+        currentMonthExpenses,
         outstandingBalance,
         overduePayments,
         upcomingPayments,
         totalPayments: payments.length,
         paidPayments: payments.filter((p: any) => p.paidDate).length,
-        pendingPayments: payments.filter((p: any) => !p.paidDate).length
+        pendingPayments: payments.filter((p: any) => !p.paidDate).length,
+        netIncome: totalRevenue - currentMonthExpenses
       };
     } catch (error) {
       console.error("Error getting payment summaries:", error);
-      throw error;
+      return {
+        totalRevenue: 0,
+        currentMonthRevenue: 0,
+        lastMonthRevenue: 0,
+        currentMonthExpenses: 0,
+        outstandingBalance: 0,
+        overduePayments: 0,
+        upcomingPayments: 0,
+        totalPayments: 0,
+        paidPayments: 0,
+        pendingPayments: 0,
+        netIncome: 0
+      };
     }
   }
 
