@@ -78,6 +78,14 @@ const taskSchema = z.object({
   actualCost: z.string().optional(),
 });
 
+const billingRecordSchema = z.object({
+  amount: z.string().min(1, "Amount is required"),
+  dueDate: z.date(),
+  billingPeriod: z.string().min(1, "Billing period is required"),
+  status: z.enum(["pending", "paid", "overdue"]),
+  notes: z.string().optional(),
+});
+
 export default function Tenants() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
@@ -98,6 +106,8 @@ export default function Tenants() {
   const [uploadedIdBackDocument, setUploadedIdBackDocument] = useState<{url: string, name: string} | null>(null);
   const [isUploadingId, setIsUploadingId] = useState(false);
   const [isUploadingIdBack, setIsUploadingIdBack] = useState(false);
+  const [editBillingRecord, setEditBillingRecord] = useState<any>(null);
+  const [isEditBillingDialogOpen, setIsEditBillingDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
   const { toast } = useToast();
@@ -217,6 +227,16 @@ export default function Tenants() {
       status: "active",
       moveOutDate: "",
       moveOutReason: "",
+    },
+  });
+
+  const billingRecordForm = useForm<z.infer<typeof billingRecordSchema>>({
+    resolver: zodResolver(billingRecordSchema),
+    defaultValues: {
+      amount: "",
+      billingPeriod: "",
+      status: "pending",
+      notes: "",
     },
   });
 
@@ -401,16 +421,18 @@ export default function Tenants() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
+      setIsEditBillingDialogOpen(false);
+      billingRecordForm.reset();
       toast({
         title: "Success",
-        description: "Payment updated successfully",
+        description: "Billing record updated successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+        title: "Error", 
+        description: "Failed to update billing record",
+        variant: "destructive"
       });
     },
   });
@@ -2278,6 +2300,11 @@ export default function Tenants() {
                                         size="sm"
                                         onClick={() => {
                                           setEditBillingRecord(transaction);
+                                          billingRecordForm.setValue("amount", transaction.amount);
+                                          billingRecordForm.setValue("dueDate", new Date(transaction.dueDate || transaction.date));
+                                          billingRecordForm.setValue("billingPeriod", transaction.billingPeriod || "");
+                                          billingRecordForm.setValue("status", transaction.status);
+                                          billingRecordForm.setValue("notes", transaction.notes || "");
                                           setIsEditBillingDialogOpen(true);
                                         }}
                                       >
@@ -3143,6 +3170,139 @@ export default function Tenants() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Edit Billing Record Dialog */}
+      <Dialog open={isEditBillingDialogOpen} onOpenChange={setIsEditBillingDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Billing Record</DialogTitle>
+            <DialogDescription>
+              Update billing record details
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...billingRecordForm}>
+            <form onSubmit={billingRecordForm.handleSubmit((data) => {
+              if (editBillingRecord) {
+                updateBillingMutation.mutate({
+                  id: editBillingRecord.id,
+                  updates: {
+                    ...data,
+                    dueDate: data.dueDate.toISOString(),
+                  }
+                });
+              }
+            })} className="space-y-4">
+              <FormField
+                control={billingRecordForm.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={billingRecordForm.control}
+                name="dueDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Due Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={billingRecordForm.control}
+                name="billingPeriod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Billing Period</FormLabel>
+                    <FormControl>
+                      <Input placeholder="YYYY-MM" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={billingRecordForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="overdue">Overdue</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={billingRecordForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Add notes..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditBillingDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateBillingMutation.isPending}>
+                  {updateBillingMutation.isPending ? "Updating..." : "Update"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
