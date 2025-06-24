@@ -196,8 +196,8 @@ export default function Tenants() {
     queryKey: ["/api/rent-payments"],
   });
 
-  // Fetch outstanding balances for all tenants
-  const { data: tenantOutstandingBalances } = useQuery({
+  // Fetch outstanding balances for all tenants with aggressive cache invalidation
+  const { data: tenantOutstandingBalances, refetch: refetchBalances } = useQuery({
     queryKey: ["/api/outstanding-balances"],
     queryFn: async () => {
       if (!tenants) return {};
@@ -215,6 +215,10 @@ export default function Tenants() {
       return balances;
     },
     enabled: !!tenants,
+    refetchOnWindowFocus: true,
+    refetchInterval: 3000, // Refetch every 3 seconds
+    staleTime: 0, // Always consider data stale
+    cacheTime: 0, // Don't cache
   });
 
   const { data: tasks = [] } = useQuery<Task[]>({
@@ -1377,20 +1381,24 @@ export default function Tenants() {
 
 
 
-                    {/* Payment Summary */}
+                    {/* Payment Summary - Using API Data */}
                     {(() => {
                       const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === tenant.id) || [];
                       const totalPaid = tenantPayments
                         .filter((payment: any) => payment.paidDate)
                         .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
-                      const totalOutstanding = tenantPayments
-                        .filter((payment: any) => !payment.paidDate)
-                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
-                      const totalOverdue = tenantPayments
-                        .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
-                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+                      
+                      // Use API outstanding balance instead of calculated balance
+                      const apiOutstanding = tenantOutstandingBalances?.[tenant.id] || 0;
+                      
+                      // Only show overdue if there are actual overdue payments
+                      const overduePayments = tenantPayments
+                        .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date());
+                      const totalOverdue = overduePayments.length > 0 ? overduePayments
+                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0) : 0;
 
-                      if (totalPaid === 0 && totalOutstanding === 0) return null;
+                      // Show summary if there's any payment activity or outstanding balance
+                      if (totalPaid === 0 && apiOutstanding === 0 && totalOverdue === 0) return null;
 
                       return (
                         <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
@@ -1403,11 +1411,11 @@ export default function Tenants() {
                                 </span>
                               </div>
                             )}
-                            {totalOutstanding > 0 && (
+                            {apiOutstanding > 0 && (
                               <div className="flex items-center justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">Outstanding:</span>
                                 <span className="font-medium text-yellow-600 dark:text-yellow-400">
-                                  {formatCurrency(totalOutstanding.toString())}
+                                  {formatCurrency(apiOutstanding.toString())}
                                 </span>
                               </div>
                             )}
