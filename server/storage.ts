@@ -1419,8 +1419,9 @@ class Storage {
           }
         }
         
-        // Set due date to today's date instead of first of month
+        // Set due date 30 days from today by default
         const dueDate = new Date(today);
+        dueDate.setDate(dueDate.getDate() + 30);
 
         // Create billing record for current period
         const billingData = {
