@@ -313,34 +313,12 @@ export default function Tenants() {
 
   // Tenant billing records queries and mutations  
   const { data: tenantBillingRecords = [] } = useQuery({
-    queryKey: ["/api/billing-records", selectedTenant?.id],
-    queryFn: async () => {
-      if (!selectedTenant?.id) return [];
-      try {
-        const response = await apiRequest("GET", `/api/billing-records/${selectedTenant.id}`);
-        console.log('Billing records response:', response);
-        return Array.isArray(response) ? response : [];
-      } catch (error) {
-        console.error('Error fetching tenant billing records:', error);
-        return [];
-      }
-    },
+    queryKey: [`/api/billing-records/${selectedTenant?.id}`],
     enabled: !!selectedTenant?.id,
   });
 
   const { data: tenantOutstandingBalance = { balance: 0 } } = useQuery({
-    queryKey: ["/api/outstanding-balance", selectedTenant?.id],
-    queryFn: async () => {
-      if (!selectedTenant?.id) return { balance: 0 };
-      try {
-        const response = await apiRequest("GET", `/api/outstanding-balance/${selectedTenant.id}`);
-        console.log('Outstanding balance response:', response);
-        return response && typeof response.balance === 'number' ? response : { balance: 0 };
-      } catch (error) {
-        console.error('Error fetching tenant outstanding balance:', error);
-        return { balance: 0 };
-      }
-    },
+    queryKey: [`/api/outstanding-balance/${selectedTenant?.id}`],
     enabled: !!selectedTenant?.id,
   });
 
