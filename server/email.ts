@@ -206,6 +206,14 @@ class EmailService {
           ${resetUrl}
         </p>
         
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 20px;">
+          <strong>Alternative Access:</strong> If the link above doesn't work, you can manually navigate to your app and go to <code>/reset-password?token=${resetToken}</code>
+        </p>
+        
+        <p style="color: #666; font-size: 12px; background: #f0f9ff; padding: 10px; border-radius: 4px;">
+          Token: <code style="font-family: monospace; background: white; padding: 2px 4px; border-radius: 2px;">${resetToken}</code>
+        </p>
+        
         <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;">
           <p style="color: #dc2626; margin: 0; font-size: 14px;">
             <strong>Security Notice:</strong> This link will expire in 1 hour. If you didn't request this password reset, please ignore this email and your account will remain secure.
