@@ -2,11 +2,12 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 interface User {
-  id: number;
+  id: string;
   email: string;
   firstName: string;
   lastName: string;
   role: string;
+  organizationId: string;
 }
 
 interface AuthContextType {
