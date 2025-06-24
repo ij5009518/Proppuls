@@ -37,21 +37,26 @@ export default function ForgotPassword() {
     setSubmitResult(null);
 
     try {
-      const response = await apiRequest("/api/auth/forgot-password", {
+      const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
       });
 
-      if (response.success) {
+      const result = await response.json();
+
+      if (result.success) {
         setSubmitResult({
           success: true,
-          message: response.message,
+          message: result.message,
         });
         form.reset();
       } else {
         setSubmitResult({
           success: false,
-          message: response.message || "Failed to send reset email",
+          message: result.message || "Failed to send reset email",
         });
       }
     } catch (error) {
