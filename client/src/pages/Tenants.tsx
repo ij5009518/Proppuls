@@ -314,13 +314,33 @@ export default function Tenants() {
   // Tenant billing records queries and mutations  
   const { data: tenantBillingRecords = [] } = useQuery({
     queryKey: ["/api/billing-records", selectedTenant?.id],
-    queryFn: () => selectedTenant ? apiRequest("GET", `/api/billing-records/${selectedTenant.id}`) : [],
+    queryFn: async () => {
+      if (!selectedTenant?.id) return [];
+      try {
+        const response = await apiRequest("GET", `/api/billing-records/${selectedTenant.id}`);
+        console.log('Billing records response:', response);
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error('Error fetching tenant billing records:', error);
+        return [];
+      }
+    },
     enabled: !!selectedTenant?.id,
   });
 
   const { data: tenantOutstandingBalance = { balance: 0 } } = useQuery({
     queryKey: ["/api/outstanding-balance", selectedTenant?.id],
-    queryFn: () => selectedTenant ? apiRequest("GET", `/api/outstanding-balance/${selectedTenant.id}`) : { balance: 0 },
+    queryFn: async () => {
+      if (!selectedTenant?.id) return { balance: 0 };
+      try {
+        const response = await apiRequest("GET", `/api/outstanding-balance/${selectedTenant.id}`);
+        console.log('Outstanding balance response:', response);
+        return response && typeof response.balance === 'number' ? response : { balance: 0 };
+      } catch (error) {
+        console.error('Error fetching tenant outstanding balance:', error);
+        return { balance: 0 };
+      }
+    },
     enabled: !!selectedTenant?.id,
   });
 
@@ -2118,7 +2138,8 @@ export default function Tenants() {
                       const outstandingBalance = tenantOutstandingBalance?.balance || 0;
                       
                       // Calculate overdue from billing records that are past due
-                      const overdueAmount = (tenantBillingRecords || [])
+                      const billingRecords = Array.isArray(tenantBillingRecords) ? tenantBillingRecords : [];
+                      const overdueAmount = billingRecords
                         .filter((record: any) => record.status === 'pending' && new Date(record.dueDate) < new Date())
                         .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
 
@@ -2128,7 +2149,9 @@ export default function Tenants() {
                         outstandingBalance,
                         overdueAmount,
                         tenantOutstandingBalance,
-                        tenantBillingRecords
+                        tenantBillingRecords,
+                        billingRecordsType: typeof tenantBillingRecords,
+                        isArray: Array.isArray(tenantBillingRecords)
                       });
 
                       return (
