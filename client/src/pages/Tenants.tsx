@@ -2083,6 +2083,72 @@ export default function Tenants() {
                     </Button>
                   </div>
 
+                  {/* Payment Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {(() => {
+                      const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id) || [];
+                      const totalPaid = tenantPayments
+                        .filter((payment: any) => payment.paidDate)
+                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+                      
+                      // Calculate outstanding from billing records for accuracy
+                      const outstandingBalance = tenantOutstandingBalance?.balance || 0;
+                      
+                      const overdueAmount = tenantPayments
+                        .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
+                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+
+                      return (
+                        <>
+                          <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                            <div className="flex items-center">
+                              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400 mr-2" />
+                              <div>
+                                <p className="text-xs font-medium text-green-800 dark:text-green-200 uppercase tracking-wide">Total Paid</p>
+                                <p className="text-xl font-bold text-green-800 dark:text-green-200">
+                                  {formatCurrency(totalPaid.toString())}
+                                </p>
+                                <p className="text-xs text-green-600 dark:text-green-400">
+                                  {tenantPayments.filter((p: any) => p.paidDate).length} payments
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                            <div className="flex items-center">
+                              <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400 mr-2" />
+                              <div>
+                                <p className="text-xs font-medium text-yellow-800 dark:text-yellow-200 uppercase tracking-wide">Outstanding</p>
+                                <p className="text-xl font-bold text-yellow-800 dark:text-yellow-200">
+                                  {formatCurrency(outstandingBalance.toString())}
+                                </p>
+                                <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                                  {outstandingBalance > 0 ? "1 pending" : "0 pending"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                            <div className="flex items-center">
+                              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400 mr-2" />
+                              <div>
+                                <p className="text-xs font-medium text-red-800 dark:text-red-200 uppercase tracking-wide">Overdue</p>
+                                <p className="text-xl font-bold text-red-800 dark:text-red-200">
+                                  {formatCurrency(overdueAmount.toString())}
+                                </p>
+                                <p className="text-xs text-red-600 dark:text-red-400">
+                                  {tenantPayments.filter((p: any) => !p.paidDate && new Date(p.dueDate) < new Date()).length} overdue
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+
                   {/* Unified Payment & Bill History */}
                   <div className="space-y-4">
                     <h4 className="text-md font-semibold">Payment & Bill History</h4>
