@@ -24,8 +24,19 @@ const expenseSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   date: z.string().min(1, "Date is required"),
   isRecurring: z.boolean().default(false),
+  recurrencePeriod: z.enum(["monthly", "quarterly", "yearly"]).optional(),
   vendorName: z.string().optional(),
   notes: z.string().optional(),
+  // Insurance and tax specific fields
+  policyEffectiveDate: z.string().optional(),
+  policyExpirationDate: z.string().optional(),
+  accountNumber: z.string().optional(),
+  // Utility specific fields
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  meterReadingStart: z.string().optional(),
+  meterReadingEnd: z.string().optional(),
+  usageAmount: z.string().optional(),
 });
 
 type ExpenseFormData = z.infer<typeof expenseSchema>;
@@ -39,6 +50,23 @@ const vendorSchema = z.object({
 });
 
 type VendorFormData = z.infer<typeof vendorSchema>;
+
+const expenseCategories = {
+  maintenance: "Maintenance & Repairs",
+  utilities: "Utilities",
+  water: "Water",
+  sewer: "Sewer",
+  sanitation: "Sanitation",
+  insurance: "Insurance",
+  taxes: "Property Taxes",
+  management: "Property Management",
+  legal: "Legal & Professional",
+  marketing: "Marketing & Advertising",
+  supplies: "Supplies & Materials",
+  landscaping: "Landscaping & Grounds",
+  improvements: "Capital Improvements",
+  other: "Other"
+};
 
 export default function Expenses() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -86,8 +114,17 @@ export default function Expenses() {
       amount: "",
       date: new Date().toISOString().split('T')[0],
       isRecurring: false,
+      recurrencePeriod: "monthly",
       vendorName: "",
       notes: "",
+      policyEffectiveDate: "",
+      policyExpirationDate: "",
+      accountNumber: "",
+      startDate: "",
+      endDate: "",
+      meterReadingStart: "",
+      meterReadingEnd: "",
+      usageAmount: "",
     },
   });
 
@@ -283,28 +320,254 @@ export default function Expenses() {
                   )}
                 />
 
+
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={createForm.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount</FormLabel>
+                        <FormControl>
+                          <Input placeholder="0.00" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={createForm.control}
-                  name="amount"
+                  name="vendorName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount</FormLabel>
+                      <FormLabel>Vendor (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="0.00" {...field} />
+                        <Input placeholder="Vendor name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                {/* Conditional fields based on category */}
+                {(createForm.watch("category") === "insurance" || createForm.watch("category") === "taxes") && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={createForm.control}
+                        name="policyEffectiveDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              {createForm.watch("category") === "insurance" ? "Policy Effective Date" : "Tax Period Start"}
+                            </FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={createForm.control}
+                        name="policyExpirationDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              {createForm.watch("category") === "insurance" ? "Policy Expiration Date" : "Tax Period End"}
+                            </FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={createForm.control}
+                      name="accountNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {createForm.watch("category") === "insurance" ? "Policy Number" : "Account Number"}
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder={createForm.watch("category") === "insurance" ? "Policy number" : "Account number"} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {/* Utility-specific fields */}
+                {(createForm.watch("category") === "utilities" || createForm.watch("category") === "water" || 
+                  createForm.watch("category") === "sewer" || createForm.watch("category") === "sanitation") && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={createForm.control}
+                        name="startDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Service Period Start</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={createForm.control}
+                        name="endDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Service Period End</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={createForm.control}
+                      name="accountNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Service Account Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Utility account number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Meter readings for water, sewer utilities */}
+                    {(createForm.watch("category") === "water" || createForm.watch("category") === "sewer") && (
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          control={createForm.control}
+                          name="meterReadingStart"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Starting Meter Reading</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Previous reading" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={createForm.control}
+                          name="meterReadingEnd"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Ending Meter Reading</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Current reading" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={createForm.control}
+                          name="usageAmount"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Usage Amount</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Gallons/units used" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {/* Recurring expense fields */}
                 <FormField
                   control={createForm.control}
-                  name="date"
+                  name="isRecurring"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Recurring Expense</FormLabel>
+                        <div className="text-sm text-muted-foreground">
+                          This expense repeats on a regular schedule
+                        </div>
+                      </div>
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="rounded border border-input"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {createForm.watch("isRecurring") && (
+                  <FormField
+                    control={createForm.control}
+                    name="recurrencePeriod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Frequency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
+                            <SelectItem value="yearly">Yearly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <FormField
+                  control={createForm.control}
+                  name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel>Notes (Optional)</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input placeholder="Additional notes" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
