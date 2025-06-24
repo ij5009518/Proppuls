@@ -124,7 +124,7 @@ A comprehensive property management and financial intelligence platform that pro
 
 ## Recent Changes
 
-- June 24, 2025: Enhanced billing and payment system
+- June 24, 2025: Enhanced billing and payment system and fixed expense form consistency
   - Removed redundant payment summary cards from tenant details
   - Created unified Payment & Bill History table showing both bills and payments chronologically
   - Fixed new tenant overdue issue by setting due dates for future months
@@ -136,6 +136,9 @@ A comprehensive property management and financial intelligence platform that pro
   - Added Rent Payments to main navigation sidebar
   - Enhanced payment editing to recalculate billing records when payment amounts change
   - Fixed property creation button authentication issue
+  - Fixed expense form inconsistency: Added all category-specific fields (utilities, taxes, insurance) to main Expenses page
+  - Restored conditional form fields that were missing from expense creation dialog
+  - Enhanced expense schema with complete field set including recurring options and detailed tracking
 
 ## Changelog
 
