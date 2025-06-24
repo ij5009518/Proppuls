@@ -46,24 +46,25 @@ export function registerRoutes(app: Express) {
         return;
       }
 
-      // Fallback to demo admin user
-      const defaultUser = {
-        id: "demo-user-1",
-        email: "admin@propertyflow.com",
-        password: "admin123",
-        firstName: "Admin",
-        lastName: "User",
-        role: "admin" as const,
-        organizationId: "demo-org-1",
-        phone: null,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      // Always use demo-org-1 for demo login
+      if (email === "admin@propertyflow.com" && password === "admin123") {
+        const defaultUser = {
+          id: "demo-user-1",
+          email: "admin@propertyflow.com",
+          firstName: "Admin",
+          lastName: "User",
+          role: "admin" as const,
+          organizationId: "demo-org-1",
+          phone: null,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
 
-      if (email === defaultUser.email && password === defaultUser.password) {
         const token = crypto.randomBytes(32).toString('hex');
         await storage.createSession(token, defaultUser);
+        
+        console.log("Demo login successful for organization:", defaultUser.organizationId);
         
         res.json({
           success: true,
