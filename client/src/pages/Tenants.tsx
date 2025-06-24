@@ -1433,49 +1433,7 @@ export default function Tenants() {
                           </p>
                         )}
                       </div>
-                      <div className="text-center">
-                        {(() => {
-                          // Get actual outstanding balance by fetching from API data  
-                          const { data: tenantOutstandingBalance } = useQuery({
-                            queryKey: [`/api/outstanding-balance/${tenant.id}`],
-                            enabled: !!tenant.id,
-                          });
-                          const totalOutstanding = tenantOutstandingBalance?.balance || 0;
-                          
-                          // Calculate overdue from rent payments for now (we can enhance this later)
-                          const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === tenant.id) || [];
-                          const totalOverdue = tenantPayments
-                            .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
-                            .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
-
-                          if (totalOverdue > 0) {
-                            return (
-                              <div>
-                                <p className="text-sm font-semibold text-red-600 dark:text-red-400">
-                                  {formatCurrency(totalOverdue.toString())} overdue
-                                </p>
-                                {totalOutstanding > totalOverdue && (
-                                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                                    +{formatCurrency((totalOutstanding - totalOverdue).toString())} pending
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          } else if (totalOutstanding > 0) {
-                            return (
-                              <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">
-                                {formatCurrency(totalOutstanding.toString())} pending
-                              </p>
-                            );
-                          } else {
-                            return (
-                              <p className="text-sm text-green-600 dark:text-green-400">
-                                Up to date
-                              </p>
-                            );
-                          }
-                        })()}
-                      </div>
+                      <OutstandingBalanceDisplay tenantId={tenant.id} />
                       <div className="flex items-center space-x-2">
                         <Button
                           size="sm"
