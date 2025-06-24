@@ -57,10 +57,11 @@ export default function ResetPassword() {
       }
 
       try {
-        const response = await apiRequest(`/api/auth/validate-reset-token/${resetToken}`);
-        if (response.valid) {
+        const response = await fetch(`/api/auth/validate-reset-token/${resetToken}`);
+        const result = await response.json();
+        if (result.valid) {
           setTokenValid(true);
-          setUserEmail(response.email);
+          setUserEmail(result.email);
         } else {
           setTokenValid(false);
         }
@@ -80,18 +81,23 @@ export default function ResetPassword() {
     setSubmitResult(null);
 
     try {
-      const response = await apiRequest("/api/auth/reset-password", {
+      const response = await fetch("/api/auth/reset-password", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           token: resetToken,
           password: data.password,
         }),
       });
 
-      if (response.success) {
+      const result = await response.json();
+
+      if (result.success) {
         setSubmitResult({
           success: true,
-          message: response.message,
+          message: result.message,
         });
         form.reset();
         
@@ -102,7 +108,7 @@ export default function ResetPassword() {
       } else {
         setSubmitResult({
           success: false,
-          message: response.message || "Failed to reset password",
+          message: result.message || "Failed to reset password",
         });
       }
     } catch (error) {
