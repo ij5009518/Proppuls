@@ -124,18 +124,16 @@ A comprehensive property management and financial intelligence platform that pro
 
 ## Recent Changes
 
-- June 24, 2025: Enhanced billing and payment system
-  - Removed redundant payment summary cards from tenant details
-  - Created unified Payment & Bill History table showing both bills and payments chronologically
-  - Fixed new tenant overdue issue by setting due dates for future months
-  - Implemented automatic billing record updates when payments are recorded
-  - Outstanding balance calculation now properly moves amounts from outstanding to paid
-  - Fixed outstanding balance display on tenant cards by using API data instead of calculated values
-  - Created comprehensive RentPayments page with clickable cards, grid/list views, and full CRUD operations
-  - Added real-time cache invalidation for outstanding balances (3-second refresh interval)
-  - Added Rent Payments to main navigation sidebar
-  - Enhanced payment editing to recalculate billing records when payment amounts change
-  - Fixed property creation button authentication issue
+- June 24, 2025: Complete multi-tenant organization-based data isolation implementation
+  - Added authentication middleware to all API routes requiring user login
+  - Implemented organization-based data filtering across all endpoints (properties, units, tenants, expenses, rent payments, tasks, etc.)
+  - Users now only see data belonging to their own organization
+  - Each API request validates organization ID and filters data accordingly
+  - Created test organizations (demo-org-1, demo-org-2) with separate datasets for testing
+  - Verified complete data isolation - users from different organizations cannot access each other's data
+  - Standardized expense forms with comprehensive conditional fields (insurance, taxes, utilities, meter readings)
+  - Enhanced expense form validation and category management
+  - Fixed authentication tokens and session management for proper user context
 
 ## Changelog
 
