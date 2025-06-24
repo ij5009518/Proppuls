@@ -130,6 +130,10 @@ A comprehensive property management and financial intelligence platform that pro
   - Fixed new tenant overdue issue by setting due dates for future months
   - Implemented automatic billing record updates when payments are recorded
   - Outstanding balance calculation now properly moves amounts from outstanding to paid
+  - Fixed outstanding balance display on tenant cards by using API data instead of calculated values
+  - Created comprehensive RentPayments page with clickable cards, grid/list views, and full CRUD operations
+  - Added real-time cache invalidation for outstanding balances (3-second refresh interval)
+  - Added Rent Payments to main navigation sidebar
 
 ## Changelog
 
