@@ -88,8 +88,7 @@ export default function Login() {
                   type="email"
                   autoComplete="email"
                   required
-                  placeholder="admin@propertyflow.com"
-                  defaultValue="admin@propertyflow.com"
+                  placeholder="Enter your email"
                 />
               </div>
 
@@ -102,8 +101,7 @@ export default function Login() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
-                    placeholder="admin123"
-                    defaultValue="admin123"
+                    placeholder="Enter your password"
                   />
                   <button
                     type="button"

@@ -1183,9 +1183,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Maintenance requests routes
-  app.get("/api/maintenance-requests", async (req, res) => {
+  app.get("/api/maintenance-requests", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const requests = await storage.getAllMaintenanceRequests();
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const requests = await storage.getAllMaintenanceRequests(req.user.organizationId);
       res.json(requests);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
@@ -1213,22 +1216,44 @@ export function registerRoutes(app: Express) {
       const units = await storage.getAllUnits(req.user.organizationId);
       const tenants = await storage.getAllTenants(req.user.organizationId);
       const maintenanceRequests = await storage.getAllMaintenanceRequests(req.user.organizationId);
-      const paymentSummaries = await storage.getPaymentSummaries();
+      const paymentSummaries = await storage.getPaymentSummaries(req.user.organizationId);
 
       const occupiedUnits = tenants.filter(t => t.status === 'active' && t.unitId).length;
       const occupancyRate = units.length > 0 ? ((occupiedUnits / units.length) * 100).toFixed(1) : "0";
 
+      const occupiedUnits = tenants.filter(t => t.status === 'active' && t.unitId).length;
+      const occupancyRate = units.length > 0 ? ((occupiedUnits / units.length) * 100) : 0;
+
+      const openMaintenance = maintenanceRequests.filter(m => m.status === 'open').length;
+      const totalMaintenance = maintenanceRequests.length;
+
+      const currentRevenue = paymentSummaries.totalRevenue || 0;
+      const currentExpenses = paymentSummaries.currentMonthExpenses || 0;
+      
+      // Calculate actual revenue change based on data
+      const lastMonthRevenue = paymentSummaries.lastMonthRevenue || 0;
+      const revenueChange = lastMonthRevenue > 0 ? 
+        (((currentRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1) : "0";
+      
+      // Count properties created this month
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const newPropertiesThisMonth = properties.filter(p => {
+        const createdDate = new Date(p.createdAt);
+        return createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear;
+      }).length;
+
       const kpis = {
         totalProperties: properties.length,
         totalUnits: units.length,
-        occupancyRate: `${occupancyRate}%`,
-        occupancyChange: "+0%",
-        totalRevenue: `$${paymentSummaries.totalRevenue.toLocaleString()}`,
-        revenueChange: "+0%",
-        monthlyRevenue: paymentSummaries.currentMonthRevenue,
-        maintenanceRequests: maintenanceRequests.length,
-        pendingRequests: maintenanceRequests.filter((r: any) => r.status === 'open').length,
-        newProperties: 0
+        occupancyRate: `${occupancyRate.toFixed(1)}%`,
+        totalRevenue: `$${currentRevenue.toLocaleString()}`,
+        revenueChange: `${revenueChange >= 0 ? '+' : ''}${revenueChange}%`,
+        newProperties: newPropertiesThisMonth,
+        openMaintenanceRequests: openMaintenance,
+        totalMaintenanceRequests: totalMaintenance,
+        activeTenantsCount: occupiedUnits,
+        totalTenantsCount: tenants.length
       };
       res.json(kpis);
     } catch (error) {
@@ -1243,7 +1268,7 @@ export function registerRoutes(app: Express) {
       if (!req.user?.organizationId) {
         return res.status(400).json({ message: "Organization ID required" });
       }
-      const summaries = await storage.getPaymentSummaries();
+      const summaries = await storage.getPaymentSummaries(req.user.organizationId);
       res.json(summaries);
     } catch (error) {
       console.error("Error fetching payment summaries:", error);
