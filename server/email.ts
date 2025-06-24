@@ -34,32 +34,55 @@ class EmailService {
     }
 
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      // Add some additional options for better compatibility
       tls: {
         rejectUnauthorized: false
+      }
+    });
+
+    // Test SMTP connection on startup
+    this.transporter.verify((error, success) => {
+      if (error) {
+        console.error('SMTP connection failed:', error);
+        console.error('Please check your Gmail credentials and App Password');
+      } else {
+        console.log('SMTP server is ready to send emails');
       }
     });
   }
 
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-      await this.transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      console.log('Attempting to send email to:', options.to);
+      console.log('From:', process.env.SMTP_USER);
+      console.log('Subject:', options.subject);
+      
+      const result = await this.transporter.sendMail({
+        from: process.env.SMTP_USER,
         to: options.to,
         subject: options.subject,
         html: options.html,
         text: options.text,
       });
+      
+      console.log('Email sent successfully with message ID:', result.messageId);
+      console.log('Server response:', result.response);
       return true;
     } catch (error) {
-      console.error('Email sending failed:', error);
+      console.error('Failed to send email:', error);
+      console.error('Error details:', {
+        code: error.code,
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode
+      });
       return false;
     }
   }

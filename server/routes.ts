@@ -112,6 +112,7 @@ export function registerRoutes(app: Express) {
       const resetToken = await storage.createPasswordResetToken(email);
       
       // Send reset email
+      console.log("Attempting to send password reset email to:", email);
       const emailSent = await emailService.sendPasswordResetEmail(
         email, 
         user.firstName, 
@@ -120,10 +121,10 @@ export function registerRoutes(app: Express) {
 
       if (!emailSent) {
         console.error("Failed to send password reset email to:", email);
-        return res.status(500).json({ message: "Failed to send reset email" });
+        return res.status(500).json({ message: "Failed to send reset email. Please check your email configuration." });
       }
 
-      console.log("Password reset email sent to:", email);
+      console.log("Password reset email sent successfully to:", email);
 
       res.json({ 
         success: true, 
