@@ -2197,6 +2197,7 @@ export default function Tenants() {
                               <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Amount</TableHead>
                               <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Method</TableHead>
                               <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Status</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -2227,7 +2228,7 @@ export default function Tenants() {
                               if (allTransactions.length === 0) {
                                 return (
                                   <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                                       No billing or payment history found.
                                     </TableCell>
                                   </TableRow>
@@ -2269,6 +2270,20 @@ export default function Tenants() {
                                       {transaction.status === 'paid' ? "Paid" : 
                                        transaction.status === 'overdue' ? "Overdue" : "Pending"}
                                     </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    {transaction.type === 'bill' && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setEditBillingRecord(transaction);
+                                          setIsEditBillingDialogOpen(true);
+                                        }}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    )}
                                   </TableCell>
                                 </TableRow>
                               ));
