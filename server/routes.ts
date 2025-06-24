@@ -714,29 +714,28 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/properties", async (req: AuthenticatedRequest, res) => {
+  app.post("/api/properties", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      console.log("Routes: Received property creation request:", req.body);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const propertyData = {
         ...req.body,
-        organizationId: req.user?.organizationId || "default-org"
+        organizationId: req.user.organizationId
       };
       const property = await storage.createProperty(propertyData);
-      console.log("Routes: Property created successfully:", property);
       res.json(property);
     } catch (error) {
-      console.error("Routes: Error creating property:", error);
-      console.error("Routes: Error details:", error.message);
-      console.error("Routes: Error stack:", error.stack);
-      res.status(500).json({ 
-        message: "Failed to create property",
-        error: error.message 
-      });
+      console.error("Error creating property:", error);
+      res.status(500).json({ message: "Failed to create property" });
     }
   });
 
-  app.patch("/api/properties/:id", async (req, res) => {
+  app.patch("/api/properties/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const id = req.params.id;
       const property = await storage.updateProperty(id, req.body);
       res.json(property);
@@ -746,8 +745,11 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/properties/:id", async (req, res) => {
+  app.delete("/api/properties/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const id = req.params.id;
       await storage.deleteProperty(id);
       res.json({ success: true });
@@ -771,11 +773,14 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/units", async (req: AuthenticatedRequest, res) => {
+  app.post("/api/units", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const unitData = {
         ...req.body,
-        organizationId: req.user?.organizationId || "default-org"
+        organizationId: req.user.organizationId
       };
       const unit = await storage.createUnit(unitData);
       res.json(unit);
@@ -904,9 +909,11 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/tenants", async (req, res) => {
+  app.post("/api/tenants", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      console.log("Routes: Received tenant creation request:", req.body);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       
       // Validate required fields
       const { firstName, lastName, email, phone } = req.body;
@@ -916,27 +923,20 @@ export function registerRoutes(app: Express) {
         });
       }
 
-      // Ensure tenant is created under the authenticated user's organization
       const tenantData = {
         ...req.body,
-        organizationId: (req as AuthenticatedRequest).user?.organizationId || req.body.organizationId || "default-org"
+        organizationId: req.user.organizationId
       };
 
       const tenant = await storage.createTenant(tenantData);
-      console.log("Routes: Tenant created successfully:", tenant);
       res.json(tenant);
     } catch (error) {
-      console.error("Routes: Error creating tenant:", error);
-      console.error("Routes: Error details:", error.message);
-      console.error("Routes: Error stack:", error.stack);
-      res.status(500).json({ 
-        message: "Failed to create tenant",
-        error: error.message 
-      });
+      console.error("Error creating tenant:", error);
+      res.status(500).json({ message: "Failed to create tenant" });
     }
   });
 
-  app.put("/api/tenants/:id", async (req, res) => {
+  app.put("/api/tenants/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const id = req.params.id;
       console.log("=== API MIDDLEWARE HIT FOR", req.url, "===");
@@ -1062,7 +1062,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.patch("/api/tenants/:id/status", async (req, res) => {
+  app.patch("/api/tenants/:id/status", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const { id } = req.params;
       const { status, moveOutDate, moveOutReason } = req.body;
@@ -1108,9 +1108,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Rent Payments routes
-  app.get("/api/rent-payments", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/rent-payments", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const rentPayments = await storage.getAllRentPayments(req.user?.organizationId);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const rentPayments = await storage.getAllRentPayments(req.user.organizationId);
       res.json(rentPayments);
     } catch (error) {
       console.error("Error fetching rent payments:", error);
@@ -1118,9 +1121,16 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/rent-payments", async (req, res) => {
+  app.post("/api/rent-payments", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const payment = await storage.createRentPayment(req.body);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const paymentData = {
+        ...req.body,
+        organizationId: req.user.organizationId
+      };
+      const payment = await storage.createRentPayment(paymentData);
       res.json(payment);
     } catch (error) {
       console.error("Error creating rent payment:", error);
@@ -1194,11 +1204,14 @@ export function registerRoutes(app: Express) {
   });
 
   // Dashboard KPIs route
-  app.get("/api/dashboard/kpis", async (req, res) => {
+  app.get("/api/dashboard/kpis", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const properties = await storage.getAllProperties();
-      const units = await storage.getAllUnits();
-      const tenants = await storage.getAllTenants();
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const properties = await storage.getAllProperties(req.user.organizationId);
+      const units = await storage.getAllUnits(req.user.organizationId);
+      const tenants = await storage.getAllTenants(req.user.organizationId);
       const maintenanceRequests = await storage.getAllMaintenanceRequests();
       const paymentSummaries = await storage.getPaymentSummaries();
 
@@ -1225,8 +1238,11 @@ export function registerRoutes(app: Express) {
   });
 
   // Payment summaries route
-  app.get("/api/dashboard/payment-summaries", async (req, res) => {
+  app.get("/api/dashboard/payment-summaries", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const summaries = await storage.getPaymentSummaries();
       res.json(summaries);
     } catch (error) {
@@ -1236,8 +1252,11 @@ export function registerRoutes(app: Express) {
   });
 
   // Generate monthly rent payments route
-  app.post("/api/rent-payments/generate-monthly", async (req, res) => {
+  app.post("/api/rent-payments/generate-monthly", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const generatedPayments = await storage.generateMonthlyRentPayments();
       res.json({ 
         success: true, 
@@ -1267,8 +1286,11 @@ export function registerRoutes(app: Express) {
   });
 
   // Monthly revenues route
-  app.get("/api/revenues/monthly", async (req, res) => {
+  app.get("/api/revenues/monthly", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       // Mock monthly revenue data
       const monthlyRevenues = [];
       res.json(monthlyRevenues);
