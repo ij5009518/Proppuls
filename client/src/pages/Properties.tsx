@@ -122,10 +122,12 @@ export default function Properties() {
 
   const { data: properties = [], isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties"],
+    retry: false,
   });
 
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
+    retry: false,
   });
 
   // Sync server data with local state on initial load
@@ -138,14 +140,17 @@ export default function Properties() {
   // Additional data for property details
   const { data: units = [] } = useQuery<Unit[]>({
     queryKey: ["/api/units"],
+    retry: false,
   });
 
   const { data: mortgages = [] } = useQuery<Mortgage[]>({
     queryKey: ["/api/mortgages"],
+    retry: false,
   });
 
   const { data: expenses = [] } = useQuery<Expense[]>({
     queryKey: ["/api/expenses"],
+    retry: false,
   });
 
   const createForm = useForm<UnitFormData>({
