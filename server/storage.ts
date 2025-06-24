@@ -924,8 +924,45 @@ class Storage {
   }
 
   async deleteRentPayment(id: string): Promise<boolean> {
-    const result = await db.delete(rentPayments).where(eq(rentPayments.id, id));
-    return result.rowCount > 0;
+    return await withRetry(async () => {
+      // First, get the payment details to find related billing records
+      const payment = await db.select().from(rentPayments).where(eq(rentPayments.id, id)).limit(1);
+      
+      if (payment.length === 0) {
+        return false;
+      }
+      
+      const paymentRecord = payment[0];
+      
+      // Find related billing records that were marked as paid due to this payment
+      // Look for billing records for the same tenant, unit, and amount
+      const relatedBillingRecords = await db.select()
+        .from(billingRecords)
+        .where(and(
+          eq(billingRecords.tenantId, paymentRecord.tenantId),
+          eq(billingRecords.status, 'paid'),
+          eq(billingRecords.amount, paymentRecord.amount)
+        ));
+      
+      // Revert billing records back to pending status
+      for (const billingRecord of relatedBillingRecords) {
+        await db.update(billingRecords)
+          .set({ 
+            status: 'pending',
+            paidAmount: '0',
+            paidDate: null,
+            updatedAt: new Date()
+          })
+          .where(eq(billingRecords.id, billingRecord.id));
+      }
+      
+      // Delete the payment record
+      const result = await db.delete(rentPayments).where(eq(rentPayments.id, id));
+      
+      console.log(`Deleted payment ${id} and reverted ${relatedBillingRecords.length} billing records to pending status`);
+      
+      return result.rowCount > 0;
+    });
   }
 
   // Mortgage methods
