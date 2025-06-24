@@ -1283,42 +1283,24 @@ class Storage {
       try {
         console.log("Calculating outstanding balance for tenant:", tenantId);
 
-        // Get all billing records for the tenant
-        const billings = await db.select()
+        // Get only pending billing records for the tenant
+        const pendingBillings = await db.select()
           .from(billingRecords)
-          .where(eq(billingRecords.tenantId, tenantId));
+          .where(and(
+            eq(billingRecords.tenantId, tenantId),
+            eq(billingRecords.status, 'pending')
+          ));
 
-        // Calculate total billed amount
-        let totalBilled = 0;
-        for (const billing of billings) {
+        // Calculate total outstanding amount from pending bills
+        let outstandingBalance = 0;
+        for (const billing of pendingBillings) {
           const amount = parseFloat(billing.amount || '0');
-          totalBilled += amount;
-          console.log("Billing amount:", amount, "Status:", billing.status);
+          outstandingBalance += amount;
+          console.log("Pending billing amount:", amount);
         }
 
-        // Get all rent payments for the tenant
-        const payments = await db.select()
-          .from(rentPayments)
-          .where(eq(rentPayments.tenantId, tenantId));
-
-        // Calculate total paid amount
-        let totalPaid = 0;
-        for (const payment of payments) {
-          if (payment.status === 'paid' || payment.paidDate) {
-            const amount = parseFloat(payment.amount || '0');
-            totalPaid += amount;
-            console.log("Payment amount:", amount, "Status:", payment.status);
-          }
-        }
-
-        console.log("Total billed:", totalBilled, "Total paid:", totalPaid);
-
-        // Outstanding balance = Total Billed - Total Paid
-        const outstandingBalance = totalBilled - totalPaid;
-        const finalBalance = Math.max(0, outstandingBalance);
-
-        console.log("Final outstanding balance:", finalBalance);
-        return finalBalance;
+        console.log("Final outstanding balance:", outstandingBalance);
+        return Math.max(0, outstandingBalance);
       } catch (error) {
         console.error("Error calculating outstanding balance:", error);
         throw error;
@@ -1437,14 +1419,15 @@ class Storage {
           }
         }
         
-        const dueDate = new Date(dueYear, dueMonth, 1);
+        // Set due date to today's date instead of first of month
+        const dueDate = new Date(today);
 
-        // Create billing record
+        // Create billing record for current period
         const billingData = {
           tenantId: tenant.id,
           unitId: tenant.unitId,
           amount: tenant.monthlyRent,
-          billingPeriod: `${dueYear}-${String(dueMonth + 1).padStart(2, '0')}`,
+          billingPeriod: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`,
           dueDate,
           status: 'pending',
           type: 'rent',
