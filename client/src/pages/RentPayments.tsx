@@ -35,6 +35,7 @@ const rentPaymentSchema = z.object({
 
 export default function RentPayments() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -174,11 +175,19 @@ export default function RentPayments() {
     return unit ? `Unit ${unit.unitNumber || unit.id.slice(0, 8)}` : "Unknown Unit";
   };
 
-  const filteredPayments = rentPayments?.filter((payment: RentPayment) =>
-    getTenantName(payment.tenantId).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getUnitNumber(payment.unitId).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payment.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPayments = rentPayments?.filter((payment: RentPayment) => {
+    // Search filter
+    const matchesSearch = searchTerm === "" || (
+      getTenantName(payment.tenantId).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getUnitNumber(payment.unitId).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Status filter
+    const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   if (paymentsLoading) {
     return (
