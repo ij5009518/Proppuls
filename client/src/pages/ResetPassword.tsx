@@ -1,20 +1,20 @@
-import { useState } from 'react';
-import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Link, useLocation, useSearch } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { KeyRound, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
 
 const resetPasswordSchema = z.object({
-  newPassword: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
@@ -23,191 +23,272 @@ type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPassword() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const search = useSearch();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitResult, setSubmitResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
-  // Get token from URL params
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
+  // Extract token from URL
+  const urlParams = new URLSearchParams(search);
+  const resetToken = urlParams.get("token");
 
   const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      newPassword: '',
-      confirmPassword: '',
+      password: "",
+      confirmPassword: "",
     },
   });
 
-  if (!token) {
+  // Validate token on component mount
+  useEffect(() => {
+    const validateToken = async () => {
+      if (!resetToken) {
+        setTokenValid(false);
+        setIsValidating(false);
+        return;
+      }
+
+      try {
+        const response = await apiRequest(`/api/auth/validate-reset-token/${resetToken}`);
+        if (response.valid) {
+          setTokenValid(true);
+          setUserEmail(response.email);
+        } else {
+          setTokenValid(false);
+        }
+      } catch (error) {
+        console.error("Token validation error:", error);
+        setTokenValid(false);
+      } finally {
+        setIsValidating(false);
+      }
+    };
+
+    validateToken();
+  }, [resetToken]);
+
+  const onSubmit = async (data: ResetPasswordForm) => {
+    setIsSubmitting(true);
+    setSubmitResult(null);
+
+    try {
+      const response = await apiRequest("/api/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({
+          token: resetToken,
+          password: data.password,
+        }),
+      });
+
+      if (response.success) {
+        setSubmitResult({
+          success: true,
+          message: response.message,
+        });
+        form.reset();
+        
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          setLocation("/login");
+        }, 3000);
+      } else {
+        setSubmitResult({
+          success: false,
+          message: response.message || "Failed to reset password",
+        });
+      }
+    } catch (error) {
+      console.error("Reset password error:", error);
+      setSubmitResult({
+        success: false,
+        message: "An error occurred. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isValidating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center text-red-600">Invalid Reset Link</CardTitle>
-            <CardDescription className="text-center">
-              This password reset link is invalid or has expired.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => setLocation('/forgot-password')} 
-              className="w-full"
-            >
-              Request New Reset Link
-            </Button>
+          <CardContent className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Validating reset link...</p>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const onSubmit = async (data: ResetPasswordForm) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token,
-          newPassword: data.newPassword,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to reset password');
-      }
-
-      toast({
-        title: 'Password Reset Successfully',
-        description: 'Your password has been updated. You can now log in with your new password.',
-      });
-
-      // Redirect to login page
-      setLocation('/login');
-    } catch (error: any) {
-      toast({
-        title: 'Reset Failed',
-        description: error.message || 'Failed to reset password. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!tokenValid) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full">
+          <Card>
+            <CardHeader className="space-y-1">
+              <div className="flex items-center justify-center mb-4">
+                <AlertCircle className="h-12 w-12 text-red-600" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-center text-red-800">
+                Invalid Reset Link
+              </CardTitle>
+              <CardDescription className="text-center">
+                This password reset link is invalid or has expired. Please request a new one.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <Link href="/forgot-password">
+                  <Button className="w-full">
+                    Request New Reset Link
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button variant="outline" className="w-full">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Login
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
-              <Lock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <Card>
+          <CardHeader className="space-y-1">
+            <div className="flex items-center justify-center mb-4">
+              <KeyRound className="h-12 w-12 text-blue-600" />
             </div>
-          </div>
-          <CardTitle className="text-center">Reset Your Password</CardTitle>
-          <CardDescription className="text-center">
-            Enter your new password below
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="newPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>New Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          {...field}
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="Enter your new password"
-                          disabled={isLoading}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                          disabled={isLoading}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+            <CardTitle className="text-2xl font-bold text-center">
+              Reset Password
+            </CardTitle>
+            <CardDescription className="text-center">
+              Enter your new password for {userEmail}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {submitResult && (
+              <Alert className={submitResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+                {submitResult.success ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-red-600" />
                 )}
-              />
+                <AlertDescription className={submitResult.success ? "text-green-800" : "text-red-800"}>
+                  {submitResult.message}
+                  {submitResult.success && (
+                    <span className="block mt-2 text-sm">
+                      Redirecting to login page in 3 seconds...
+                    </span>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
 
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm New Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          {...field}
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          placeholder="Confirm your new password"
-                          disabled={isLoading}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          disabled={isLoading}
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {!submitResult?.success && (
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your new password"
+                      {...form.register("password")}
+                      className={form.formState.errors.password ? "border-red-500" : ""}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {form.formState.errors.password && (
+                    <p className="text-sm text-red-600">
+                      {form.formState.errors.password.message}
+                    </p>
+                  )}
+                </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-              >
-                {isLoading ? 'Resetting Password...' : 'Reset Password'}
-              </Button>
-            </form>
-          </Form>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your new password"
+                      {...form.register("confirmPassword")}
+                      className={form.formState.errors.confirmPassword ? "border-red-500" : ""}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {form.formState.errors.confirmPassword && (
+                    <p className="text-sm text-red-600">
+                      {form.formState.errors.confirmPassword.message}
+                    </p>
+                  )}
+                </div>
 
-          <div className="mt-4 text-center">
-            <Button
-              variant="link"
-              onClick={() => setLocation('/login')}
-              className="text-sm"
-            >
-              Back to Login
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Resetting Password..." : "Reset Password"}
+                </Button>
+              </form>
+            )}
+
+            {!submitResult?.success && (
+              <div className="flex items-center justify-center space-x-1 text-sm">
+                <ArrowLeft className="h-4 w-4" />
+                <Link href="/login">
+                  <a className="text-blue-600 hover:text-blue-800 hover:underline">
+                    Back to Login
+                  </a>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
