@@ -137,6 +137,9 @@ A comprehensive property management and financial intelligence platform that pro
   - Ensured property creation and all CRUD operations work with proper organization scoping
   - Standardized expense forms with comprehensive conditional fields
   - Enhanced authentication and session management for proper user context
+  - Removed demo credentials from login page for security
+  - Fixed dashboard KPI calculations to show accurate data based on organization scope
+  - Corrected revenue calculations and occupancy rates to reflect actual tenant and unit data
 
 ## Changelog
 
