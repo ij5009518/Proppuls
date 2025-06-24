@@ -1358,13 +1358,14 @@ export default function Tenants() {
                       </div>
                       <div className="text-right">
                         {(() => {
-                          const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === tenant.id) || [];
-                          const totalOutstanding = tenantPayments
-                            .filter((payment: any) => !payment.paidDate)
-                            .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
-                          const totalOverdue = tenantPayments
-                            .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
-                            .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
+                          // Calculate outstanding balance from billing records instead of rent payments
+                          const tenantBillingRecords = Array.isArray(tenantBillingRecords) ? tenantBillingRecords.filter((record: any) => record.tenantId === tenant.id) : [];
+                          const totalOutstanding = tenantBillingRecords
+                            .filter((record: any) => record.status === 'pending')
+                            .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
+                          const totalOverdue = tenantBillingRecords
+                            .filter((record: any) => record.status === 'pending' && new Date(record.dueDate) < new Date())
+                            .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
 
                           if (totalOverdue > 0) {
                             return (
@@ -2082,193 +2083,100 @@ export default function Tenants() {
                     </Button>
                   </div>
 
-                  {/* Payment Summary Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {(() => {
-                      const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === selectedTenant.id) || [];
-                      const totalPaid = tenantPayments
-                        .filter((payment: any) => payment.paidDate)
-                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
-                      const totalOutstanding = tenantPayments
-                        .filter((payment: any) => !payment.paidDate)
-                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
-                      const overdueAmount = tenantPayments
-                        .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date())
-                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
 
-                      return (
-                        <>
-                          <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                            <div className="flex items-center">
-                              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400 mr-2" />
-                              <div>
-                                <p className="text-xs font-medium text-green-800 dark:text-green-200 uppercase tracking-wide">Total Paid</p>
-                                <p className="text-xl font-bold text-green-800 dark:text-green-200">
-                                  {formatCurrency(totalPaid.toString())}
-                                </p>
-                                <p className="text-xs text-green-600 dark:text-green-400">
-                                  {tenantPayments.filter((p: any) => p.paidDate).length} payments
-                                </p>
-                              </div>
-                            </div>
-                          </div>
 
-                          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                            <div className="flex items-center">
-                              <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400 mr-2" />
-                              <div>
-                                <p className="text-xs font-medium text-yellow-800 dark:text-yellow-200 uppercase tracking-wide">Outstanding</p>
-                                <p className="text-xl font-bold text-yellow-800 dark:text-yellow-200">
-                                  {formatCurrency(totalOutstanding.toString())}
-                                </p>
-                                <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                                  {tenantPayments.filter((p: any) => !p.paidDate).length} pending
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                  {/* Unified Payment & Bill History */}
+                  <div className="space-y-4">
+                    <h4 className="text-md font-semibold">Payment & Bill History</h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="max-h-96 overflow-y-auto">
+                        <Table>
+                          <TableHeader className="sticky top-0 z-10">
+                            <TableRow className="bg-gray-50 dark:bg-gray-800 border-b-2">
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Date</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Type</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Description</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Amount</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Method</TableHead>
+                              <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {(() => {
+                              // Combine billing records and payments into a unified history
+                              const billingRecords = (Array.isArray(tenantBillingRecords) ? tenantBillingRecords : []).map((record: any) => ({
+                                ...record,
+                                type: 'bill',
+                                date: record.dueDate || record.createdAt,
+                                description: `Monthly rent - ${record.billingPeriod || 'N/A'}`,
+                                method: null
+                              }));
 
-                          <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                            <div className="flex items-center">
-                              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400 mr-2" />
-                              <div>
-                                <p className="text-xs font-medium text-red-800 dark:text-red-200 uppercase tracking-wide">Overdue</p>
-                                <p className="text-xl font-bold text-red-800 dark:text-red-200">
-                                  {formatCurrency(overdueAmount.toString())}
-                                </p>
-                                <p className="text-xs text-red-600 dark:text-red-400">
-                                  {tenantPayments.filter((p: any) => !p.paidDate && new Date(p.dueDate) < new Date()).length} overdue
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
+                              const payments = (rentPayments?.filter((payment: any) => 
+                                payment.tenantId === selectedTenant.id && payment.paidDate
+                              ) || []).map((payment: any) => ({
+                                ...payment,
+                                type: 'payment',
+                                date: payment.paidDate,
+                                description: `Payment received`,
+                                method: payment.paymentMethod,
+                                status: 'paid'
+                              }));
 
-                  {/* Enhanced Payment & Billing Table */}
-                  <div className="space-y-6">                    
-                    {/* Billing Records */}
-                    <div>
-                      <h4 className="text-md font-semibold mb-3">Monthly Bills</h4>
-                      <div className="border rounded-lg overflow-hidden">
-                        <div className="max-h-64 overflow-y-auto">
-                          <Table>
-                            <TableHeader className="sticky top-0 z-10">
-                              <TableRow className="bg-gray-50 dark:bg-gray-800 border-b-2">
-                                <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Billing Period</TableHead>
-                                <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Amount Due</TableHead>
-                                <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Due Date</TableHead>
-                                <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Status</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {(() => {
-                                const sortedBillingRecords = (Array.isArray(tenantBillingRecords) ? tenantBillingRecords : [])
-                                  .sort((a: any, b: any) => new Date(b.dueDate || b.createdAt).getTime() - new Date(a.dueDate || a.createdAt).getTime());
+                              const allTransactions = [...billingRecords, ...payments]
+                                .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-                                if (sortedBillingRecords.length === 0) {
-                                  return (
-                                    <TableRow>
-                                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">
-                                        No billing records found.
-                                      </TableCell>
-                                    </TableRow>
-                                  );
-                                }
-
-                                return sortedBillingRecords.map((record: any) => (
-                                  <TableRow key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                    <TableCell className="font-medium">
-                                      {record.billingPeriod || "N/A"}
-                                    </TableCell>
-                                    <TableCell>
-                                      <span className="font-semibold text-green-600 dark:text-green-400">
-                                        {formatCurrency(record.amount)}
-                                      </span>
-                                    </TableCell>
-                                    <TableCell>
-                                      {formatDate(record.dueDate || record.createdAt)}
-                                    </TableCell>
-                                    <TableCell>
-                                      <Badge className={
-                                        record.status === 'paid' ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" :
-                                        record.status === 'overdue' ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300" :
-                                        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
-                                      }>
-                                        {record.status === 'paid' ? "Paid" : 
-                                         record.status === 'overdue' ? "Overdue" : "Pending"}
-                                      </Badge>
+                              if (allTransactions.length === 0) {
+                                return (
+                                  <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                      No billing or payment history found.
                                     </TableCell>
                                   </TableRow>
-                                ));
-                              })()}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </div>
-                    </div>
+                                );
+                              }
 
-                    {/* Payment History */}
-                    <div>
-                      <h4 className="text-md font-semibold mb-3">Payment History</h4>
-                      <div className="border rounded-lg overflow-hidden">
-                        <div className="max-h-64 overflow-y-auto">
-                          <Table>
-                            <TableHeader className="sticky top-0 z-10">
-                              <TableRow className="bg-gray-50 dark:bg-gray-800 border-b-2">
-                                <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Payment Date</TableHead>
-                                <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Amount</TableHead>
-                                <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Method</TableHead>
-                                <TableHead className="font-semibold sticky top-0 bg-gray-50 dark:bg-gray-800">Status</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {(() => {
-                                const tenantPayments = rentPayments?.filter((payment: any) => 
-                                  payment.tenantId === selectedTenant.id && payment.paidDate
-                                ) || [];
-                                
-                                const sortedPayments = tenantPayments
-                                  .sort((a: any, b: any) => new Date(b.paidDate).getTime() - new Date(a.paidDate).getTime());
-
-                                if (sortedPayments.length === 0) {
-                                  return (
-                                    <TableRow>
-                                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">
-                                        No payments recorded yet.
-                                      </TableCell>
-                                    </TableRow>
-                                  );
-                                }
-
-                                return sortedPayments.map((payment: any) => (
-                                  <TableRow key={payment.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                    <TableCell className="font-medium">
-                                      {formatDate(payment.paidDate)}
-                                    </TableCell>
-                                    <TableCell>
-                                      <span className="font-semibold text-green-600 dark:text-green-400">
-                                        {formatCurrency(payment.amount)}
-                                      </span>
-                                    </TableCell>
-                                    <TableCell>
-                                      <span className="capitalize text-sm">
-                                        {payment.paymentMethod?.toLowerCase() || "Not specified"}
-                                      </span>
-                                    </TableCell>
-                                    <TableCell>
-                                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
-                                        Paid
-                                      </Badge>
-                                    </TableCell>
-                                  </TableRow>
-                                ));
-                              })()}
-                            </TableBody>
-                          </Table>
-                        </div>
+                              return allTransactions.map((transaction: any, index: number) => (
+                                <TableRow key={`${transaction.type}-${transaction.id}-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                  <TableCell className="font-medium">
+                                    {formatDate(transaction.date)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant={transaction.type === 'bill' ? 'outline' : 'default'} 
+                                           className={transaction.type === 'bill' ? 'border-blue-200 text-blue-700' : 'bg-green-100 text-green-800'}>
+                                      {transaction.type === 'bill' ? 'Bill' : 'Payment'}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className="text-sm">
+                                      {transaction.description}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className={`font-semibold ${transaction.type === 'bill' ? 'text-blue-600 dark:text-blue-400' : 'text-green-600 dark:text-green-400'}`}>
+                                      {transaction.type === 'bill' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className="capitalize text-sm">
+                                      {transaction.method?.toLowerCase() || (transaction.type === 'bill' ? 'N/A' : 'Not specified')}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge className={
+                                      transaction.status === 'paid' ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300" :
+                                      transaction.status === 'overdue' ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300" :
+                                      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
+                                    }>
+                                      {transaction.status === 'paid' ? "Paid" : 
+                                       transaction.status === 'overdue' ? "Overdue" : "Pending"}
+                                    </Badge>
+                                  </TableCell>
+                                </TableRow>
+                              ));
+                            })()}
+                          </TableBody>
+                        </Table>
                       </div>
                     </div>
                   </div>
