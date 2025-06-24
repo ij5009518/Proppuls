@@ -2165,13 +2165,8 @@ export default function Properties() {
                   bathrooms: data.bathrooms.toString(),
                 };
 
-                // Create unit via API
-                fetch("/api/units", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(unitData),
-                })
-                .then(res => res.json())
+                // Create unit via API with authentication
+                apiRequest("POST", "/api/units", unitData)
                 .then(() => {
                   queryClient.invalidateQueries({ queryKey: ["/api/units"] });
                   setIsUnitDialogOpen(false);
@@ -2181,7 +2176,8 @@ export default function Properties() {
                     description: "Unit added successfully.",
                   });
                 })
-                .catch(() => {
+                .catch((error) => {
+                  console.error("Failed to create unit:", error);
                   toast({
                     title: "Error",
                     description: "Failed to add unit.",
