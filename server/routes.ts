@@ -701,11 +701,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Properties routes
-  app.get("/api/properties", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/properties", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      console.log("DEBUG: Properties request - User:", req.user?.id, "Organization:", req.user?.organizationId);
-      const properties = await storage.getAllProperties(req.user?.organizationId);
-      console.log("DEBUG: Properties returned:", properties.length, "items");
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const properties = await storage.getAllProperties(req.user.organizationId);
       res.json(properties);
     } catch (error) {
       console.error("Error fetching properties:", error);
@@ -757,9 +758,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Units routes
-  app.get("/api/units", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/units", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const units = await storage.getAllUnits(req.user?.organizationId);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const units = await storage.getAllUnits(req.user.organizationId);
       res.json(units);
     } catch (error) {
       console.error("Error fetching units:", error);
@@ -804,9 +808,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Mortgages routes
-  app.get("/api/mortgages", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/mortgages", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const mortgages = await storage.getAllMortgages(req.user?.organizationId);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const mortgages = await storage.getAllMortgages(req.user.organizationId);
       res.json(mortgages);
     } catch (error) {
       console.error("Error fetching mortgages:", error);
@@ -825,9 +832,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Expenses routes
-  app.get("/api/expenses", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/expenses", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const expenses = await storage.getAllExpenses(req.user?.organizationId);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const expenses = await storage.getAllExpenses(req.user.organizationId);
       res.json(expenses);
     } catch (error) {
       console.error("Error fetching expenses:", error);
@@ -835,11 +845,14 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/expenses", async (req: AuthenticatedRequest, res) => {
+  app.post("/api/expenses", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const expenseData = {
         ...req.body,
-        organizationId: req.user?.organizationId || "default-org"
+        organizationId: req.user.organizationId
       };
       const expense = await storage.createExpense(expenseData);
       res.json(expense);
@@ -849,8 +862,11 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.patch("/api/expenses/:id", async (req, res) => {
+  app.patch("/api/expenses/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const id = req.params.id;
       const expense = await storage.updateExpense(id, req.body);
       res.json(expense);
@@ -860,8 +876,11 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/expenses/:id", async (req, res) => {
+  app.delete("/api/expenses/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const id = req.params.id;
       await storage.deleteExpense(id);
       res.json({ success: true });
@@ -872,9 +891,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Tenants routes
-  app.get("/api/tenants", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/tenants", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const tenants = await storage.getAllTenants(req.user?.organizationId);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const tenants = await storage.getAllTenants(req.user.organizationId);
       res.json(tenants);
     } catch (error) {
       console.error("Error fetching tenants:", error);
@@ -1231,9 +1253,12 @@ export function registerRoutes(app: Express) {
   
 
   // Properties with stats route
-  app.get("/api/properties/with-stats", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/properties/with-stats", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const properties = await storage.getAllProperties(req.user?.organizationId);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const properties = await storage.getAllProperties(req.user.organizationId);
       res.json(properties);
     } catch (error) {
       console.error("Error fetching properties with stats:", error);
@@ -1254,9 +1279,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Expenses by category route
-  app.get("/api/expenses/by-category", async (req, res) => {
+  app.get("/api/expenses/by-category", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const expenses = await storage.getAllExpenses();
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const expenses = await storage.getAllExpenses(req.user.organizationId);
       res.json(expenses);
     } catch (error) {
       console.error("Error fetching expenses by category:", error);
@@ -1265,9 +1293,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Tasks routes
-  app.get("/api/tasks", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/tasks", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const tasks = await storage.getAllTasks(req.user?.organizationId);
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const tasks = await storage.getAllTasks(req.user.organizationId);
       res.json(tasks);
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -1275,10 +1306,16 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/tasks", async (req, res) => {
+  app.post("/api/tasks", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       // Convert date string to Date object if present
-      const taskData = { ...req.body };
+      const taskData = { 
+        ...req.body,
+        organizationId: req.user.organizationId
+      };
       if (taskData.dueDate) {
         taskData.dueDate = new Date(taskData.dueDate);
       }
@@ -1291,8 +1328,11 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.put("/api/tasks/:id", async (req, res) => {
+  app.put("/api/tasks/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
       const id = req.params.id;
       const task = await storage.updateTask(id, req.body);
       res.json(task);
