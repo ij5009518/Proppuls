@@ -60,8 +60,6 @@ function AuthenticatedApp() {
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
-        <Route path="/forgot-password" component={ForgotPassword} />
-        <Route path="/reset-password" component={ResetPassword} />
         <Route path="/tenant" component={TenantPortal} />
         <Route path="/tenant-portal" component={TenantPortal} />
         <Route component={() => {
