@@ -1193,68 +1193,76 @@ class Storage {
   }
 
   // Get payment summaries for dashboard
-  async getPaymentSummaries(organizationId?: string) {
+  async getPaymentSummaries(organizationId?: string): Promise<any> {
     try {
-      const payments = await this.getAllRentPayments(organizationId);
+      const rentPayments = await this.getAllRentPayments(organizationId);
       const expenses = await this.getAllExpenses(organizationId);
-      const today = new Date();
-      const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-
-      const totalRevenue = payments
-        .filter((p: any) => p.paidDate)
-        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
-
-      const currentMonthRevenue = payments
-        .filter((p: any) => {
-          const paidDate = p.paidDate ? new Date(p.paidDate) : null;
-          return paidDate && paidDate >= currentMonth && paidDate < nextMonth;
-        })
-        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
-
-      const lastMonthRevenue = payments
-        .filter((p: any) => {
-          const paidDate = p.paidDate ? new Date(p.paidDate) : null;
-          return paidDate && paidDate >= lastMonth && paidDate < currentMonth;
-        })
-        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
-
+      
+      const totalRevenue = rentPayments
+        .filter(p => p.status === 'paid')
+        .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
+      
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      
       const currentMonthExpenses = expenses
-        .filter((e: any) => {
+        .filter(e => {
           const expenseDate = new Date(e.date);
-          return expenseDate >= currentMonth && expenseDate < nextMonth;
+          return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
         })
-        .reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0);
+        .reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
+      
+      const lastMonthRevenue = rentPayments
+        .filter(p => {
+          if (p.status !== 'paid' || !p.paidDate) return false;
+          const paidDate = new Date(p.paidDate);
+          return paidDate.getMonth() === lastMonth && paidDate.getFullYear() === lastMonthYear;
+        })
+        .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
 
-      const outstandingBalance = payments
-        .filter((p: any) => !p.paidDate && new Date(p.dueDate) <= today)
-        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+      const currentMonthRevenue = rentPayments
+        .filter(p => {
+          if (p.status !== 'paid' || !p.paidDate) return false;
+          const paidDate = new Date(p.paidDate);
+          return paidDate.getMonth() === currentMonth && paidDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
 
-      const overduePayments = payments
-        .filter((p: any) => !p.paidDate && new Date(p.dueDate) < today)
-        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+      const outstandingBalance = rentPayments
+        .filter(p => p.status === 'pending')
+        .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
 
-      const upcomingPayments = payments
-        .filter((p: any) => {
+      const overduePayments = rentPayments
+        .filter(p => {
+          if (p.status !== 'pending') return false;
           const dueDate = new Date(p.dueDate);
-          const futureDate = new Date(today);
-          futureDate.setDate(today.getDate() + 30);
-          return !p.paidDate && dueDate > today && dueDate <= futureDate;
+          return dueDate < new Date();
         })
-        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+        .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
 
+      const upcomingPayments = rentPayments
+        .filter(p => {
+          if (p.status !== 'pending') return false;
+          const dueDate = new Date(p.dueDate);
+          const futureDate = new Date();
+          futureDate.setDate(futureDate.getDate() + 30);
+          return dueDate > new Date() && dueDate <= futureDate;
+        })
+        .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
+      
       return {
         totalRevenue,
         currentMonthRevenue,
-        lastMonthRevenue,
         currentMonthExpenses,
+        lastMonthRevenue,
         outstandingBalance,
         overduePayments,
         upcomingPayments,
-        totalPayments: payments.length,
-        paidPayments: payments.filter((p: any) => p.paidDate).length,
-        pendingPayments: payments.filter((p: any) => !p.paidDate).length,
+        totalPayments: rentPayments.length,
+        paidPayments: rentPayments.filter(p => p.status === 'paid').length,
+        pendingPayments: rentPayments.filter(p => p.status === 'pending').length,
         netIncome: totalRevenue - currentMonthExpenses
       };
     } catch (error) {
@@ -1262,8 +1270,8 @@ class Storage {
       return {
         totalRevenue: 0,
         currentMonthRevenue: 0,
-        lastMonthRevenue: 0,
         currentMonthExpenses: 0,
+        lastMonthRevenue: 0,
         outstandingBalance: 0,
         overduePayments: 0,
         upcomingPayments: 0,

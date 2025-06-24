@@ -1219,9 +1219,6 @@ export function registerRoutes(app: Express) {
       const paymentSummaries = await storage.getPaymentSummaries(req.user.organizationId);
 
       const occupiedUnits = tenants.filter(t => t.status === 'active' && t.unitId).length;
-      const occupancyRate = units.length > 0 ? ((occupiedUnits / units.length) * 100).toFixed(1) : "0";
-
-      const occupiedUnits = tenants.filter(t => t.status === 'active' && t.unitId).length;
       const occupancyRate = units.length > 0 ? ((occupiedUnits / units.length) * 100) : 0;
 
       const openMaintenance = maintenanceRequests.filter(m => m.status === 'open').length;
