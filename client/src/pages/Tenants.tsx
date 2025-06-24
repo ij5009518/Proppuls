@@ -86,6 +86,10 @@ const billingRecordSchema = z.object({
   notes: z.string().optional(),
 });
 
+const dueDateOptionSchema = z.object({
+  dueDate: z.date(),
+});
+
 export default function Tenants() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
@@ -606,11 +610,15 @@ export default function Tenants() {
   };
 
   const onPaymentSubmit = (data: z.infer<typeof rentPaymentSchema>) => {
+    // Calculate due date 30 days from payment date by default
+    const dueDate = new Date(data.paymentDate);
+    dueDate.setDate(dueDate.getDate() + 30);
+    
     const submitData = {
       tenantId: data.tenantId,
       unitId: data.unitId,
       amount: parseFloat(data.amount),
-      dueDate: new Date().toISOString(), // Current month due date
+      dueDate: dueDate.toISOString(), // 30 days from payment date
       paidDate: data.paymentDate.toISOString(), // Actual payment date
       paymentMethod: data.paymentMethod,
       lateFeeAmount: data.lateFeeAmount ? parseFloat(data.lateFeeAmount) : 0,
@@ -2137,11 +2145,8 @@ export default function Tenants() {
                       // Use outstanding balance from API
                       const outstandingBalance = tenantOutstandingBalance?.balance || 0;
                       
-                      // Calculate overdue from billing records that are past due
-                      const billingRecords = Array.isArray(tenantBillingRecords) ? tenantBillingRecords : [];
-                      const overdueAmount = billingRecords
-                        .filter((record: any) => record.status === 'pending' && new Date(record.dueDate) < new Date())
-                        .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
+                      // Remove automatic overdue calculation - let users manage manually
+                      const overdueAmount = 0;
 
                       console.log('Payment Summary Debug:', {
                         selectedTenantId: selectedTenant.id,
@@ -2294,7 +2299,7 @@ export default function Tenants() {
                                     </Badge>
                                   </TableCell>
                                   <TableCell>
-                                    {transaction.type === 'bill' && (
+                                    {transaction.type === 'bill' ? (
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -2306,6 +2311,24 @@ export default function Tenants() {
                                           billingRecordForm.setValue("status", transaction.status);
                                           billingRecordForm.setValue("notes", transaction.notes || "");
                                           setIsEditBillingDialogOpen(true);
+                                        }}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedPayment(transaction);
+                                          editPaymentForm.setValue("tenantId", transaction.tenantId || "");
+                                          editPaymentForm.setValue("unitId", transaction.unitId || "");
+                                          editPaymentForm.setValue("amount", transaction.amount);
+                                          editPaymentForm.setValue("paymentDate", new Date(transaction.paidDate || transaction.date));
+                                          editPaymentForm.setValue("paymentMethod", transaction.paymentMethod || "CHECK");
+                                          editPaymentForm.setValue("lateFeeAmount", transaction.lateFeeAmount || "");
+                                          editPaymentForm.setValue("notes", transaction.notes || "");
+                                          setIsEditPaymentDialogOpen(true);
                                         }}
                                       >
                                         <Edit className="h-4 w-4" />
