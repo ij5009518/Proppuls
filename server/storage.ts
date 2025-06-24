@@ -966,7 +966,6 @@ class Storage {
           console.log("Updating billing records for existing paid payment");
           await this.updateBillingRecordsForPayment(payment.tenantId, parseFloat(payment.amount || '0'));
         }
-        }
 
         return payment || null;
       } catch (error) {
