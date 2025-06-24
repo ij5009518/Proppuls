@@ -148,6 +148,9 @@ A comprehensive property management and financial intelligence platform that pro
   - Implemented complete forgot password system with email verification and secure token validation
   - Added professional email templates with 1-hour token expiration and single-use protection
   - Created password reset pages with form validation and "Forgot password?" link on login page
+  - Fixed password reset email URLs to use correct Replit domain instead of localhost
+  - Fixed unit creation authentication - Properties page now properly sends auth tokens when creating units
+  - Units now correctly link to user's organization and appear in dashboard
 
 ## Changelog
 
