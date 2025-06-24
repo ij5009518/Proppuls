@@ -893,34 +893,78 @@ class Storage {
   }
 
   async updateRentPayment(id: string, paymentData: any): Promise<RentPayment | null> {
-    try {
-      console.log("Updating rent payment with data:", paymentData);
+    return await withRetry(async () => {
+      try {
+        console.log("Updating rent payment with data:", paymentData);
 
-      const updateData = {
-        ...paymentData,
-        dueDate: paymentData.dueDate ? new Date(paymentData.dueDate) : undefined,
-        paidDate: paymentData.paidDate ? new Date(paymentData.paidDate) : undefined,
-        updatedAt: new Date()
-      };
-
-      // Remove undefined values
-      Object.keys(updateData).forEach(key => {
-        if (updateData[key] === undefined) {
-          delete updateData[key];
+        // Get the original payment to check for amount changes
+        const originalPayment = await db.select().from(rentPayments).where(eq(rentPayments.id, id)).limit(1);
+        if (originalPayment.length === 0) {
+          throw new Error("Payment not found");
         }
-      });
+        
+        const original = originalPayment[0];
+        const originalAmount = parseFloat(original.amount || '0');
+        const newAmount = parseFloat(paymentData.amount || '0');
 
-      console.log("Formatted update data:", updateData);
+        const updateData = {
+          ...paymentData,
+          dueDate: paymentData.dueDate ? new Date(paymentData.dueDate) : undefined,
+          paidDate: paymentData.paidDate ? new Date(paymentData.paidDate) : undefined,
+          updatedAt: new Date()
+        };
 
-      const [payment] = await db.update(rentPayments)
-        .set(updateData)
-        .where(eq(rentPayments.id, id))
-        .returning();
-      return payment || null;
-    } catch (error) {
-      console.error("Error updating rent payment:", error);
-      throw error;
-    }
+        // Remove undefined values
+        Object.keys(updateData).forEach(key => {
+          if (updateData[key] === undefined) {
+            delete updateData[key];
+          }
+        });
+
+        console.log("Formatted update data:", updateData);
+
+        const [payment] = await db.update(rentPayments)
+          .set(updateData)
+          .where(eq(rentPayments.id, id))
+          .returning();
+
+        // If the amount changed and this is a paid payment, recalculate billing records
+        if (originalAmount !== newAmount && payment.status === 'paid' && payment.paidDate) {
+          console.log(`Payment amount changed from ${originalAmount} to ${newAmount}, recalculating billing records`);
+          
+          // Reset all paid billing records for this tenant back to pending
+          await db.update(billingRecords)
+            .set({ 
+              status: 'pending',
+              paidAmount: '0',
+              paidDate: null,
+              updatedAt: new Date()
+            })
+            .where(and(
+              eq(billingRecords.tenantId, payment.tenantId),
+              eq(billingRecords.status, 'paid')
+            ));
+
+          // Reapply all payments for this tenant
+          const allTenantPayments = await db.select()
+            .from(rentPayments)
+            .where(and(
+              eq(rentPayments.tenantId, payment.tenantId),
+              eq(rentPayments.status, 'paid'),
+              isNotNull(rentPayments.paidDate)
+            ));
+
+          for (const tenantPayment of allTenantPayments) {
+            await this.updateBillingRecordsForPayment(tenantPayment.tenantId, parseFloat(tenantPayment.amount || '0'));
+          }
+        }
+
+        return payment || null;
+      } catch (error) {
+        console.error("Error updating rent payment:", error);
+        throw error;
+      }
+    });
   }
 
   async deleteRentPayment(id: string): Promise<boolean> {

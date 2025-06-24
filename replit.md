@@ -134,6 +134,8 @@ A comprehensive property management and financial intelligence platform that pro
   - Created comprehensive RentPayments page with clickable cards, grid/list views, and full CRUD operations
   - Added real-time cache invalidation for outstanding balances (3-second refresh interval)
   - Added Rent Payments to main navigation sidebar
+  - Enhanced payment editing to recalculate billing records when payment amounts change
+  - Fixed property creation button authentication issue
 
 ## Changelog
 
