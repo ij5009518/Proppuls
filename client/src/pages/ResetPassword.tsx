@@ -285,10 +285,8 @@ export default function ResetPassword() {
             {!submitResult?.success && (
               <div className="flex items-center justify-center space-x-1 text-sm">
                 <ArrowLeft className="h-4 w-4" />
-                <Link to="/login">
-                  <a className="text-blue-600 hover:text-blue-800 hover:underline">
-                    Back to Login
-                  </a>
+                <Link to="/login" className="text-blue-600 hover:text-blue-800 hover:underline">
+                  Back to Login
                 </Link>
               </div>
             )}
