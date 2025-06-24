@@ -196,7 +196,7 @@ export default function Tenants() {
     queryKey: ["/api/rent-payments"],
   });
 
-  // Fetch outstanding balances for all tenants with aggressive cache invalidation
+  // Fetch outstanding balances and billing records for all tenants
   const { data: tenantOutstandingBalances, refetch: refetchBalances } = useQuery({
     queryKey: ["/api/outstanding-balances"],
     queryFn: async () => {
@@ -219,6 +219,30 @@ export default function Tenants() {
     refetchInterval: 3000, // Refetch every 3 seconds
     staleTime: 0, // Always consider data stale
     cacheTime: 0, // Don't cache
+  });
+
+  // Fetch all billing records for overdue calculations
+  const { data: allBillingRecords } = useQuery({
+    queryKey: ["/api/all-billing-records"],
+    queryFn: async () => {
+      if (!tenants) return {};
+      const records: Record<string, any[]> = {};
+      await Promise.all(
+        tenants.map(async (tenant: Tenant) => {
+          try {
+            const response = await apiRequest("GET", `/api/billing-records/${tenant.id}`);
+            records[tenant.id] = response || [];
+          } catch (error) {
+            records[tenant.id] = [];
+          }
+        })
+      );
+      return records;
+    },
+    enabled: !!tenants,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000,
+    staleTime: 0,
   });
 
   const { data: tasks = [] } = useQuery<Task[]>({
@@ -1381,52 +1405,48 @@ export default function Tenants() {
 
 
 
-                    {/* Payment Summary - Using API Data */}
+                    {/* Payment Summary - Always Show Outstanding */}
                     {(() => {
                       const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === tenant.id) || [];
                       const totalPaid = tenantPayments
                         .filter((payment: any) => payment.paidDate)
                         .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0);
                       
-                      // Use API outstanding balance instead of calculated balance
+                      // Use API outstanding balance
                       const apiOutstanding = tenantOutstandingBalances?.[tenant.id] || 0;
                       
-                      // Only show overdue if there are actual overdue payments
-                      const overduePayments = tenantPayments
-                        .filter((payment: any) => !payment.paidDate && new Date(payment.dueDate) < new Date());
-                      const totalOverdue = overduePayments.length > 0 ? overduePayments
-                        .reduce((sum: number, payment: any) => sum + parseFloat(payment.amount || 0), 0) : 0;
-
-                      // Show summary if there's any payment activity or outstanding balance
-                      if (totalPaid === 0 && apiOutstanding === 0 && totalOverdue === 0) return null;
+                      // Calculate overdue from billing records that are pending and past due
+                      const tenantBillingRecords = allBillingRecords?.[tenant.id] || [];
+                      const overdueAmount = tenantBillingRecords
+                        .filter((record: any) => 
+                          record.status === 'pending' && 
+                          new Date(record.dueDate) < new Date()
+                        )
+                        .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
 
                       return (
                         <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                           <div className="grid grid-cols-2 gap-2 text-xs">
-                            {totalPaid > 0 && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-gray-600 dark:text-gray-400">Total Paid:</span>
-                                <span className="font-medium text-green-600 dark:text-green-400">
-                                  {formatCurrency(totalPaid.toString())}
-                                </span>
-                              </div>
-                            )}
-                            {apiOutstanding > 0 && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-gray-600 dark:text-gray-400">Outstanding:</span>
-                                <span className="font-medium text-yellow-600 dark:text-yellow-400">
-                                  {formatCurrency(apiOutstanding.toString())}
-                                </span>
-                              </div>
-                            )}
-                            {totalOverdue > 0 && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Total Paid:</span>
+                              <span className="font-medium text-green-600 dark:text-green-400">
+                                {formatCurrency(totalPaid.toString())}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Outstanding:</span>
+                              <span className={`font-medium ${apiOutstanding > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
+                                {formatCurrency(apiOutstanding.toString())}
+                              </span>
+                            </div>
+                            {overdueAmount > 0 && (
                               <div className="flex items-center justify-between col-span-2">
                                 <span className="text-gray-600 dark:text-gray-400 flex items-center">
                                   <AlertTriangle className="h-3 w-3 text-red-500 mr-1" />
                                   Overdue:
                                 </span>
                                 <span className="font-medium text-red-600 dark:text-red-400">
-                                  {formatCurrency(totalOverdue.toString())}
+                                  {formatCurrency(overdueAmount.toString())}
                                 </span>
                               </div>
                             )}
