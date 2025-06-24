@@ -623,6 +623,17 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.get("/api/billing-records/:tenantId", async (req, res) => {
+    try {
+      const { tenantId } = req.params;
+      const billingRecords = await storage.getBillingRecordsByTenant(tenantId);
+      res.json(billingRecords);
+    } catch (error) {
+      console.error("Error fetching billing records:", error);
+      res.status(500).json({ error: "Failed to fetch billing records" });
+    }
+  });
+
   app.post("/api/billing-records/generate-monthly", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const billingRecords = await storage.generateMonthlyBilling();
