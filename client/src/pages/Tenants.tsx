@@ -293,8 +293,9 @@ export default function Tenants() {
     mutationFn: (data: any) => apiRequest("POST", "/api/rent-payments", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/billing-records", selectedTenant?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/billing-records/${selectedTenant?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
       setIsPaymentDialogOpen(false);
@@ -311,8 +312,10 @@ export default function Tenants() {
       apiRequest("PUT", `/api/rent-payments/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/billing-records/${selectedTenant?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant?.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
       setIsEditPaymentDialogOpen(false);
       editPaymentForm.reset();
       toast({ title: "Success", description: "Payment updated successfully" });
@@ -424,7 +427,9 @@ export default function Tenants() {
       apiRequest("PUT", `/api/billing-records/${id}`, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/billing-records/${selectedTenant?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
       setIsEditBillingDialogOpen(false);
       billingRecordForm.reset();
       toast({
@@ -610,20 +615,23 @@ export default function Tenants() {
   };
 
   const onPaymentSubmit = (data: z.infer<typeof rentPaymentSchema>) => {
-    // Calculate due date 30 days from payment date by default
-    const dueDate = new Date(data.paymentDate);
-    dueDate.setDate(dueDate.getDate() + 30);
+    // Use provided due date or calculate 30 days from payment date
+    const dueDate = data.dueDate || (() => {
+      const calculated = new Date(data.paymentDate);
+      calculated.setDate(calculated.getDate() + 30);
+      return calculated;
+    })();
     
     const submitData = {
       tenantId: data.tenantId,
       unitId: data.unitId,
       amount: parseFloat(data.amount),
-      dueDate: dueDate.toISOString(), // 30 days from payment date
-      paidDate: data.paymentDate.toISOString(), // Actual payment date
+      dueDate: dueDate.toISOString(),
+      paidDate: data.paymentDate.toISOString(),
       paymentMethod: data.paymentMethod,
       lateFeeAmount: data.lateFeeAmount ? parseFloat(data.lateFeeAmount) : 0,
       notes: data.notes || "",
-      status: "paid" // Mark as paid since we're recording a payment
+      status: "paid"
     };
     createPaymentMutation.mutate(submitData);
   };
@@ -2119,19 +2127,33 @@ export default function Tenants() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold">Payment Overview</h3>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        paymentForm.setValue("tenantId", selectedTenant.id);
-                        paymentForm.setValue("unitId", selectedTenant.unitId || "");
-                        paymentForm.setValue("amount", selectedTenant.monthlyRent || "");
-                        setIsPaymentDialogOpen(true);
-                      }}
-                    >
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Add Payment
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          queryClient.invalidateQueries({ queryKey: [`/api/billing-records/${selectedTenant.id}`] });
+                          queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant.id}`] });
+                          queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
+                        }}
+                      >
+                        <Clock className="h-4 w-4 mr-2" />
+                        Refresh
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          paymentForm.setValue("tenantId", selectedTenant.id);
+                          paymentForm.setValue("unitId", selectedTenant.unitId || "");
+                          paymentForm.setValue("amount", selectedTenant.monthlyRent || "");
+                          setIsPaymentDialogOpen(true);
+                        }}
+                      >
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Add Payment
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Payment Summary Cards */}
@@ -3319,7 +3341,7 @@ export default function Tenants() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={updateBillingMutation.isPending}>
-                  {updateBillingMutation.isPending ? "Updating..." : "Update"}
+                  {updateBillingMutation.isPending ? "Updating..." : "Update Billing Record"}
                 </Button>
               </div>
             </form>
