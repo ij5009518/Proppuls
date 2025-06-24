@@ -296,13 +296,7 @@ export default function Properties() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertProperty) => {
-      try {
-        const response = await apiRequest("POST", "/api/properties", data);
-        return response.json();
-      } catch (error) {
-        console.error("API request failed:", error);
-        throw error;
-      }
+      return await apiRequest("POST", "/api/properties", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/properties"] });
@@ -312,7 +306,7 @@ export default function Properties() {
     },
     onError: (error) => {
       console.error("Create property error:", error);
-      toast({ title: "Failed to create property", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to create property", description: error.message || "Unknown error", variant: "destructive" });
     },
   });
 
