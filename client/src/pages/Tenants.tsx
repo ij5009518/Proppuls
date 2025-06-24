@@ -298,6 +298,10 @@ export default function Tenants() {
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      // Invalidate outstanding balance for all tenants
+      filteredTenants.forEach(tenant => {
+        queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${tenant.id}`] });
+      });
       setIsPaymentDialogOpen(false);
       paymentForm.reset();
       toast({ title: "Success", description: "Payment recorded successfully" });
@@ -316,6 +320,10 @@ export default function Tenants() {
       queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant?.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
+      // Invalidate outstanding balance for all tenants
+      filteredTenants.forEach(tenant => {
+        queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${tenant.id}`] });
+      });
       setIsEditPaymentDialogOpen(false);
       editPaymentForm.reset();
       toast({ title: "Success", description: "Payment updated successfully" });
@@ -430,6 +438,10 @@ export default function Tenants() {
       queryClient.invalidateQueries({ queryKey: [`/api/billing-records/${selectedTenant?.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant?.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
+      // Invalidate outstanding balance for all tenants
+      filteredTenants.forEach(tenant => {
+        queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${tenant.id}`] });
+      });
       setIsEditBillingDialogOpen(false);
       billingRecordForm.reset();
       toast({
@@ -1366,7 +1378,6 @@ export default function Tenants() {
         <div className="space-y-4">
           {filteredTenants.map((tenant) => {
             const overduePayments = getOverduePayments(tenant.id);
-            const currentBalance = getCurrentMonthBalance(tenant.id);
             
             return (
               <Card 
@@ -1409,23 +1420,27 @@ export default function Tenants() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-6">
-                      <div className="text-right">
+                      <div className="text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Monthly Rent</div>
                         {tenant.monthlyRent && (
                           <p className="text-sm font-semibold text-green-600 dark:text-green-400">
-                            {formatCurrency(tenant.monthlyRent)}/mo
+                            {formatCurrency(tenant.monthlyRent)}
                           </p>
                         )}
                         {tenant.leaseStart && tenant.leaseEnd && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {formatDate(tenant.leaseStart)} - {formatDate(tenant.leaseEnd)}
                           </p>
                         )}
                       </div>
-                      <div className="text-right">
+                      <div className="text-center">
                         {(() => {
-                          // Use the outstanding balance data for accurate calculations
-                          const outstandingBalance = tenantOutstandingBalances?.[tenant.id] || 0;
-                          const totalOutstanding = outstandingBalance;
+                          // Get actual outstanding balance by fetching from API data  
+                          const { data: tenantOutstandingBalance } = useQuery({
+                            queryKey: [`/api/outstanding-balance/${tenant.id}`],
+                            enabled: !!tenant.id,
+                          });
+                          const totalOutstanding = tenantOutstandingBalance?.balance || 0;
                           
                           // Calculate overdue from rent payments for now (we can enhance this later)
                           const tenantPayments = rentPayments?.filter((payment: any) => payment.tenantId === tenant.id) || [];
