@@ -122,6 +122,15 @@ A comprehensive property management and financial intelligence platform that pro
 - **iOS**: Build and deploy through Expo/App Store
 - **Android**: Build and deploy through Expo/Google Play Store
 
+## Recent Changes
+
+- June 24, 2025: Enhanced billing and payment system
+  - Removed redundant payment summary cards from tenant details
+  - Created unified Payment & Bill History table showing both bills and payments chronologically
+  - Fixed new tenant overdue issue by setting due dates for future months
+  - Implemented automatic billing record updates when payments are recorded
+  - Outstanding balance calculation now properly moves amounts from outstanding to paid
+
 ## Changelog
 
 - June 24, 2025. Initial setup
