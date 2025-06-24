@@ -1212,7 +1212,7 @@ export function registerRoutes(app: Express) {
       const properties = await storage.getAllProperties(req.user.organizationId);
       const units = await storage.getAllUnits(req.user.organizationId);
       const tenants = await storage.getAllTenants(req.user.organizationId);
-      const maintenanceRequests = await storage.getAllMaintenanceRequests();
+      const maintenanceRequests = await storage.getAllMaintenanceRequests(req.user.organizationId);
       const paymentSummaries = await storage.getPaymentSummaries();
 
       const occupiedUnits = tenants.filter(t => t.status === 'active' && t.unitId).length;

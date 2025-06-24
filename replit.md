@@ -126,14 +126,17 @@ A comprehensive property management and financial intelligence platform that pro
 
 - June 24, 2025: Complete multi-tenant organization-based data isolation implementation
   - Added authentication middleware to all API routes requiring user login
-  - Implemented organization-based data filtering across all endpoints (properties, units, tenants, expenses, rent payments, tasks, etc.)
+  - Implemented organization-based data filtering across all endpoints (properties, units, tenants, expenses, rent payments, tasks, mortgages, maintenance requests)
   - Users now only see data belonging to their own organization
   - Each API request validates organization ID and filters data accordingly
   - Created test organizations (demo-org-1, demo-org-2) with separate datasets for testing
   - Verified complete data isolation - users from different organizations cannot access each other's data
-  - Standardized expense forms with comprehensive conditional fields (insurance, taxes, utilities, meter readings)
-  - Enhanced expense form validation and category management
-  - Fixed authentication tokens and session management for proper user context
+  - Fixed frontend authentication system to properly send Bearer tokens with all API requests
+  - Updated database schema to include organization_id in all relevant tables
+  - Fixed rent payments, mortgages, and maintenance requests query errors
+  - Ensured property creation and all CRUD operations work with proper organization scoping
+  - Standardized expense forms with comprehensive conditional fields
+  - Enhanced authentication and session management for proper user context
 
 ## Changelog
 
