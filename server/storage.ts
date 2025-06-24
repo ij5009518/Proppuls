@@ -888,7 +888,10 @@ class Storage {
   async getAllRentPayments(organizationId?: string): Promise<RentPayment[]> {
     return await withRetry(async () => {
       if (organizationId) {
-        return await db.select().from(rentPayments).where(eq(rentPayments.organizationId, organizationId));
+        console.log("Fetching rent payments for organization:", organizationId);
+        const payments = await db.select().from(rentPayments).where(eq(rentPayments.organizationId, organizationId));
+        console.log("Found", payments.length, "rent payments for organization:", organizationId);
+        return payments;
       }
       return await db.select().from(rentPayments);
     });
