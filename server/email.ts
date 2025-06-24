@@ -142,26 +142,130 @@ class EmailService {
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
     
     const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Password Reset Request</h2>
-        <p>Dear ${userName},</p>
-        <p>We received a request to reset your password for your Property Management Platform account.</p>
-        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-          <p>Click the button below to reset your password:</p>
-          <a href="${resetUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 10px 0;">Reset Password</a>
-          <p style="margin-top: 15px; font-size: 14px; color: #666;">Or copy and paste this link in your browser:</p>
-          <p style="font-size: 14px; word-break: break-all;">${resetUrl}</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #2563eb; margin: 0;">Property Manager</h1>
         </div>
-        <p><strong>This link will expire in 1 hour.</strong></p>
-        <p>If you didn't request this password reset, please ignore this email.</p>
-        <p>Best regards,<br>Property Management Team</p>
+        
+        <h2 style="color: #333; margin-bottom: 20px;">Password Reset Request</h2>
+        
+        <p style="color: #555; line-height: 1.6;">Hi ${userName},</p>
+        
+        <p style="color: #555; line-height: 1.6;">
+          You requested to reset your password for your Property Manager account. 
+          Click the button below to create a new password:
+        </p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" 
+             style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
+            Reset My Password
+          </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">
+          Or copy and paste this link into your browser:
+        </p>
+        <p style="word-break: break-all; color: #2563eb; background: #f8fafc; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 13px;">
+          ${resetUrl}
+        </p>
+        
+        <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;">
+          <p style="color: #dc2626; margin: 0; font-size: 14px;">
+            <strong>Security Notice:</strong> This link will expire in 1 hour. If you didn't request this password reset, please ignore this email and your account will remain secure.
+          </p>
+        </div>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        
+        <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+          This is an automated message from Property Manager. Please do not reply to this email.
+        </p>
       </div>
     `;
 
-    return this.sendEmail({
+    const text = `
+Password Reset Request - Property Manager
+
+Hi ${userName},
+
+You requested to reset your password for your Property Manager account.
+
+Click this link to reset your password: ${resetUrl}
+
+SECURITY NOTICE: This link will expire in 1 hour for security reasons. If you didn't request this password reset, you can safely ignore this email.
+
+---
+This is an automated message from Property Manager. Please do not reply to this email.
+    `;
+
+    return await this.sendEmail({
       to,
-      subject: `Password Reset Request`,
+      subject: 'Reset Your Property Manager Password',
       html,
+      text
+    });
+  }
+
+  async sendPasswordResetConfirmation(to: string, userName: string): Promise<boolean> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #2563eb; margin: 0;">Property Manager</h1>
+        </div>
+        
+        <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 20px; margin-bottom: 20px;">
+          <h2 style="color: #16a34a; margin: 0 0 10px 0;">Password Successfully Reset</h2>
+        </div>
+        
+        <p style="color: #555; line-height: 1.6;">Hi ${userName},</p>
+        
+        <p style="color: #555; line-height: 1.6;">
+          Your password has been successfully reset for your Property Manager account. 
+          You can now log in with your new password.
+        </p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}/login" 
+             style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
+            Log In to Your Account
+          </a>
+        </div>
+        
+        <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;">
+          <p style="color: #dc2626; margin: 0; font-size: 14px;">
+            <strong>Security Notice:</strong> If you didn't change your password, please contact support immediately at support@propertymanager.com
+          </p>
+        </div>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        
+        <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+          This is an automated message from Property Manager. Please do not reply to this email.
+        </p>
+      </div>
+    `;
+
+    const text = `
+Password Successfully Reset - Property Manager
+
+Hi ${userName},
+
+Your password has been successfully reset for your Property Manager account. You can now log in with your new password.
+
+Log in at: ${process.env.FRONTEND_URL || 'http://localhost:5000'}/login
+
+SECURITY NOTICE: If you didn't change your password, please contact support immediately.
+
+---
+This is an automated message from Property Manager. Please do not reply to this email.
+    `;
+
+    return await this.sendEmail({
+      to,
+      subject: 'Password Reset Confirmation - Property Manager',
+      html,
+      text
     });
   }
 }
