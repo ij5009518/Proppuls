@@ -108,6 +108,7 @@ export default function Properties() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("overview");
   const [isMortgageDialogOpen, setIsMortgageDialogOpen] = useState(false);
   const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
@@ -495,10 +496,13 @@ export default function Properties() {
 
 
   const filteredProperties = (localProperties.length > 0 ? localProperties : properties).filter(
-    (property) =>
-      property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      property.city.toLowerCase().includes(searchTerm.toLowerCase())
+    (property) => {
+      const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           property.city.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "all" || property.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    }
   );
 
   if (isLoading) {
@@ -681,12 +685,26 @@ export default function Properties() {
       </div>
 
       <div className="flex justify-between items-center">
-        <Input
-          placeholder="Search properties..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
+        <div className="flex items-center space-x-4">
+          <Input
+            placeholder="Search properties..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Properties</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="maintenance">Under Maintenance</SelectItem>
+              <SelectItem value="sold">Sold</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center space-x-2">
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}

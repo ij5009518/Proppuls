@@ -51,6 +51,7 @@ export default function Tasks() {
   const [isTaskDetailsDialogOpen, setIsTaskDetailsDialogOpen] = useState(false);
   const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<Task | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
   const [editingDescription, setEditingDescription] = useState(false);
   const [editingDescriptionValue, setEditingDescriptionValue] = useState("");
@@ -307,11 +308,13 @@ export default function Tasks() {
     return "";
   };
 
-  const filteredTasks = Array.isArray(tasks) ? tasks.filter((task: Task) =>
-    task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.category.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  const filteredTasks = Array.isArray(tasks) ? tasks.filter((task: Task) => {
+    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         task.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  }) : [];
 
   const taskCategories = [
     "general",
@@ -588,12 +591,26 @@ export default function Tasks() {
       </div>
 
       <div className="flex justify-between items-center">
-        <Input
-          placeholder="Search tasks..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
+        <div className="flex items-center space-x-4">
+          <Input
+            placeholder="Search tasks..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tasks</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center space-x-2">
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
