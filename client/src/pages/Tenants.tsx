@@ -639,11 +639,18 @@ export default function Tenants() {
   const onEditPaymentSubmit = (data: z.infer<typeof rentPaymentSchema>) => {
     if (!selectedPayment) return;
     
+    // Use provided due date or calculate 30 days from payment date
+    const dueDate = data.dueDate || (() => {
+      const calculated = new Date(data.paymentDate);
+      calculated.setDate(calculated.getDate() + 30);
+      return calculated;
+    })();
+    
     const submitData = {
       tenantId: data.tenantId,
       unitId: data.unitId,
       amount: parseFloat(data.amount),
-      dueDate: data.paymentDate.toISOString(),
+      dueDate: dueDate.toISOString(),
       paidDate: data.paymentDate.toISOString(),
       paymentMethod: data.paymentMethod,
       lateFeeAmount: data.lateFeeAmount ? parseFloat(data.lateFeeAmount) : 0,
@@ -2135,6 +2142,9 @@ export default function Tenants() {
                           queryClient.invalidateQueries({ queryKey: [`/api/billing-records/${selectedTenant.id}`] });
                           queryClient.invalidateQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant.id}`] });
                           queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] });
+                          queryClient.refetchQueries({ queryKey: [`/api/billing-records/${selectedTenant.id}`] });
+                          queryClient.refetchQueries({ queryKey: [`/api/outstanding-balance/${selectedTenant.id}`] });
+                          toast({ title: "Data refreshed" });
                         }}
                       >
                         <Clock className="h-4 w-4 mr-2" />
