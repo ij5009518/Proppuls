@@ -525,6 +525,7 @@ class Storage {
 
         payments.push({
           id: crypto.randomUUID(),
+          organizationId: tenant.organizationId,
           tenantId: tenant.id,
           unitId: tenant.unitId,
           amount: monthlyAmount.toString(),
@@ -598,6 +599,7 @@ class Storage {
       if (!currentMonthExists) {
         const payment = {
           id: crypto.randomUUID(),
+          organizationId: tenant.organizationId,
           tenantId: tenant.id,
           unitId: tenant.unitId,
           amount: monthlyAmount.toString(),

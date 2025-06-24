@@ -166,6 +166,7 @@ export const expenses = pgTable('expenses', {
 
 export const maintenanceRequests = pgTable('maintenance_requests', {
   id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull(),
   unitId: text('unit_id').notNull(),
   tenantId: text('tenant_id'),
   title: text('title').notNull(),
@@ -200,6 +201,7 @@ export const vendors = pgTable('vendors', {
 
 export const rentPayments = pgTable('rent_payments', {
   id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull(),
   tenantId: text('tenant_id').notNull(),
   unitId: text('unit_id').notNull(),
   amount: decimal('amount').notNull(),
@@ -230,6 +232,7 @@ export const billingRecords = pgTable('billing_records', {
 
 export const mortgages = pgTable('mortgages', {
   id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull(),
   propertyId: text('property_id').notNull(),
   lender: text('lender').notNull(),
   originalAmount: decimal('original_amount').notNull(),
