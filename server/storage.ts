@@ -572,8 +572,21 @@ class Storage {
         .from(rentPayments)
         .where(eq(rentPayments.tenantId, tenant.id));
 
-      // Only generate payment for current month
-      const currentMonthDueDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      // For new tenants, set due date to avoid immediate overdue status
+      const dayOfMonth = today.getDate();
+      let dueYear = today.getFullYear();
+      let dueMonth = today.getMonth();
+      
+      if (dayOfMonth > 15) {
+        // If we're past mid-month, set due date for next month
+        dueMonth = today.getMonth() + 1;
+        if (dueMonth > 11) {
+          dueMonth = 0;
+          dueYear = today.getFullYear() + 1;
+        }
+      }
+      
+      const currentMonthDueDate = new Date(dueYear, dueMonth, 1);
 
       // Check if payment already exists for current month
       const currentMonthExists = existingPayments.some((payment: any) => {
@@ -1409,15 +1422,29 @@ class Storage {
         );
 
       if (existingBilling.length === 0) {
-        // Calculate due date (use 1st of month for simplicity)
-        const dueDate = new Date(currentYear, currentMonth, 1);
+        // For new tenants, set due date to next month to avoid immediate overdue status
+        // If we're past the 15th of the month, use next month, otherwise use current month
+        const dayOfMonth = today.getDate();
+        let dueYear = currentYear;
+        let dueMonth = currentMonth;
+        
+        if (dayOfMonth > 15) {
+          // If we're past mid-month, bill for next month
+          dueMonth = currentMonth + 1;
+          if (dueMonth > 11) {
+            dueMonth = 0;
+            dueYear = currentYear + 1;
+          }
+        }
+        
+        const dueDate = new Date(dueYear, dueMonth, 1);
 
-        // Create billing record for current month
+        // Create billing record
         const billingData = {
           tenantId: tenant.id,
           unitId: tenant.unitId,
           amount: tenant.monthlyRent,
-          billingPeriod,
+          billingPeriod: `${dueYear}-${String(dueMonth + 1).padStart(2, '0')}`,
           dueDate,
           status: 'pending',
           type: 'rent',
