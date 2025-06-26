@@ -760,7 +760,11 @@ export default function Tasks() {
         </TabsContent>
 
         <TabsContent value="calendar">
-          <CalendarView tasks={filteredTasks} />
+          <CalendarView 
+            tasks={filteredTasks} 
+            setSelectedTaskForDetails={setSelectedTaskForDetails}
+            setIsTaskDetailsDialogOpen={setIsTaskDetailsDialogOpen}
+          />
         </TabsContent>
       </Tabs>
 
@@ -1829,7 +1833,7 @@ function CalendarView({
                     <div
                       key={task.id}
                       className={`text-xs p-2 rounded border cursor-pointer hover:scale-105 transition-transform ${getPriorityColor(task.priority)}`}
-                      onClick={() => handleTaskClick(task)}
+                      onClick={() => handleCalendarTaskClick(task)}
                     >
                       <div className="font-medium">{task.title}</div>
                       {task.description && (
