@@ -147,87 +147,69 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-md flex items-center justify-center">
-                  <DollarSign className="text-green-600 dark:text-green-400 h-5 w-5" />
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="metric-card overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <DollarSign className="text-white h-6 w-6" />
                 </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-muted-foreground truncate">
-                    Total Revenue
-                  </dt>
-                  <dd className="text-lg font-semibold text-slate-900 dark:text-foreground">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
+                  <p className="text-2xl font-bold text-foreground">
                     {kpis?.totalRevenue || "$0"}
-                  </dd>
-                </dl>
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="mt-2">
-              <div className="flex items-center text-sm text-green-600 dark:text-green-400">
-                <ArrowUp className="mr-1 h-3 w-3" />
-                <span>{kpis?.revenueChange || "+0%"}</span>
-              </div>
+            <div className="mt-4 flex items-center text-sm text-emerald-600 dark:text-emerald-400">
+              <ArrowUp className="mr-1 h-4 w-4" />
+              <span className="font-medium">{kpis?.revenueChange || "+0%"} from last month</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-md flex items-center justify-center">
-                  <Home className="text-blue-600 dark:text-blue-400 h-5 w-5" />
+        <Card className="metric-card overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Home className="text-white h-6 w-6" />
                 </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-muted-foreground truncate">
-                    Properties
-                  </dt>
-                  <dd className="text-lg font-semibold text-slate-900 dark:text-foreground">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Properties</p>
+                  <p className="text-2xl font-bold text-foreground">
                     {kpis?.totalProperties || 0}
-                  </dd>
-                </dl>
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="mt-2">
-              <div className="flex items-center text-sm text-blue-600 dark:text-blue-400">
-                <Plus className="mr-1 h-3 w-3" />
-                <span>+{kpis?.newProperties || 0} this month</span>
-              </div>
+            <div className="mt-4 flex items-center text-sm text-blue-600 dark:text-blue-400">
+              <Plus className="mr-1 h-4 w-4" />
+              <span className="font-medium">+{kpis?.newProperties || 0} this month</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-md flex items-center justify-center">
-                  <DoorOpen className="text-purple-600 dark:text-purple-400 h-5 w-5" />
+        <Card className="metric-card overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <DoorOpen className="text-white h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Occupancy Rate</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {kpis?.occupancyRate || "0%"}
+                  </p>
                 </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-slate-500 dark:text-muted-foreground truncate">
-                    Occupancy Rate
-                  </dt>
-                  <dd className="text-lg font-semibold text-slate-900 dark:text-foreground">
-                    {kpis?.occupancyRate || "0%"}
-                  </dd>
-                </dl>
-              </div>
             </div>
-            <div className="mt-2">
-              <div className="flex items-center text-sm text-green-600 dark:text-green-400">
-                <ArrowUp className="mr-1 h-3 w-3" />
-                <span>{kpis?.occupancyChange || "+0%"}</span>
-              </div>
+            <div className="mt-4 flex items-center text-sm text-emerald-600 dark:text-emerald-400">
+              <ArrowUp className="mr-1 h-4 w-4" />
+              <span className="font-medium">{kpis?.occupancyChange || "+0%"} from last month</span>
             </div>
           </CardContent>
         </Card>
