@@ -66,9 +66,6 @@ export default function Tasks() {
       category: "general",
       dueDate: "",
       assignedTo: "",
-      communicationMethod: "none",
-      recipientEmail: "",
-      recipientPhone: "",
     },
   });
 
@@ -82,9 +79,6 @@ export default function Tasks() {
       category: "general",
       dueDate: "",
       assignedTo: "",
-      communicationMethod: "none",
-      recipientEmail: "",
-      recipientPhone: "",
     },
   });
 
@@ -354,20 +348,35 @@ export default function Tasks() {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Title</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="category"
@@ -392,23 +401,6 @@ export default function Tasks() {
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="priority"
@@ -457,93 +449,33 @@ export default function Tasks() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="assignedTo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Assigned To</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter assignee name" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Communication Settings */}
-                <div className="space-y-4 border-t pt-4">
-                  <h3 className="text-sm font-medium">Communication Settings</h3>
-                  
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="communicationMethod"
+                    name="dueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Communication Method</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            <SelectItem value="email">Email</SelectItem>
-                            <SelectItem value="sms">SMS</SelectItem>
-                            <SelectItem value="both">Both Email & SMS</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Due Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  {(form.watch("communicationMethod") === "email" || form.watch("communicationMethod") === "both") && (
-                    <FormField
-                      control={form.control}
-                      name="recipientEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Recipient Email</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="email" placeholder="Enter recipient email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-
-                  {(form.watch("communicationMethod") === "sms" || form.watch("communicationMethod") === "both") && (
-                    <FormField
-                      control={form.control}
-                      name="recipientPhone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Recipient Phone</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="tel" placeholder="Enter recipient phone number" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                  <FormField
+                    control={form.control}
+                    name="assignedTo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assigned To</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter assignee name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 {/* Document Upload Section */}
@@ -1879,20 +1811,35 @@ function CalendarView({
           </DialogHeader>
           <Form {...createTaskForm}>
             <form onSubmit={createTaskForm.handleSubmit(onCreateTaskSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={createTaskForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={createTaskForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={createTaskForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={createTaskForm.control}
                   name="category"
@@ -1917,23 +1864,6 @@ function CalendarView({
                     </FormItem>
                   )}
                 />
-              </div>
-
-              <FormField
-                control={createTaskForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={createTaskForm.control}
                   name="priority"
@@ -1959,12 +1889,51 @@ function CalendarView({
                 />
                 <FormField
                   control={createTaskForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={createTaskForm.control}
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Due Date</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={createTaskForm.control}
+                  name="assignedTo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assigned To</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter assignee name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
