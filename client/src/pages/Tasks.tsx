@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X, History as HistoryIcon } from "lucide-react";
+import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X, History as HistoryIcon, DollarSign, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -336,8 +336,6 @@ export default function Tasks() {
   if (tasksLoading) {
     return <div className="flex justify-center items-center min-h-96">Loading tasks...</div>;
   }
-
-
 
   return (
     <div className="space-y-6">
@@ -762,13 +760,7 @@ export default function Tasks() {
         </TabsContent>
 
         <TabsContent value="calendar">
-          <div className="text-center py-12">
-            <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-medium">Calendar view coming soon</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              View your tasks in a calendar format.
-            </p>
-          </div>
+          <CalendarView tasks={filteredTasks} />
         </TabsContent>
       </Tabs>
 
@@ -1448,4 +1440,292 @@ export default function Tasks() {
       </Dialog>
     </div>
   );
+}
+
+// Calendar View Component
+function CalendarView({ tasks }: { tasks: Task[] }) {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+
+  // Generate calendar grid
+  const generateCalendarGrid = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+    
+    return days;
+  };
+
+  const calendarGrid = generateCalendarGrid();
+
+  const getTasksForDate = (date: Date) => {
+    return tasks.filter(task => 
+      task.dueDate && new Date(task.dueDate).toDateString() === date.toDateString()
+    );
+  };
+
+  const previousMonth = () => {
+    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1));
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'high':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const renderMonthView = () => (
+    <div className="space-y-4">
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="outline" size="sm" onClick={previousMonth}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-xl font-semibold">
+            {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+          </h2>
+          <Button variant="outline" size="sm" onClick={nextMonth}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={viewMode === 'month' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('month')}
+          >
+            Month
+          </Button>
+          <Button
+            variant={viewMode === 'week' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('week')}
+          >
+            Week
+          </Button>
+          <Button
+            variant={viewMode === 'day' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('day')}
+          >
+            Day
+          </Button>
+        </div>
+      </div>
+
+      {/* Day names header */}
+      <div className="grid grid-cols-7 gap-2">
+        {dayNames.map(day => (
+          <div key={day} className="p-3 text-center font-medium text-muted-foreground border-b">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-2">
+        {calendarGrid.map((date, index) => {
+          const tasksForDate = date ? getTasksForDate(date) : [];
+          const isToday = date && date.toDateString() === new Date().toDateString();
+          
+          return (
+            <div
+              key={index}
+              className={`min-h-24 p-2 border rounded-lg ${
+                date ? 'bg-card hover:bg-accent cursor-pointer' : 'bg-muted'
+              } ${isToday ? 'ring-2 ring-primary' : ''}`}
+            >
+              {date && (
+                <>
+                  <div className={`text-sm font-medium mb-1 ${isToday ? 'font-bold text-primary' : ''}`}>
+                    {date.getDate()}
+                  </div>
+                  <div className="space-y-1">
+                    {tasksForDate.slice(0, 2).map((task, taskIndex) => (
+                      <div
+                        key={taskIndex}
+                        className={`text-xs p-1 rounded truncate border ${getPriorityColor(task.priority)}`}
+                        title={task.title}
+                      >
+                        {task.title}
+                      </div>
+                    ))}
+                    {tasksForDate.length > 2 && (
+                      <div className="text-xs text-muted-foreground">
+                        +{tasksForDate.length - 2} more
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderDayView = () => {
+    const events = getTasksForDate(selectedDate);
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <h3 className="text-lg font-semibold">
+              {selectedDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </h3>
+            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="border rounded-lg">
+          {hours.map(hour => (
+            <div key={hour} className="border-b last:border-b-0 p-3 min-h-[60px]">
+              <div className="flex">
+                <div className="w-20 text-sm text-muted-foreground">
+                  {hour.toString().padStart(2, '0')}:00
+                </div>
+                <div className="flex-1">
+                  {events
+                    .filter(() => hour === 9) // Show all events at 9 AM for simplicity
+                    .map(task => (
+                      <div
+                        key={task.id}
+                        className={`p-2 rounded border mb-1 ${getPriorityColor(task.priority)}`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <CheckSquare className="h-4 w-4" />
+                          <span className="font-medium">{task.title}</span>
+                        </div>
+                        {task.description && (
+                          <div className="text-sm mt-1 text-muted-foreground">
+                            {task.description}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderWeekView = () => {
+    const weekStart = new Date(selectedDate);
+    weekStart.setDate(selectedDate.getDate() - selectedDate.getDay());
+    
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(weekStart);
+      day.setDate(weekStart.getDate() + i);
+      return day;
+    });
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000))}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <h3 className="text-lg font-semibold">
+              Week of {weekStart.toLocaleDateString()}
+            </h3>
+            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 7 * 24 * 60 * 60 * 1000))}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-2">
+          {weekDays.map((day, index) => {
+            const tasksForDate = getTasksForDate(day);
+            const isToday = day.toDateString() === new Date().toDateString();
+            
+            return (
+              <div key={index} className="space-y-2">
+                <div className={`text-center p-2 rounded ${isToday ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                  <div className="font-medium">{dayNames[day.getDay()]}</div>
+                  <div className="text-lg">{day.getDate()}</div>
+                </div>
+                <div className="space-y-1 min-h-48">
+                  {tasksForDate.map(task => (
+                    <div
+                      key={task.id}
+                      className={`text-xs p-2 rounded border ${getPriorityColor(task.priority)}`}
+                    >
+                      <div className="font-medium">{task.title}</div>
+                      {task.description && (
+                        <div className="mt-1 text-xs opacity-75 line-clamp-2">
+                          {task.description}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  if (viewMode === 'day') {
+    return renderDayView();
+  } else if (viewMode === 'week') {
+    return renderWeekView();
+  } else {
+    return renderMonthView();
+  }
 }
