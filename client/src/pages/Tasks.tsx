@@ -1443,9 +1443,56 @@ export default function Tasks() {
 }
 
 // Calendar View Component
-function CalendarView({ tasks }: { tasks: Task[] }) {
+function CalendarView({ 
+  tasks,
+  setSelectedTaskForDetails,
+  setIsTaskDetailsDialogOpen 
+}: { 
+  tasks: Task[];
+  setSelectedTaskForDetails: (task: Task) => void;
+  setIsTaskDetailsDialogOpen: (open: boolean) => void;
+}) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [showCreateTaskDialog, setShowCreateTaskDialog] = useState(false);
+  const [selectedDateForTask, setSelectedDateForTask] = useState<Date | null>(null);
+  const { toast } = useToast();
+
+  const createTaskForm = useForm<TaskFormData>({
+    resolver: zodResolver(taskFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      priority: "medium",
+      status: "pending",
+      category: "general",
+      dueDate: "",
+      assignedTo: "",
+      communicationMethod: "none",
+      recipientEmail: "",
+      recipientPhone: "",
+    },
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: (taskData: InsertTask) => apiRequest("POST", "/api/tasks", taskData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      setShowCreateTaskDialog(false);
+      createTaskForm.reset();
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Generate calendar grid
   const generateCalendarGrid = () => {
@@ -1485,6 +1532,25 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
 
   const nextMonth = () => {
     setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1));
+  };
+
+  const handleDateClick = (date: Date) => {
+    setSelectedDateForTask(date);
+    createTaskForm.setValue("dueDate", date.toISOString().split('T')[0]);
+    setShowCreateTaskDialog(true);
+  };
+
+  const handleCalendarTaskClick = (task: Task) => {
+    setSelectedTaskForDetails(task);
+    setIsTaskDetailsDialogOpen(true);
+  };
+
+  const onCreateTaskSubmit = (data: TaskFormData) => {
+    const taskData: InsertTask = {
+      ...data,
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+    };
+    createTaskMutation.mutate(taskData);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -1570,6 +1636,7 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
               className={`min-h-24 p-2 border rounded-lg ${
                 date ? 'bg-card hover:bg-accent cursor-pointer' : 'bg-muted'
               } ${isToday ? 'ring-2 ring-primary' : ''}`}
+              onClick={() => date && handleDateClick(date)}
             >
               {date && (
                 <>
@@ -1580,8 +1647,12 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
                     {tasksForDate.slice(0, 2).map((task, taskIndex) => (
                       <div
                         key={taskIndex}
-                        className={`text-xs p-1 rounded truncate border ${getPriorityColor(task.priority)}`}
+                        className={`text-xs p-1 rounded truncate border cursor-pointer hover:scale-105 transition-transform ${getPriorityColor(task.priority)}`}
                         title={task.title}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCalendarTaskClick(task);
+                        }}
                       >
                         {task.title}
                       </div>
@@ -1624,6 +1695,29 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={viewMode === 'month' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('month')}
+            >
+              Month
+            </Button>
+            <Button
+              variant={viewMode === 'week' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('week')}
+            >
+              Week
+            </Button>
+            <Button
+              variant={viewMode === 'day' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('day')}
+            >
+              Day
+            </Button>
+          </div>
         </div>
         
         <div className="border rounded-lg">
@@ -1639,7 +1733,8 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
                     .map(task => (
                       <div
                         key={task.id}
-                        className={`p-2 rounded border mb-1 ${getPriorityColor(task.priority)}`}
+                        className={`p-2 rounded border mb-1 cursor-pointer hover:scale-105 transition-transform ${getPriorityColor(task.priority)}`}
+                        onClick={() => handleCalendarTaskClick(task)}
                       >
                         <div className="flex items-center space-x-2">
                           <CheckSquare className="h-4 w-4" />
@@ -1652,6 +1747,14 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
                         )}
                       </div>
                     ))}
+                  {hour === 9 && events.length === 0 && (
+                    <div 
+                      className="p-2 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-gray-400 transition-colors text-center text-gray-500 text-sm"
+                      onClick={() => handleDateClick(selectedDate)}
+                    >
+                      + Add Task
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1685,6 +1788,29 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={viewMode === 'month' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('month')}
+            >
+              Month
+            </Button>
+            <Button
+              variant={viewMode === 'week' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('week')}
+            >
+              Week
+            </Button>
+            <Button
+              variant={viewMode === 'day' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('day')}
+            >
+              Day
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-7 gap-2">
@@ -1702,7 +1828,8 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
                   {tasksForDate.map(task => (
                     <div
                       key={task.id}
-                      className={`text-xs p-2 rounded border ${getPriorityColor(task.priority)}`}
+                      className={`text-xs p-2 rounded border cursor-pointer hover:scale-105 transition-transform ${getPriorityColor(task.priority)}`}
+                      onClick={() => handleTaskClick(task)}
                     >
                       <div className="font-medium">{task.title}</div>
                       {task.description && (
@@ -1712,6 +1839,12 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
                       )}
                     </div>
                   ))}
+                  <div 
+                    className="text-xs p-2 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-gray-400 transition-colors text-center text-gray-500"
+                    onClick={() => handleDateClick(day)}
+                  >
+                    + Add Task
+                  </div>
                 </div>
               </div>
             );
@@ -1721,11 +1854,132 @@ function CalendarView({ tasks }: { tasks: Task[] }) {
     );
   };
 
+  let content;
   if (viewMode === 'day') {
-    return renderDayView();
+    content = renderDayView();
   } else if (viewMode === 'week') {
-    return renderWeekView();
+    content = renderWeekView();
   } else {
-    return renderMonthView();
+    content = renderMonthView();
   }
+
+  return (
+    <div className="space-y-4">
+      {content}
+      
+      {/* Create Task Dialog */}
+      <Dialog open={showCreateTaskDialog} onOpenChange={setShowCreateTaskDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Task</DialogTitle>
+          </DialogHeader>
+          <Form {...createTaskForm}>
+            <form onSubmit={createTaskForm.handleSubmit(onCreateTaskSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={createTaskForm.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={createTaskForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {taskCategories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category.charAt(0).toUpperCase() + category.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={createTaskForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={createTaskForm.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Priority</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={createTaskForm.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Due Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setShowCreateTaskDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createTaskMutation.isPending}>
+                  {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
