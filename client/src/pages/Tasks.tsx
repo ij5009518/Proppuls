@@ -803,7 +803,7 @@ export default function Tasks() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {taskCategories.map((category) => (
+                          {["general", "maintenance", "inspection", "financial", "administrative", "legal", "marketing", "emergency"].map((category) => (
                             <SelectItem key={category} value={category}>
                               {category.charAt(0).toUpperCase() + category.slice(1)}
                             </SelectItem>
@@ -1906,7 +1906,7 @@ function CalendarView({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {taskCategories.map((category) => (
+                          {["general", "maintenance", "inspection", "financial", "administrative", "legal", "marketing", "emergency"].map((category) => (
                             <SelectItem key={category} value={category}>
                               {category.charAt(0).toUpperCase() + category.slice(1)}
                             </SelectItem>
