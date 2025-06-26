@@ -1404,9 +1404,6 @@ function CalendarView({
       category: "general",
       dueDate: "",
       assignedTo: "",
-      communicationMethod: "none",
-      recipientEmail: "",
-      recipientPhone: "",
     },
   });
 
