@@ -31,11 +31,13 @@ const unitSchema = z.object({
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
+  category: z.string().min(1, "Category is required"),
   priority: z.enum(["low", "medium", "high", "urgent"]),
   status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
-  category: z.string().min(1, "Category is required"),
   dueDate: z.string().optional(),
   assignedTo: z.string().optional(),
+  attachmentUrl: z.string().optional(),
+  attachmentName: z.string().optional(),
 });
 
 const assignTenantSchema = z.object({
@@ -1199,20 +1201,35 @@ export default function Units() {
           </DialogHeader>
           <Form {...taskForm}>
             <form onSubmit={taskForm.handleSubmit(onTaskSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={taskForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Fix leaky faucet" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={taskForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={taskForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="category"
@@ -1222,7 +1239,7 @@ export default function Units() {
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
+                            <SelectValue />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
