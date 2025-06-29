@@ -1169,11 +1169,61 @@ class Storage {
   }
 
   async getAllTasks(organizationId?: string): Promise<Task[]> {
-    if (organizationId) {
-      return await db.select().from(tasks)
-        .where(eq(tasks.organizationId, organizationId));
-    }
-    return await db.select().from(tasks);
+    return await withRetry(async () => {
+      if (organizationId) {
+        const result = await db.execute(sql`SELECT * FROM tasks WHERE organization_id = ${organizationId}`);
+        return result.map((task: any) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          priority: task.priority as "low" | "medium" | "high" | "urgent",
+          status: task.status as "pending" | "in_progress" | "completed" | "cancelled",
+          dueDate: task.due_date,
+          assignedTo: task.assigned_to,
+          propertyId: task.property_id,
+          unitId: task.unit_id,
+          tenantId: task.tenant_id,
+          vendorId: task.vendor_id,
+          rentPaymentId: task.rent_payment_id,
+          category: task.category,
+          notes: task.notes,
+          isRecurring: task.is_recurring,
+          recurrencePeriod: task.recurrence_period,
+          organizationId: task.organization_id,
+          communicationMethod: task.communication_method,
+          recipientEmail: task.recipient_email,
+          recipientPhone: task.recipient_phone,
+          createdAt: task.created_at,
+          updatedAt: task.updated_at
+        }));
+      } else {
+        const result = await db.execute(sql`SELECT * FROM tasks`);
+        return result.map((task: any) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          priority: task.priority as "low" | "medium" | "high" | "urgent",
+          status: task.status as "pending" | "in_progress" | "completed" | "cancelled",
+          dueDate: task.due_date,
+          assignedTo: task.assigned_to,
+          propertyId: task.property_id,
+          unitId: task.unit_id,
+          tenantId: task.tenant_id,
+          vendorId: task.vendor_id,
+          rentPaymentId: task.rent_payment_id,
+          category: task.category,
+          notes: task.notes,
+          isRecurring: task.is_recurring,
+          recurrencePeriod: task.recurrence_period,
+          organizationId: task.organization_id,
+          communicationMethod: task.communication_method,
+          recipientEmail: task.recipient_email,
+          recipientPhone: task.recipient_phone,
+          createdAt: task.created_at,
+          updatedAt: task.updated_at
+        }));
+      }
+    });
   }
 
   async getTaskById(id: string): Promise<Task | null> {
