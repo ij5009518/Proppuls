@@ -1231,6 +1231,7 @@ export default function Units() {
                             {tenant.firstName} {tenant.lastName} - {tenant.email}
                           </SelectItem>
                         ))}
+                      </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
@@ -1311,139 +1312,6 @@ export default function Units() {
               Close
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Task Detail Dialog */}
-      {selectedTask && (
-        <Dialog open={isTaskDetailOpen} onOpenChange={setIsTaskDetailOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <TaskDetails
-              task={selectedTask}
-              onBack={() => setIsTaskDetailOpen(false)}
-              onTaskUpdated={() => {
-                queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-                setIsTaskDetailOpen(false);
-              }}
-              onTaskDeleted={() => {
-                queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-                setIsTaskDetailOpen(false);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
-  );
-}
-                            <div>
-                              <span className="font-medium text-gray-600 dark:text-gray-400">Move-out Date:</span>
-                              <p className="text-gray-900 dark:text-white">{history.moveOutDate}</p>
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600 dark:text-gray-400">Monthly Rent:</span>
-                              <p className="text-gray-900 dark:text-white">{formatCurrency(history.monthlyRent)}</p>
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600 dark:text-gray-400">Reason for Moving:</span>
-                              <p className="text-gray-900 dark:text-white">{history.moveOutReason}</p>
-                            </div>
-                          </div>
-                          {history.notes && (
-                            <div className="mt-2">
-                              <span className="font-medium text-gray-600 dark:text-gray-400">Notes:</span>
-                              <p className="text-gray-900 dark:text-white mt-1">{history.notes}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-      {/* Tenant Status Edit Dialog */}
-      <Dialog open={isTenantStatusDialogOpen} onOpenChange={setIsTenantStatusDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Update Tenant Status</DialogTitle>
-            <DialogDescription>
-              Change the tenant's status and provide move-out details if applicable.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...tenantStatusForm}>
-            <form onSubmit={tenantStatusForm.handleSubmit(onTenantStatusSubmit)} className="space-y-4">
-              <FormField
-                control={tenantStatusForm.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="moved">Moved</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {tenantStatusForm.watch("status") === "moved" && (
-                <>
-                  <FormField
-                    control={tenantStatusForm.control}
-                    name="moveOutDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Move-out Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={tenantStatusForm.control}
-                    name="moveOutReason"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Move-out Reason</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Reason for moving out" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
-
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsTenantStatusDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateTenantStatusMutation.isPending}>
-                  {updateTenantStatusMutation.isPending ? "Updating..." : "Update Status"}
-                </Button>
-              </div>
-            </form>
-          </Form>
         </DialogContent>
       </Dialog>
 
