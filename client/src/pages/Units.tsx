@@ -230,6 +230,8 @@ export default function Units() {
     mutationFn: async (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      setIsTaskDialogOpen(false);
+      taskForm.reset();
       toast({ title: "Task created successfully" });
     },
     onError: (error: Error) => {
