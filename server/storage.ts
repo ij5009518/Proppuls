@@ -1170,14 +1170,46 @@ class Storage {
 
   async getAllTasks(organizationId?: string): Promise<Task[]> {
     return await withRetry(async () => {
+      console.log('Fetching tasks for organization:', organizationId);
+      
+      // Use raw SQL query since the Drizzle schema is incomplete
+      let query = 'SELECT * FROM tasks';
+      const params: any[] = [];
+      
       if (organizationId) {
-        const result = await db.execute(sql`SELECT * FROM tasks WHERE organization_id = ${organizationId}`);
-        return result.map((task: any) => ({
+        query += ' WHERE organization_id = $1';
+        params.push(organizationId);
+      }
+      
+      query += ' ORDER BY created_at DESC';
+      
+      try {
+        const result = organizationId 
+          ? await db.execute(sql`SELECT * FROM tasks WHERE organization_id = ${organizationId} ORDER BY created_at DESC`)
+          : await db.execute(sql`SELECT * FROM tasks ORDER BY created_at DESC`);
+        
+        console.log('Task query result type:', typeof result);
+        console.log('Task query result keys:', Object.keys(result || {}));
+        
+        // Handle Neon database result format
+        let rows: any[] = [];
+        if (result && result.rows && Array.isArray(result.rows)) {
+          rows = result.rows;
+        } else if (Array.isArray(result)) {
+          rows = result;
+        } else {
+          console.log('No tasks found or unexpected result format');
+          return [];
+        }
+        
+        console.log('Found', rows.length, 'tasks');
+        
+        return rows.map((task: any) => ({
           id: task.id,
-          title: task.title,
-          description: task.description,
-          priority: task.priority as "low" | "medium" | "high" | "urgent",
-          status: task.status as "pending" | "in_progress" | "completed" | "cancelled",
+          title: task.title || '',
+          description: task.description || '',
+          priority: task.priority as "low" | "medium" | "high" | "urgent" || "medium",
+          status: task.status as "pending" | "in_progress" | "completed" | "cancelled" || "pending",
           dueDate: task.due_date,
           assignedTo: task.assigned_to,
           propertyId: task.property_id,
@@ -1185,9 +1217,9 @@ class Storage {
           tenantId: task.tenant_id,
           vendorId: task.vendor_id,
           rentPaymentId: task.rent_payment_id,
-          category: task.category,
+          category: task.category || 'general',
           notes: task.notes,
-          isRecurring: task.is_recurring,
+          isRecurring: task.is_recurring || false,
           recurrencePeriod: task.recurrence_period,
           organizationId: task.organization_id,
           communicationMethod: task.communication_method,
@@ -1196,32 +1228,9 @@ class Storage {
           createdAt: task.created_at,
           updatedAt: task.updated_at
         }));
-      } else {
-        const result = await db.execute(sql`SELECT * FROM tasks`);
-        return result.map((task: any) => ({
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          priority: task.priority as "low" | "medium" | "high" | "urgent",
-          status: task.status as "pending" | "in_progress" | "completed" | "cancelled",
-          dueDate: task.due_date,
-          assignedTo: task.assigned_to,
-          propertyId: task.property_id,
-          unitId: task.unit_id,
-          tenantId: task.tenant_id,
-          vendorId: task.vendor_id,
-          rentPaymentId: task.rent_payment_id,
-          category: task.category,
-          notes: task.notes,
-          isRecurring: task.is_recurring,
-          recurrencePeriod: task.recurrence_period,
-          organizationId: task.organization_id,
-          communicationMethod: task.communication_method,
-          recipientEmail: task.recipient_email,
-          recipientPhone: task.recipient_phone,
-          createdAt: task.created_at,
-          updatedAt: task.updated_at
-        }));
+      } catch (error) {
+        console.error('Error executing tasks query:', error);
+        throw error;
       }
     });
   }
