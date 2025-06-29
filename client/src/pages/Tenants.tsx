@@ -32,24 +32,11 @@ function OutstandingBalanceDisplay({ tenantId }: { tenantId: string }) {
   const { data: tenantOutstandingBalance, isLoading: balanceLoading, refetch } = useQuery({
     queryKey: [`/api/outstanding-balance/${tenantId}`],
     enabled: !!tenantId,
-    refetchOnWindowFocus: true,
-    refetchInterval: 5000, // Refetch every 5 seconds
-    staleTime: 0, // Always consider data stale
-    cacheTime: 0, // Don't cache
   });
   
   const { data: rentPayments } = useQuery({ 
     queryKey: ["/api/rent-payments"],
-    refetchOnWindowFocus: true,
-    refetchInterval: 5000,
-    staleTime: 0,
-    cacheTime: 0,
   });
-  
-  // Force refetch when component mounts
-  React.useEffect(() => {
-    refetch();
-  }, [refetch]);
   
   const totalOutstanding = tenantOutstandingBalance?.balance || 0;
   
@@ -197,7 +184,7 @@ export default function Tenants() {
     queryKey: ["/api/rent-payments"],
   });
 
-  // Fetch outstanding balances and billing records for all tenants
+  // Fetch outstanding balances for all tenants (simplified)
   const { data: tenantOutstandingBalances, refetch: refetchBalances } = useQuery({
     queryKey: ["/api/outstanding-balances"],
     queryFn: async () => {
@@ -216,13 +203,9 @@ export default function Tenants() {
       return balances;
     },
     enabled: !!tenants,
-    refetchOnWindowFocus: true,
-    refetchInterval: 3000, // Refetch every 3 seconds
-    staleTime: 0, // Always consider data stale
-    cacheTime: 0, // Don't cache
   });
 
-  // Fetch all billing records for overdue calculations
+  // Fetch all billing records (simplified)
   const { data: allBillingRecords } = useQuery({
     queryKey: ["/api/all-billing-records"],
     queryFn: async () => {
@@ -241,9 +224,6 @@ export default function Tenants() {
       return records;
     },
     enabled: !!tenants,
-    refetchOnWindowFocus: true,
-    refetchInterval: 5000,
-    staleTime: 0,
   });
 
   const { data: tasks = [] } = useQuery<Task[]>({
@@ -339,13 +319,20 @@ export default function Tenants() {
 
   const createTenantMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/tenants", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/all-billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      refetchBalances();
+    onSuccess: async () => {
+      // Invalidate and refetch all related queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/tenants"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/units"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/all-billing-records"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/tenants"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/units"] }),
+      ]);
+      
+      // Reset component state
       setIsAddDialogOpen(false);
       form.reset();
       setUploadedIdDocument(null);
@@ -362,13 +349,20 @@ export default function Tenants() {
   const updateTenantMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => 
       apiRequest("PUT", `/api/tenants/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/all-billing-records"] });
-      refetchBalances();
+    onSuccess: async () => {
+      // Invalidate all related queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/tenants"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/units"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/all-billing-records"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/tenants"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/units"] }),
+      ]);
+      
+      // Reset component state
       setIsEditDialogOpen(false);
       setSelectedTenant(null);
       form.reset();
@@ -580,12 +574,20 @@ export default function Tenants() {
   const updateTenantStatusMutation = useMutation({
     mutationFn: ({ tenantId, data }: { tenantId: string; data: z.infer<typeof tenantStatusSchema> }) =>
       apiRequest("PATCH", `/api/tenants/${tenantId}/status`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/all-billing-records"] });
-      refetchBalances();
+    onSuccess: async () => {
+      // Invalidate and refetch all related queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/tenants"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/units"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/all-billing-records"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/rent-payments"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/tenants"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/units"] }),
+      ]);
+      
+      // Reset component state
       setIsTenantStatusDialogOpen(false);
       setEditingTenant(null);
       tenantStatusForm.reset();
