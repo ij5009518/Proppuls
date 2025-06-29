@@ -341,8 +341,11 @@ export default function Tenants() {
     mutationFn: (data: any) => apiRequest("POST", "/api/tenants", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
       queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/all-billing-records"] });
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
+      refetchBalances();
       setIsAddDialogOpen(false);
       form.reset();
       setUploadedIdDocument(null);
@@ -361,9 +364,14 @@ export default function Tenants() {
       apiRequest("PUT", `/api/tenants/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
       queryClient.invalidateQueries({ queryKey: ["/api/billing-records"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balance", selectedTenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/all-billing-records"] });
+      refetchBalances();
       setIsEditDialogOpen(false);
+      setSelectedTenant(null);
+      form.reset();
       toast({ title: "Success", description: "Tenant updated successfully" });
     },
     onError: () => {
@@ -574,7 +582,12 @@ export default function Tenants() {
       apiRequest("PATCH", `/api/tenants/${tenantId}/status`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/outstanding-balances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/all-billing-records"] });
+      refetchBalances();
       setIsTenantStatusDialogOpen(false);
+      setEditingTenant(null);
       tenantStatusForm.reset();
       toast({ title: "Success", description: "Tenant status updated successfully" });
     },
