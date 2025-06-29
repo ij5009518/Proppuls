@@ -389,11 +389,15 @@ export default function Tasks() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {taskCategories.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category.charAt(0).toUpperCase() + category.slice(1)}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="general">General</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="inspection">Inspection</SelectItem>
+                            <SelectItem value="repair">Repair</SelectItem>
+                            <SelectItem value="cleaning">Cleaning</SelectItem>
+                            <SelectItem value="landscaping">Landscaping</SelectItem>
+                            <SelectItem value="legal">Legal</SelectItem>
+                            <SelectItem value="financial">Financial</SelectItem>
+                            <SelectItem value="administrative">Administrative</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
