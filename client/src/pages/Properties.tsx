@@ -204,10 +204,11 @@ export default function Properties() {
     defaultValues: {
       title: "",
       description: "",
+      priority: "medium",
       status: "pending",
       category: "general",
-      priority: "medium",
-      propertyId: "",
+      dueDate: "",
+      assignedTo: "",
     },
   });
 
@@ -433,11 +434,16 @@ export default function Properties() {
     const taskData: InsertTask = {
       title: data.title,
       description: data.description,
-      status: data.status as "pending" | "in_progress" | "completed" | "cancelled",
+      priority: data.priority,
+      status: data.status,
       category: data.category,
-      priority: data.priority as "low" | "medium" | "high" | "urgent",
-      propertyId: selectedProperty?.id,
-      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+      propertyId: selectedProperty?.id || null,
+      dueDate: data.dueDate ? new Date(data.dueDate) : null,
+      assignedTo: data.assignedTo || null,
+      unitId: null,
+      tenantId: null,
+      vendorId: null,
+      rentPaymentId: null,
     };
     createTaskMutation.mutate(taskData);
     taskForm.reset();
@@ -2412,7 +2418,7 @@ export default function Properties() {
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Due Date</FormLabel>
+                      <FormLabel>Due Date (Optional)</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
@@ -2421,6 +2427,20 @@ export default function Properties() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={taskForm.control}
+                name="assignedTo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assigned To (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Person or vendor name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsCreateTaskDialogOpen(false)}>
