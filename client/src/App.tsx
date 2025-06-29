@@ -37,6 +37,7 @@ import DocumentManagement from '@/pages/DocumentManagement';
 import CommunicationHub from '@/pages/CommunicationHub';
 import TenantPortal from '@/pages/TenantPortal';
 import MobileApp from '@/pages/MobileApp';
+import Profile from "@/pages/Profile";
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -100,6 +101,7 @@ function AuthenticatedApp() {
         <Route path="/mobile-app" component={MobileApp} />
         <Route path="/organizations" component={Organizations} />
         <Route path="/settings" component={Settings} />
+        <Route path="/profile" component={Profile} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
