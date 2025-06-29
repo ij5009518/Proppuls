@@ -276,6 +276,7 @@ export const tasks = pgTable('tasks', {
   notes: text('notes'),
   isRecurring: boolean('is_recurring').default(false),
   recurrencePeriod: text('recurrence_period'),
+  organizationId: text('organization_id').notNull(),
   // Communication settings
   communicationMethod: text('communication_method').default('none'), // 'none', 'email', 'sms', 'both'
   recipientEmail: text('recipient_email'),
