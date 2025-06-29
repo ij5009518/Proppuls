@@ -281,6 +281,9 @@ export const taskSchema = z.object({
   communicationMethod: z.enum(["none", "email", "sms", "both"]).default("none"),
   recipientEmail: z.string().optional(),
   recipientPhone: z.string().optional(),
+  // Document attachment
+  attachmentUrl: z.string().optional(),
+  attachmentName: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date().optional(),
 });

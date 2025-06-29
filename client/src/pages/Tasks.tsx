@@ -21,14 +21,13 @@ import type { Task, InsertTask } from "shared/schema";
 const taskFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
+  category: z.string().min(1, "Category is required"),
   priority: z.enum(["low", "medium", "high", "urgent"]),
   status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
-  category: z.string().min(1, "Category is required"),
   dueDate: z.string().optional(),
   assignedTo: z.string().optional(),
-  communicationMethod: z.enum(["none", "email", "sms", "both"]).default("none"),
-  recipientEmail: z.string().email().optional().or(z.literal("")),
-  recipientPhone: z.string().optional(),
+  attachmentUrl: z.string().optional(),
+  attachmentName: z.string().optional(),
 });
 
 const communicationFormSchema = z.object({
