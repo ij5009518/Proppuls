@@ -59,11 +59,11 @@ const mortgageSchema = z.object({
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
-  status: z.string().min(1, "Status is required"),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
   category: z.string().min(1, "Category is required"),
-  priority: z.string().min(1, "Priority is required"),
-  propertyId: z.string().optional(),
   dueDate: z.string().optional(),
+  assignedTo: z.string().optional(),
 });
 
 const expenseSchema = z.object({

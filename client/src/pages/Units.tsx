@@ -31,8 +31,9 @@ const unitSchema = z.object({
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
   category: z.string().min(1, "Category is required"),
-  priority: z.string().min(1, "Priority is required"),
   dueDate: z.string().optional(),
   assignedTo: z.string().optional(),
 });
@@ -122,8 +123,9 @@ export default function Units() {
     defaultValues: {
       title: "",
       description: "",
-      category: "general",
       priority: "medium",
+      status: "pending",
+      category: "general",
       dueDate: "",
       assignedTo: "",
     },
@@ -297,16 +299,13 @@ export default function Units() {
       const taskData: InsertTask = {
         title: data.title,
         description: data.description,
+        priority: data.priority,
+        status: data.status,
         category: data.category,
-        priority: data.priority as "low" | "medium" | "high" | "urgent",
-        status: "pending",
         propertyId: selectedUnit.propertyId,
         unitId: selectedUnit.id,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
         assignedTo: data.assignedTo || null,
-        completedAt: null,
-        maintenanceRequestId: null,
-        expenseId: null,
         tenantId: null,
         vendorId: null,
         rentPaymentId: null,
@@ -1266,13 +1265,23 @@ export default function Units() {
                 />
                 <FormField
                   control={taskForm.control}
-                  name="assignedTo"
+                  name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assigned To (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Person or vendor name" {...field} />
-                      </FormControl>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -1285,6 +1294,19 @@ export default function Units() {
                       <FormLabel>Due Date (Optional)</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={taskForm.control}
+                  name="assignedTo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assigned To (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Person or vendor name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
