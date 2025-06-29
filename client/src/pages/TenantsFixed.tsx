@@ -114,9 +114,10 @@ export default function Tenants() {
     defaultValues: {
       title: "",
       description: "",
-      status: "pending",
-      category: "",
       priority: "medium",
+      status: "pending",
+      category: "general",
+      dueDate: new Date(),
       assignedTo: "",
       estimatedCost: "",
       actualCost: "",
