@@ -1161,6 +1161,7 @@ class Storage {
   async createTask(taskData: any): Promise<Task> {
     const [task] = await db.insert(tasks).values({
       id: taskData.id || crypto.randomUUID(),
+      organizationId: taskData.organizationId || "default-org",
       ...taskData,
       createdAt: new Date(),
       updatedAt: new Date()
