@@ -1472,6 +1472,30 @@ export default function Units() {
                 />
               </div>
 
+              <FormField
+                control={taskForm.control}
+                name="attachmentUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Attachment <span className="text-red-500">*</span></FormLabel>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            field.onChange(file.name);
+                          }
+                        }}
+                        className="cursor-pointer"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="flex justify-end space-x-2">
                 <Button
                   type="button"
