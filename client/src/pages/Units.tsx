@@ -1198,84 +1198,144 @@ export default function Units() {
           <DialogHeader>
             <DialogTitle>Assign Tenant</DialogTitle>
             <DialogDescription>
-              Create a new task or maintenance item for this unit. Specify the category, priority, and assignment details.
+              Select an available tenant to assign to this unit. This will update the unit's occupancy status.
             </DialogDescription>
           </DialogHeader>
-          <Form {...taskForm}>
-            <form onSubmit={taskForm.handleSubmit(onTaskSubmit)} className="space-y-4">
+          <Form {...assignTenantForm}>
+            <form
+              onSubmit={assignTenantForm.handleSubmit((data) => {
+                if (selectedUnit) {
+                  assignTenantMutation.mutate({
+                    tenantId: data.tenantId,
+                    unitId: selectedUnit.id,
+                  });
+                }
+              })}
+              className="space-y-4"
+            >
               <FormField
-                control={taskForm.control}
-                name="title"
+                control={assignTenantForm.control}
+                name="tenantId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>Select Tenant</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose an available tenant" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {getAvailableTenants().map((tenant) => (
+                          <SelectItem key={tenant.id} value={tenant.id}>
+                            {tenant.firstName} {tenant.lastName} - {tenant.email}
+                          </SelectItem>
+                        ))}
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAssignTenantDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={assignTenantMutation.isPending}>
+                  {assignTenantMutation.isPending ? "Assigning..." : "Assign Tenant"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Tenant History Dialog */}
+      <Dialog open={isTenantHistoryDialogOpen} onOpenChange={setIsTenantHistoryDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Tenant History - Unit {selectedUnit?.unitNumber}</DialogTitle>
+            <DialogDescription>
+              View the complete tenant history for this unit including move-in and move-out dates.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {tenantHistory && tenantHistory.length > 0 ? (
+            <div className="space-y-4">
+              {tenantHistory.map((entry, index) => (
+                <Card key={entry.id} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold">
+                        {entry.firstName} {entry.lastName}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">{entry.email}</p>
+                      <p className="text-sm text-muted-foreground">{entry.phone}</p>
+                      <div className="flex gap-4 text-sm">
+                        <span>
+                          <strong>Move-in:</strong> {entry.moveInDate ? formatDate(entry.moveInDate) : 'N/A'}
+                        </span>
+                        <span>
+                          <strong>Move-out:</strong> {entry.moveOutDate ? formatDate(entry.moveOutDate) : 'Current'}
+                        </span>
+                      </div>
+                      {entry.monthlyRent && (
+                        <p className="text-sm">
+                          <strong>Monthly Rent:</strong> {formatCurrency(entry.monthlyRent)}
+                        </p>
+                      )}
+                      {entry.notes && (
+                        <p className="text-sm">
+                          <strong>Notes:</strong> {entry.notes}
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant={entry.moveOutDate ? "secondary" : "default"}>
+                      {entry.moveOutDate ? "Former" : "Current"}
+                    </Badge>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No tenant history available for this unit.</p>
+            </div>
+          )}
+          
+          <div className="flex justify-end">
+            <Button onClick={() => setIsTenantHistoryDialogOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-              <FormField
-                control={taskForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={taskForm.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                          <SelectItem value="inspection">Inspection</SelectItem>
-                          <SelectItem value="lease">Lease</SelectItem>
-                          <SelectItem value="payment">Payment</SelectItem>
-                          <SelectItem value="vendor">Vendor</SelectItem>
-                          <SelectItem value="legal">Legal</SelectItem>
-                          <SelectItem value="administrative">Administrative</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={taskForm.control}
-                  name="priority"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
+      {/* Task Detail Dialog */}
+      {selectedTask && (
+        <Dialog open={isTaskDetailOpen} onOpenChange={setIsTaskDetailOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <TaskDetails
+              task={selectedTask}
+              onBack={() => setIsTaskDetailOpen(false)}
+              onTaskUpdated={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+                setIsTaskDetailOpen(false);
+              }}
+              onTaskDeleted={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+                setIsTaskDetailOpen(false);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}
                         </SelectContent>
                       </Select>
                       <FormMessage />
