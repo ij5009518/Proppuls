@@ -1170,10 +1170,8 @@ class Storage {
 
   async getAllTasks(organizationId?: string): Promise<Task[]> {
     if (organizationId) {
-      // Join with properties to filter by organization
       return await db.select().from(tasks)
-        .innerJoin(properties, eq(tasks.propertyId, properties.id))
-        .where(eq(properties.organizationId, organizationId));
+        .where(eq(tasks.organizationId, organizationId));
     }
     return await db.select().from(tasks);
   }
