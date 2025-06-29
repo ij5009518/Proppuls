@@ -1191,11 +1191,12 @@ export default function Units() {
           </Form>
         </DialogContent>
       </Dialog>
-      {/* Create Task Dialog */}
-      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      
+      {/* Assign Tenant Dialog */}
+      <Dialog open={isAssignTenantDialogOpen} onOpenChange={setIsAssignTenantDialogOpen}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Create Task for Unit {selectedUnit?.unitNumber}</DialogTitle>
+            <DialogTitle>Assign Tenant</DialogTitle>
             <DialogDescription>
               Create a new task or maintenance item for this unit. Specify the category, priority, and assignment details.
             </DialogDescription>
