@@ -3,14 +3,60 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X, History as HistoryIcon, DollarSign, CalendarIcon } from "lucide-react";
+import {
+  Plus,
+  CheckSquare,
+  Wrench,
+  Calendar,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Grid,
+  List,
+  FileText,
+  Download,
+  Eye,
+  Paperclip,
+  Upload,
+  Mail,
+  Phone,
+  MessageSquare,
+  Clock,
+  User,
+  Send,
+  AlertCircle,
+  X,
+  History as HistoryIcon,
+  DollarSign,
+  CalendarIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -57,8 +103,12 @@ function TaskCommunications({ taskId }: { taskId: string }) {
     return (
       <div className="text-center py-8">
         <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 text-sm text-muted-foreground">No communications yet</p>
-        <p className="text-xs text-muted-foreground mt-1">Communications will appear here when sent</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          No communications yet
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Communications will appear here when sent
+        </p>
       </div>
     );
   }
@@ -69,10 +119,22 @@ function TaskCommunications({ taskId }: { taskId: string }) {
         <div key={comm.id} className="border rounded-lg p-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              {comm.method === 'email' && <Mail className="h-4 w-4 text-blue-500" />}
-              {comm.method === 'sms' && <Phone className="h-4 w-4 text-green-500" />}
+              {comm.method === "email" && (
+                <Mail className="h-4 w-4 text-blue-500" />
+              )}
+              {comm.method === "sms" && (
+                <Phone className="h-4 w-4 text-green-500" />
+              )}
               <span className="font-medium capitalize">{comm.method}</span>
-              <Badge variant={comm.status === 'delivered' ? 'default' : comm.status === 'failed' ? 'destructive' : 'secondary'}>
+              <Badge
+                variant={
+                  comm.status === "delivered"
+                    ? "default"
+                    : comm.status === "failed"
+                      ? "destructive"
+                      : "secondary"
+                }
+              >
                 {comm.status}
               </Badge>
             </div>
@@ -82,10 +144,14 @@ function TaskCommunications({ taskId }: { taskId: string }) {
             </div>
           </div>
           <p className="text-sm text-muted-foreground mt-2">{comm.recipient}</p>
-          {comm.subject && <p className="text-sm font-medium mt-1">{comm.subject}</p>}
+          {comm.subject && (
+            <p className="text-sm font-medium mt-1">{comm.subject}</p>
+          )}
           <p className="text-sm mt-1">{comm.message}</p>
           {comm.errorMessage && (
-            <p className="text-xs text-destructive mt-1">Error: {comm.errorMessage}</p>
+            <p className="text-xs text-destructive mt-1">
+              Error: {comm.errorMessage}
+            </p>
           )}
         </div>
       ))}
@@ -102,7 +168,8 @@ export default function Tasks() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isTaskDetailsDialogOpen, setIsTaskDetailsDialogOpen] = useState(false);
-  const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<Task | null>(null);
+  const [selectedTaskForDetails, setSelectedTaskForDetails] =
+    useState<Task | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
@@ -179,7 +246,8 @@ export default function Tasks() {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: (taskData: InsertTask) => apiRequest("POST", "/api/tasks", taskData),
+    mutationFn: (taskData: InsertTask) =>
+      apiRequest("POST", "/api/tasks", taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setIsAddDialogOpen(false);
@@ -200,8 +268,13 @@ export default function Tasks() {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: ({ id, taskData }: { id: string; taskData: Partial<InsertTask> }) =>
-      apiRequest("PATCH", `/api/tasks/${id}`, taskData),
+    mutationFn: ({
+      id,
+      taskData,
+    }: {
+      id: string;
+      taskData: Partial<InsertTask>;
+    }) => apiRequest("PATCH", `/api/tasks/${id}`, taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setIsEditDialogOpen(false);
@@ -209,7 +282,9 @@ export default function Tasks() {
       editForm.reset();
       // Refresh task history if task details dialog is open
       if (selectedTaskForDetails) {
-        queryClient.invalidateQueries({ queryKey: ["/api/tasks", selectedTaskForDetails.id, "history"] });
+        queryClient.invalidateQueries({
+          queryKey: ["/api/tasks", selectedTaskForDetails.id, "history"],
+        });
       }
       toast({
         title: "Success",
@@ -224,8 +299,6 @@ export default function Tasks() {
       });
     },
   });
-
-
 
   const deleteTaskMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
@@ -246,11 +319,18 @@ export default function Tasks() {
   });
 
   const sendCommunicationMutation = useMutation({
-    mutationFn: (communicationData: any) => apiRequest("POST", `/api/tasks/${communicationData.taskId}/communications`, communicationData),
+    mutationFn: (communicationData: any) =>
+      apiRequest(
+        "POST",
+        `/api/tasks/${communicationData.taskId}/communications`,
+        communicationData,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       if (selectedTaskForDetails) {
-        queryClient.invalidateQueries({ queryKey: ["/api/tasks", selectedTaskForDetails.id, "communications"] });
+        queryClient.invalidateQueries({
+          queryKey: ["/api/tasks", selectedTaskForDetails.id, "communications"],
+        });
       }
       toast({
         title: "Communication sent",
@@ -286,10 +366,11 @@ export default function Tasks() {
 
   const onSendCommunication = (data: CommunicationFormData) => {
     if (!selectedTaskForDetails) return;
-    sendCommunicationMutation.mutate({ ...data, taskId: selectedTaskForDetails.id });
+    sendCommunicationMutation.mutate({
+      ...data,
+      taskId: selectedTaskForDetails.id,
+    });
   };
-
-
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -315,7 +396,9 @@ export default function Tasks() {
       priority: task.priority,
       status: task.status,
       category: task.category,
-      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "",
+      dueDate: task.dueDate
+        ? new Date(task.dueDate).toISOString().split("T")[0]
+        : "",
       assignedTo: task.assignedTo || "",
       propertyId: task.propertyId || "",
       unitId: task.unitId || "",
@@ -334,10 +417,10 @@ export default function Tasks() {
     if (file) {
       setUploadedDocument(file);
       // Update form with file information
-      form.setValue('attachmentName', file.name);
+      form.setValue("attachmentName", file.name);
       // In a real implementation, you would upload the file to a server here
       // For now, we'll create a mock URL
-      form.setValue('attachmentUrl', `uploads/${file.name}`);
+      form.setValue("attachmentUrl", `uploads/${file.name}`);
       toast({
         title: "File Selected",
         description: `Ready to attach: ${file.name}`,
@@ -348,13 +431,13 @@ export default function Tasks() {
   const handleDownloadAttachment = (task: Task) => {
     if (task.attachmentUrl && task.attachmentName) {
       // Create a download link for the file
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = task.attachmentUrl;
       link.download = task.attachmentName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast({
         title: "Download Started",
         description: `Downloading ${task.attachmentName}`,
@@ -370,31 +453,43 @@ export default function Tasks() {
 
   const getRelatedEntityName = (task: Task) => {
     if (task.propertyId) {
-      const property = Array.isArray(properties) ? properties.find((p: any) => p.id === task.propertyId) : null;
+      const property = Array.isArray(properties)
+        ? properties.find((p: any) => p.id === task.propertyId)
+        : null;
       return property ? `Property: ${property.name}` : "";
     }
     if (task.unitId) {
-      const unit = Array.isArray(units) ? units.find((u: any) => u.id === task.unitId) : null;
+      const unit = Array.isArray(units)
+        ? units.find((u: any) => u.id === task.unitId)
+        : null;
       return unit ? `Unit: ${unit.name}` : "";
     }
     if (task.tenantId) {
-      const tenant = Array.isArray(tenants) ? tenants.find((t: any) => t.id === task.tenantId) : null;
+      const tenant = Array.isArray(tenants)
+        ? tenants.find((t: any) => t.id === task.tenantId)
+        : null;
       return tenant ? `Tenant: ${tenant.firstName} ${tenant.lastName}` : "";
     }
     if (task.vendorId) {
-      const vendor = Array.isArray(vendors) ? vendors.find((v: any) => v.id === task.vendorId) : null;
+      const vendor = Array.isArray(vendors)
+        ? vendors.find((v: any) => v.id === task.vendorId)
+        : null;
       return vendor ? `Vendor: ${vendor.name}` : "";
     }
     return "";
   };
 
-  const filteredTasks = Array.isArray(tasks) ? tasks.filter((task: Task) => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }) : [];
+  const filteredTasks = Array.isArray(tasks)
+    ? tasks.filter((task: Task) => {
+        const matchesSearch =
+          task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          task.category.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus =
+          statusFilter === "all" || task.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      })
+    : [];
 
   const taskCategories = [
     "general",
@@ -414,7 +509,11 @@ export default function Tasks() {
   };
 
   if (tasksLoading) {
-    return <div className="flex justify-center items-center min-h-96">Loading tasks...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        Loading tasks...
+      </div>
+    );
   }
 
   return (
@@ -433,7 +532,10 @@ export default function Tasks() {
               <DialogTitle>Create New Task</DialogTitle>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(onCreateSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="title"
@@ -470,7 +572,10 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -478,14 +583,22 @@ export default function Tasks() {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="general">General</SelectItem>
-                            <SelectItem value="maintenance">Maintenance</SelectItem>
-                            <SelectItem value="inspection">Inspection</SelectItem>
+                            <SelectItem value="maintenance">
+                              Maintenance
+                            </SelectItem>
+                            <SelectItem value="inspection">
+                              Inspection
+                            </SelectItem>
                             <SelectItem value="repair">Repair</SelectItem>
                             <SelectItem value="cleaning">Cleaning</SelectItem>
-                            <SelectItem value="landscaping">Landscaping</SelectItem>
+                            <SelectItem value="landscaping">
+                              Landscaping
+                            </SelectItem>
                             <SelectItem value="legal">Legal</SelectItem>
                             <SelectItem value="financial">Financial</SelectItem>
-                            <SelectItem value="administrative">Administrative</SelectItem>
+                            <SelectItem value="administrative">
+                              Administrative
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -498,7 +611,10 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Priority</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -521,7 +637,10 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -529,7 +648,9 @@ export default function Tasks() {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="in_progress">
+                              In Progress
+                            </SelectItem>
                             <SelectItem value="completed">Completed</SelectItem>
                             <SelectItem value="cancelled">Cancelled</SelectItem>
                           </SelectContent>
@@ -574,7 +695,10 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Property (Optional)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || ""}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select property" />
@@ -598,7 +722,10 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Unit (Optional)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || ""}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select unit" />
@@ -607,7 +734,10 @@ export default function Tasks() {
                           <SelectContent>
                             {units?.map((unit: any) => (
                               <SelectItem key={unit.id} value={unit.id}>
-                                Unit {unit.unitNumber} - {properties?.find((p: any) => p.id === unit.propertyId)?.name || 'Property'}
+                                Unit {unit.unitNumber} -{" "}
+                                {properties?.find(
+                                  (p: any) => p.id === unit.propertyId,
+                                )?.name || "Property"}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -622,7 +752,10 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Tenant (Optional)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || ""}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select tenant" />
@@ -641,8 +774,6 @@ export default function Tasks() {
                     )}
                   />
                 </div>
-
-
 
                 {/* Document Upload Section */}
                 <div className="space-y-2">
@@ -673,11 +804,17 @@ export default function Tasks() {
                 </div>
 
                 <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAddDialogOpen(false)}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit" disabled={createTaskMutation.isPending}>
-                    {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+                    {createTaskMutation.isPending
+                      ? "Creating..."
+                      : "Create Task"}
                   </Button>
                 </div>
               </form>
@@ -732,7 +869,7 @@ export default function Tasks() {
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="tasks">
           <div className="space-y-6">
             {viewMode === "grid" ? (
@@ -742,32 +879,54 @@ export default function Tasks() {
                     <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new task."}
+                      {searchTerm
+                        ? "Try adjusting your search terms."
+                        : "Get started by creating a new task."}
                     </p>
                   </div>
                 ) : (
                   filteredTasks.map((task: Task) => (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
+                    <Card
+                      key={task.id}
+                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => handleTaskClick(task)}
+                    >
                       <CardHeader className="flex flex-col space-y-1.5 p-6 pt-[0px] pb-[0px]">
                         <CardTitle className="text-lg">{task.title}</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-muted-foreground mb-3">{task.description}</p>
+                        <p className="text-muted-foreground mb-3">
+                          {task.description}
+                        </p>
                         <div className="flex items-center gap-2 mb-3">
-                          <Badge variant={
-                            task.priority === "urgent" ? "destructive" :
-                            task.priority === "high" ? "secondary" :
-                            task.priority === "medium" ? "outline" :
-                            "outline"
-                          }>
-                            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                          <Badge
+                            variant={
+                              task.priority === "urgent"
+                                ? "destructive"
+                                : task.priority === "high"
+                                  ? "secondary"
+                                  : task.priority === "medium"
+                                    ? "outline"
+                                    : "outline"
+                            }
+                          >
+                            {task.priority.charAt(0).toUpperCase() +
+                              task.priority.slice(1)}
                           </Badge>
-                          <Badge variant={
-                            task.status === "completed" ? "default" :
-                            task.status === "in_progress" ? "secondary" :
-                            "outline"
-                          }>
-                            {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
+                          <Badge
+                            variant={
+                              task.status === "completed"
+                                ? "default"
+                                : task.status === "in_progress"
+                                  ? "secondary"
+                                  : "outline"
+                            }
+                          >
+                            {task.status
+                              .replace("_", " ")
+                              .charAt(0)
+                              .toUpperCase() +
+                              task.status.replace("_", " ").slice(1)}
                           </Badge>
                         </div>
                         <div className="text-sm text-muted-foreground space-y-1">
@@ -797,36 +956,62 @@ export default function Tasks() {
                     <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new task."}
+                      {searchTerm
+                        ? "Try adjusting your search terms."
+                        : "Get started by creating a new task."}
                     </p>
                   </div>
                 ) : (
                   filteredTasks.map((task: Task) => (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
+                    <Card
+                      key={task.id}
+                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => handleTaskClick(task)}
+                    >
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h3 className="font-semibold">{task.title}</h3>
-                            <p className="text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
+                            <p className="text-muted-foreground mt-1 line-clamp-2">
+                              {task.description}
+                            </p>
                             <div className="flex items-center gap-4 mt-3">
-                              <Badge variant={
-                                task.priority === "urgent" ? "destructive" :
-                                task.priority === "high" ? "secondary" :
-                                task.priority === "medium" ? "outline" :
-                                "outline"
-                              }>
-                                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                              <Badge
+                                variant={
+                                  task.priority === "urgent"
+                                    ? "destructive"
+                                    : task.priority === "high"
+                                      ? "secondary"
+                                      : task.priority === "medium"
+                                        ? "outline"
+                                        : "outline"
+                                }
+                              >
+                                {task.priority.charAt(0).toUpperCase() +
+                                  task.priority.slice(1)}
                               </Badge>
-                              <Badge variant={
-                                task.status === "completed" ? "default" :
-                                task.status === "in_progress" ? "secondary" :
-                                "outline"
-                              }>
-                                {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
+                              <Badge
+                                variant={
+                                  task.status === "completed"
+                                    ? "default"
+                                    : task.status === "in_progress"
+                                      ? "secondary"
+                                      : "outline"
+                                }
+                              >
+                                {task.status
+                                  .replace("_", " ")
+                                  .charAt(0)
+                                  .toUpperCase() +
+                                  task.status.replace("_", " ").slice(1)}
                               </Badge>
-                              <span className="text-sm text-muted-foreground">Category: {task.category}</span>
+                              <span className="text-sm text-muted-foreground">
+                                Category: {task.category}
+                              </span>
                               {task.dueDate && (
-                                <span className="text-sm text-muted-foreground">Due: {formatDate(task.dueDate)}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  Due: {formatDate(task.dueDate)}
+                                </span>
                               )}
                             </div>
                             {getRelatedEntityName(task) && (
@@ -844,22 +1029,25 @@ export default function Tasks() {
             )}
           </div>
         </TabsContent>
-        
+
         <TabsContent value="maintenance">
           <div className="space-y-6">
             <div className="text-center py-12">
               <Wrench className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-2 text-sm font-medium">Maintenance functionality</h3>
+              <h3 className="mt-2 text-sm font-medium">
+                Maintenance functionality
+              </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Maintenance requests are now integrated with tasks for better organization.
+                Maintenance requests are now integrated with tasks for better
+                organization.
               </p>
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="calendar">
-          <CalendarView 
-            tasks={filteredTasks} 
+          <CalendarView
+            tasks={filteredTasks}
             setSelectedTaskForDetails={setSelectedTaskForDetails}
             setIsTaskDetailsDialogOpen={setIsTaskDetailsDialogOpen}
           />
@@ -873,7 +1061,10 @@ export default function Tasks() {
             <DialogTitle>Edit Task</DialogTitle>
           </DialogHeader>
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+            <form
+              onSubmit={editForm.handleSubmit(onEditSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={editForm.control}
                 name="title"
@@ -910,7 +1101,10 @@ export default function Tasks() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -918,14 +1112,20 @@ export default function Tasks() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="maintenance">
+                            Maintenance
+                          </SelectItem>
                           <SelectItem value="inspection">Inspection</SelectItem>
                           <SelectItem value="repair">Repair</SelectItem>
                           <SelectItem value="cleaning">Cleaning</SelectItem>
-                          <SelectItem value="landscaping">Landscaping</SelectItem>
+                          <SelectItem value="landscaping">
+                            Landscaping
+                          </SelectItem>
                           <SelectItem value="legal">Legal</SelectItem>
                           <SelectItem value="financial">Financial</SelectItem>
-                          <SelectItem value="administrative">Administrative</SelectItem>
+                          <SelectItem value="administrative">
+                            Administrative
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -938,7 +1138,10 @@ export default function Tasks() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -961,7 +1164,10 @@ export default function Tasks() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -969,7 +1175,9 @@ export default function Tasks() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="in_progress">
+                            In Progress
+                          </SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
                           <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
@@ -1014,7 +1222,10 @@ export default function Tasks() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Property (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select property" />
@@ -1038,7 +1249,10 @@ export default function Tasks() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Unit (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select unit" />
@@ -1047,7 +1261,10 @@ export default function Tasks() {
                         <SelectContent>
                           {units?.map((unit: any) => (
                             <SelectItem key={unit.id} value={unit.id}>
-                              Unit {unit.unitNumber} - {properties?.find((p: any) => p.id === unit.propertyId)?.name || 'Property'}
+                              Unit {unit.unitNumber} -{" "}
+                              {properties?.find(
+                                (p: any) => p.id === unit.propertyId,
+                              )?.name || "Property"}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -1062,7 +1279,10 @@ export default function Tasks() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tenant (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select tenant" />
@@ -1111,7 +1331,11 @@ export default function Tasks() {
               </div>
 
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={updateTaskMutation.isPending}>
@@ -1132,13 +1356,13 @@ export default function Tasks() {
               Task Communications & History
             </DialogTitle>
           </DialogHeader>
-          
+
           <Tabs defaultValue="communications" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="communications">Communications</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="communications" className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -1152,16 +1376,30 @@ export default function Tasks() {
                     Send Communication
                   </Button>
                 </div>
-                
+
                 <div className="space-y-3 max-h-60 overflow-y-auto">
                   {taskCommunications.map((comm) => (
                     <div key={comm.id} className="border rounded-lg p-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          {comm.method === 'email' && <Mail className="h-4 w-4 text-blue-500" />}
-                          {comm.method === 'sms' && <Phone className="h-4 w-4 text-green-500" />}
-                          <span className="font-medium capitalize">{comm.method}</span>
-                          <Badge variant={comm.status === 'sent' ? 'default' : comm.status === 'failed' ? 'destructive' : 'secondary'}>
+                          {comm.method === "email" && (
+                            <Mail className="h-4 w-4 text-blue-500" />
+                          )}
+                          {comm.method === "sms" && (
+                            <Phone className="h-4 w-4 text-green-500" />
+                          )}
+                          <span className="font-medium capitalize">
+                            {comm.method}
+                          </span>
+                          <Badge
+                            variant={
+                              comm.status === "sent"
+                                ? "default"
+                                : comm.status === "failed"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                          >
                             {comm.status}
                           </Badge>
                         </div>
@@ -1170,7 +1408,9 @@ export default function Tasks() {
                           {new Date(comm.createdAt).toLocaleString()}
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-2">{comm.recipient}</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {comm.recipient}
+                      </p>
                       <p className="text-sm mt-1">{comm.message}</p>
                     </div>
                   ))}
@@ -1183,11 +1423,11 @@ export default function Tasks() {
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="history" className="space-y-4">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Task History</h3>
-                
+
                 <div className="space-y-3 max-h-60 overflow-y-auto">
                   {taskHistory.map((history) => (
                     <div key={history.id} className="border rounded-lg p-3">
@@ -1203,12 +1443,18 @@ export default function Tasks() {
                       </div>
                       {history.previousValues && (
                         <div className="mt-2 text-sm text-muted-foreground">
-                          <p><strong>Previous:</strong> {JSON.stringify(history.previousValues)}</p>
+                          <p>
+                            <strong>Previous:</strong>{" "}
+                            {JSON.stringify(history.previousValues)}
+                          </p>
                         </div>
                       )}
                       {history.newValues && (
                         <div className="mt-1 text-sm text-muted-foreground">
-                          <p><strong>New:</strong> {JSON.stringify(history.newValues)}</p>
+                          <p>
+                            <strong>New:</strong>{" "}
+                            {JSON.stringify(history.newValues)}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -1227,24 +1473,33 @@ export default function Tasks() {
       </Dialog>
 
       {/* Send Communication Dialog */}
-      <Dialog open={isSendCommunicationOpen} onOpenChange={(open) => {
-        setIsSendCommunicationOpen(open);
-        // Keep task details dialog open when communication dialog closes
-      }}>
+      <Dialog
+        open={isSendCommunicationOpen}
+        onOpenChange={(open) => {
+          setIsSendCommunicationOpen(open);
+          // Keep task details dialog open when communication dialog closes
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Send Communication</DialogTitle>
           </DialogHeader>
-          
+
           <Form {...communicationForm}>
-            <form onSubmit={communicationForm.handleSubmit(onSendCommunication)} className="space-y-4">
+            <form
+              onSubmit={communicationForm.handleSubmit(onSendCommunication)}
+              className="space-y-4"
+            >
               <FormField
                 control={communicationForm.control}
                 name="method"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Method</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -1266,13 +1521,23 @@ export default function Tasks() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {communicationForm.watch("method") === "email" ? "Email Address" : "Phone Number"}
+                      {communicationForm.watch("method") === "email"
+                        ? "Email Address"
+                        : "Phone Number"}
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        {...field} 
-                        type={communicationForm.watch("method") === "email" ? "email" : "tel"}
-                        placeholder={communicationForm.watch("method") === "email" ? "Enter email address" : "Enter phone number"}
+                      <Input
+                        {...field}
+                        type={
+                          communicationForm.watch("method") === "email"
+                            ? "email"
+                            : "tel"
+                        }
+                        placeholder={
+                          communicationForm.watch("method") === "email"
+                            ? "Enter email address"
+                            : "Enter phone number"
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -1287,7 +1552,11 @@ export default function Tasks() {
                   <FormItem>
                     <FormLabel>Message</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Enter your message" rows={4} />
+                      <Textarea
+                        {...field}
+                        placeholder="Enter your message"
+                        rows={4}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1295,10 +1564,17 @@ export default function Tasks() {
               />
 
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsSendCommunicationOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsSendCommunicationOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={sendCommunicationMutation.isPending}>
+                <Button
+                  type="submit"
+                  disabled={sendCommunicationMutation.isPending}
+                >
                   {sendCommunicationMutation.isPending ? "Sending..." : "Send"}
                 </Button>
               </div>
@@ -1308,7 +1584,10 @@ export default function Tasks() {
       </Dialog>
 
       {/* Task Details Modal */}
-      <Dialog open={isTaskDetailsDialogOpen} onOpenChange={setIsTaskDetailsDialogOpen}>
+      <Dialog
+        open={isTaskDetailsDialogOpen}
+        onOpenChange={setIsTaskDetailsDialogOpen}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
@@ -1317,8 +1596,8 @@ export default function Tasks() {
                 {selectedTaskForDetails?.title}
               </DialogTitle>
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => {
                     if (selectedTaskForDetails) {
@@ -1330,11 +1609,14 @@ export default function Tasks() {
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => {
-                    if (selectedTaskForDetails && confirm("Are you sure you want to delete this task?")) {
+                    if (
+                      selectedTaskForDetails &&
+                      confirm("Are you sure you want to delete this task?")
+                    ) {
                       handleDelete(selectedTaskForDetails.id);
                       setIsTaskDetailsDialogOpen(false);
                     }
@@ -1347,7 +1629,7 @@ export default function Tasks() {
               </div>
             </div>
           </DialogHeader>
-          
+
           {selectedTaskForDetails && (
             <div className="space-y-6">
               {/* Task Details with Same Layout as Forms */}
@@ -1357,12 +1639,12 @@ export default function Tasks() {
                   <div className="grid grid-cols-4 gap-4">
                     <div>
                       <label className="text-sm font-medium">Category</label>
-                      <Select 
-                        value={selectedTaskForDetails.category} 
+                      <Select
+                        value={selectedTaskForDetails.category}
                         onValueChange={(value) => {
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { category: value }
+                          updateTaskMutation.mutate({
+                            id: selectedTaskForDetails.id,
+                            taskData: { category: value },
                           });
                         }}
                       >
@@ -1371,22 +1653,26 @@ export default function Tasks() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="maintenance">
+                            Maintenance
+                          </SelectItem>
                           <SelectItem value="inspection">Inspection</SelectItem>
                           <SelectItem value="repair">Repair</SelectItem>
                           <SelectItem value="cleaning">Cleaning</SelectItem>
-                          <SelectItem value="administrative">Administrative</SelectItem>
+                          <SelectItem value="administrative">
+                            Administrative
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
                       <label className="text-sm font-medium">Priority</label>
-                      <Select 
-                        value={selectedTaskForDetails.priority} 
+                      <Select
+                        value={selectedTaskForDetails.priority}
                         onValueChange={(value) => {
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { priority: value as any }
+                          updateTaskMutation.mutate({
+                            id: selectedTaskForDetails.id,
+                            taskData: { priority: value as any },
                           });
                         }}
                       >
@@ -1403,12 +1689,12 @@ export default function Tasks() {
                     </div>
                     <div>
                       <label className="text-sm font-medium">Status</label>
-                      <Select 
-                        value={selectedTaskForDetails.status} 
+                      <Select
+                        value={selectedTaskForDetails.status}
                         onValueChange={(value) => {
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { status: value as any }
+                          updateTaskMutation.mutate({
+                            id: selectedTaskForDetails.id,
+                            taskData: { status: value as any },
                           });
                         }}
                       >
@@ -1417,7 +1703,9 @@ export default function Tasks() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="in_progress">
+                            In Progress
+                          </SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
                           <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
@@ -1427,12 +1715,20 @@ export default function Tasks() {
                       <label className="text-sm font-medium">Due Date</label>
                       <Input
                         type="date"
-                        value={selectedTaskForDetails.dueDate ? new Date(selectedTaskForDetails.dueDate).toISOString().split('T')[0] : ""}
+                        value={
+                          selectedTaskForDetails.dueDate
+                            ? new Date(selectedTaskForDetails.dueDate)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""
+                        }
                         onChange={(e) => {
-                          const newDate = e.target.value ? new Date(e.target.value) : undefined;
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { dueDate: newDate }
+                          const newDate = e.target.value
+                            ? new Date(e.target.value)
+                            : undefined;
+                          updateTaskMutation.mutate({
+                            id: selectedTaskForDetails.id,
+                            taskData: { dueDate: newDate },
                           });
                         }}
                       />
@@ -1447,25 +1743,31 @@ export default function Tasks() {
                         value={selectedTaskForDetails.assignedTo || ""}
                         onChange={(e) => {
                           // Update the local state immediately for responsive UI
-                          setSelectedTaskForDetails(prev => prev ? {...prev, assignedTo: e.target.value} : null);
+                          setSelectedTaskForDetails((prev) =>
+                            prev
+                              ? { ...prev, assignedTo: e.target.value }
+                              : null,
+                          );
                         }}
                         onBlur={(e) => {
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { assignedTo: e.target.value }
+                          updateTaskMutation.mutate({
+                            id: selectedTaskForDetails.id,
+                            taskData: { assignedTo: e.target.value },
                           });
                         }}
                         placeholder="Enter assignee name"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Property (Optional)</label>
-                      <Select 
-                        value={selectedTaskForDetails.propertyId || ""} 
+                      <label className="text-sm font-medium">
+                        Property (Optional)
+                      </label>
+                      <Select
+                        value={selectedTaskForDetails.propertyId || ""}
                         onValueChange={(value) => {
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { propertyId: value || null }
+                          updateTaskMutation.mutate({
+                            id: selectedTaskForDetails.id,
+                            taskData: { propertyId: value || null },
                           });
                         }}
                       >
@@ -1482,13 +1784,15 @@ export default function Tasks() {
                       </Select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Unit (Optional)</label>
-                      <Select 
-                        value={selectedTaskForDetails.unitId || ""} 
+                      <label className="text-sm font-medium">
+                        Unit (Optional)
+                      </label>
+                      <Select
+                        value={selectedTaskForDetails.unitId || ""}
                         onValueChange={(value) => {
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { unitId: value || null }
+                          updateTaskMutation.mutate({
+                            id: selectedTaskForDetails.id,
+                            taskData: { unitId: value || null },
                           });
                         }}
                       >
@@ -1498,20 +1802,25 @@ export default function Tasks() {
                         <SelectContent>
                           {units?.map((unit: any) => (
                             <SelectItem key={unit.id} value={unit.id}>
-                              Unit {unit.unitNumber} - {properties?.find((p: any) => p.id === unit.propertyId)?.name || 'Property'}
+                              Unit {unit.unitNumber} -{" "}
+                              {properties?.find(
+                                (p: any) => p.id === unit.propertyId,
+                              )?.name || "Property"}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Tenant (Optional)</label>
-                      <Select 
-                        value={selectedTaskForDetails.tenantId || ""} 
+                      <label className="text-sm font-medium">
+                        Tenant (Optional)
+                      </label>
+                      <Select
+                        value={selectedTaskForDetails.tenantId || ""}
                         onValueChange={(value) => {
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { tenantId: value || null }
+                          updateTaskMutation.mutate({
+                            id: selectedTaskForDetails.id,
+                            taskData: { tenantId: value || null },
                           });
                         }}
                       >
@@ -1541,14 +1850,18 @@ export default function Tasks() {
                     value={selectedTaskForDetails.description || ""}
                     onChange={(e) => {
                       // Update the local state immediately for responsive UI
-                      setSelectedTaskForDetails(prev => prev ? {...prev, description: e.target.value} : null);
+                      setSelectedTaskForDetails((prev) =>
+                        prev ? { ...prev, description: e.target.value } : null,
+                      );
                     }}
                     onBlur={(e) => {
                       // Only save if description actually changed
-                      if (e.target.value !== selectedTaskForDetails.description) {
-                        updateTaskMutation.mutate({ 
-                          id: selectedTaskForDetails.id, 
-                          taskData: { description: e.target.value }
+                      if (
+                        e.target.value !== selectedTaskForDetails.description
+                      ) {
+                        updateTaskMutation.mutate({
+                          id: selectedTaskForDetails.id,
+                          taskData: { description: e.target.value },
                         });
                       }
                     }}
@@ -1565,17 +1878,24 @@ export default function Tasks() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {selectedTaskForDetails.attachmentUrl && selectedTaskForDetails.attachmentName ? (
+                    {selectedTaskForDetails.attachmentUrl &&
+                    selectedTaskForDetails.attachmentName ? (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Current Attachment</label>
+                        <label className="text-sm font-medium">
+                          Current Attachment
+                        </label>
                         <div className="flex items-center gap-2 p-3 bg-muted rounded-md border">
                           <Paperclip className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm flex-1">{selectedTaskForDetails.attachmentName}</span>
+                          <span className="text-sm flex-1">
+                            {selectedTaskForDetails.attachmentName}
+                          </span>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDownloadAttachment(selectedTaskForDetails)}
+                            onClick={() =>
+                              handleDownloadAttachment(selectedTaskForDetails)
+                            }
                             className="flex items-center gap-1"
                           >
                             <Download className="h-3 w-3" />
@@ -1586,8 +1906,13 @@ export default function Tasks() {
                     ) : (
                       <div className="text-center py-4">
                         <Paperclip className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">No attachments available</p>
-                        <p className="text-xs text-muted-foreground mt-1">Attachments can be added when creating or editing tasks</p>
+                        <p className="text-sm text-muted-foreground">
+                          No attachments available
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Attachments can be added when creating or editing
+                          tasks
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1597,14 +1922,16 @@ export default function Tasks() {
               {/* Communications Tab */}
               <Tabs defaultValue="communications" className="space-y-4">
                 <TabsList>
-                  <TabsTrigger value="communications">Communications</TabsTrigger>
+                  <TabsTrigger value="communications">
+                    Communications
+                  </TabsTrigger>
                   <TabsTrigger value="history">History</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="communications" className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium">Task Communications</h3>
-                    <Button 
+                    <Button
                       size="sm"
                       onClick={() => {
                         setSelectedTask(selectedTaskForDetails);
@@ -1615,21 +1942,23 @@ export default function Tasks() {
                       Send Message
                     </Button>
                   </div>
-                  
+
                   {/* Query and display task communications */}
                   <TaskCommunications taskId={selectedTaskForDetails.id} />
                 </TabsContent>
 
                 <TabsContent value="history" className="space-y-4">
                   <h3 className="text-lg font-medium">Task History</h3>
-                  
+
                   <div className="space-y-3 max-h-60 overflow-y-auto">
                     {taskHistory.map((history) => (
                       <div key={history.id} className="border rounded-lg p-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium">{history.action}</span>
+                            <span className="font-medium">
+                              {history.action}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Clock className="h-3 w-3" />
@@ -1646,8 +1975,12 @@ export default function Tasks() {
                     {taskHistory.length === 0 && (
                       <div className="text-center py-8">
                         <HistoryIcon className="mx-auto h-8 w-8 text-muted-foreground" />
-                        <p className="mt-2 text-sm text-muted-foreground">No history yet</p>
-                        <p className="text-xs text-muted-foreground mt-1">Task changes will be tracked here</p>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          No history yet
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Task changes will be tracked here
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1662,19 +1995,21 @@ export default function Tasks() {
 }
 
 // Calendar View Component
-function CalendarView({ 
+function CalendarView({
   tasks,
   setSelectedTaskForDetails,
-  setIsTaskDetailsDialogOpen 
-}: { 
+  setIsTaskDetailsDialogOpen,
+}: {
   tasks: Task[];
   setSelectedTaskForDetails: (task: Task) => void;
   setIsTaskDetailsDialogOpen: (open: boolean) => void;
 }) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [viewMode, setViewMode] = useState<"month" | "week" | "day">("month");
   const [showCreateTaskDialog, setShowCreateTaskDialog] = useState(false);
-  const [selectedDateForTask, setSelectedDateForTask] = useState<Date | null>(null);
+  const [selectedDateForTask, setSelectedDateForTask] = useState<Date | null>(
+    null,
+  );
   const { toast } = useToast();
 
   const createTaskForm = useForm<TaskFormData>({
@@ -1691,7 +2026,8 @@ function CalendarView({
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: (taskData: InsertTask) => apiRequest("POST", "/api/tasks", taskData),
+    mutationFn: (taskData: InsertTask) =>
+      apiRequest("POST", "/api/tasks", taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setShowCreateTaskDialog(false);
@@ -1720,39 +2056,45 @@ function CalendarView({
     const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
-    
+
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
-    
+
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
-    
+
     return days;
   };
 
   const calendarGrid = generateCalendarGrid();
 
   const getTasksForDate = (date: Date) => {
-    return tasks.filter(task => 
-      task.dueDate && new Date(task.dueDate).toDateString() === date.toDateString()
+    return tasks.filter(
+      (task) =>
+        task.dueDate &&
+        new Date(task.dueDate).toDateString() === date.toDateString(),
     );
   };
 
   const previousMonth = () => {
-    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1));
+    setSelectedDate(
+      new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1),
+    );
   };
 
   const nextMonth = () => {
-    setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1));
+    setSelectedDate(
+      new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1),
+    );
   };
 
   const handleDateClick = (date: Date) => {
     setSelectedDateForTask(date);
-    createTaskForm.setValue("dueDate", date.toISOString().split('T')[0]);
+    createTaskForm.setValue("dueDate", date.toISOString().split("T")[0]);
     setShowCreateTaskDialog(true);
   };
 
@@ -1771,22 +2113,32 @@ function CalendarView({
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'high':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case "urgent":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "high":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "low":
+        return "bg-blue-100 text-blue-800 border-blue-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -1808,23 +2160,23 @@ function CalendarView({
         </div>
         <div className="flex items-center space-x-2">
           <Button
-            variant={viewMode === 'month' ? 'default' : 'outline'}
+            variant={viewMode === "month" ? "default" : "outline"}
             size="sm"
-            onClick={() => setViewMode('month')}
+            onClick={() => setViewMode("month")}
           >
             Month
           </Button>
           <Button
-            variant={viewMode === 'week' ? 'default' : 'outline'}
+            variant={viewMode === "week" ? "default" : "outline"}
             size="sm"
-            onClick={() => setViewMode('week')}
+            onClick={() => setViewMode("week")}
           >
             Week
           </Button>
           <Button
-            variant={viewMode === 'day' ? 'default' : 'outline'}
+            variant={viewMode === "day" ? "default" : "outline"}
             size="sm"
-            onClick={() => setViewMode('day')}
+            onClick={() => setViewMode("day")}
           >
             Day
           </Button>
@@ -1833,8 +2185,11 @@ function CalendarView({
 
       {/* Day names header */}
       <div className="grid grid-cols-7 gap-2">
-        {dayNames.map(day => (
-          <div key={day} className="p-3 text-center font-medium text-muted-foreground border-b">
+        {dayNames.map((day) => (
+          <div
+            key={day}
+            className="p-3 text-center font-medium text-muted-foreground border-b"
+          >
             {day}
           </div>
         ))}
@@ -1844,19 +2199,22 @@ function CalendarView({
       <div className="grid grid-cols-7 gap-2">
         {calendarGrid.map((date, index) => {
           const tasksForDate = date ? getTasksForDate(date) : [];
-          const isToday = date && date.toDateString() === new Date().toDateString();
-          
+          const isToday =
+            date && date.toDateString() === new Date().toDateString();
+
           return (
             <div
               key={index}
               className={`min-h-24 p-2 border rounded-lg ${
-                date ? 'bg-card hover:bg-accent cursor-pointer' : 'bg-muted'
-              } ${isToday ? 'ring-2 ring-primary' : ''}`}
+                date ? "bg-card hover:bg-accent cursor-pointer" : "bg-muted"
+              } ${isToday ? "ring-2 ring-primary" : ""}`}
               onClick={() => date && handleDateClick(date)}
             >
               {date && (
                 <>
-                  <div className={`text-sm font-medium mb-1 ${isToday ? 'font-bold text-primary' : ''}`}>
+                  <div
+                    className={`text-sm font-medium mb-1 ${isToday ? "font-bold text-primary" : ""}`}
+                  >
                     {date.getDate()}
                   </div>
                   <div className="space-y-1">
@@ -1896,57 +2254,76 @@ function CalendarView({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setSelectedDate(
+                  new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000),
+                )
+              }
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <h3 className="text-lg font-semibold">
-              {selectedDate.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+              {selectedDate.toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             </h3>
-            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setSelectedDate(
+                  new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000),
+                )
+              }
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
           <div className="flex items-center space-x-2">
             <Button
-              variant={viewMode === 'month' ? 'default' : 'outline'}
+              variant={viewMode === "month" ? "default" : "outline"}
               size="sm"
-              onClick={() => setViewMode('month')}
+              onClick={() => setViewMode("month")}
             >
               Month
             </Button>
             <Button
-              variant={viewMode === 'week' ? 'default' : 'outline'}
+              variant={viewMode === "week" ? "default" : "outline"}
               size="sm"
-              onClick={() => setViewMode('week')}
+              onClick={() => setViewMode("week")}
             >
               Week
             </Button>
             <Button
-              variant={viewMode === 'day' ? 'default' : 'outline'}
+              variant={viewMode === "day" ? "default" : "outline"}
               size="sm"
-              onClick={() => setViewMode('day')}
+              onClick={() => setViewMode("day")}
             >
               Day
             </Button>
           </div>
         </div>
-        
+
         <div className="border rounded-lg">
-          {hours.map(hour => (
-            <div key={hour} className="border-b last:border-b-0 p-3 min-h-[60px]">
+          {hours.map((hour) => (
+            <div
+              key={hour}
+              className="border-b last:border-b-0 p-3 min-h-[60px]"
+            >
               <div className="flex">
                 <div className="w-20 text-sm text-muted-foreground">
-                  {hour.toString().padStart(2, '0')}:00
+                  {hour.toString().padStart(2, "0")}:00
                 </div>
                 <div className="flex-1">
                   {events
                     .filter(() => hour === 9) // Show all events at 9 AM for simplicity
-                    .map(task => (
+                    .map((task) => (
                       <div
                         key={task.id}
                         className={`p-2 rounded border mb-1 cursor-pointer hover:scale-105 transition-transform ${getPriorityColor(task.priority)}`}
@@ -1964,7 +2341,7 @@ function CalendarView({
                       </div>
                     ))}
                   {hour === 9 && events.length === 0 && (
-                    <div 
+                    <div
                       className="p-2 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-gray-400 transition-colors text-center text-gray-500 text-sm"
                       onClick={() => handleDateClick(selectedDate)}
                     >
@@ -1983,7 +2360,7 @@ function CalendarView({
   const renderWeekView = () => {
     const weekStart = new Date(selectedDate);
     weekStart.setDate(selectedDate.getDate() - selectedDate.getDay());
-    
+
     const weekDays = Array.from({ length: 7 }, (_, i) => {
       const day = new Date(weekStart);
       day.setDate(weekStart.getDate() + i);
@@ -1994,35 +2371,51 @@ function CalendarView({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000))}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setSelectedDate(
+                  new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000),
+                )
+              }
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <h3 className="text-lg font-semibold">
               Week of {weekStart.toLocaleDateString()}
             </h3>
-            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 7 * 24 * 60 * 60 * 1000))}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setSelectedDate(
+                  new Date(selectedDate.getTime() + 7 * 24 * 60 * 60 * 1000),
+                )
+              }
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
           <div className="flex items-center space-x-2">
             <Button
-              variant={viewMode === 'month' ? 'default' : 'outline'}
+              variant={viewMode === "month" ? "default" : "outline"}
               size="sm"
-              onClick={() => setViewMode('month')}
+              onClick={() => setViewMode("month")}
             >
               Month
             </Button>
             <Button
-              variant={viewMode === 'week' ? 'default' : 'outline'}
+              variant={viewMode === "week" ? "default" : "outline"}
               size="sm"
-              onClick={() => setViewMode('week')}
+              onClick={() => setViewMode("week")}
             >
               Week
             </Button>
             <Button
-              variant={viewMode === 'day' ? 'default' : 'outline'}
+              variant={viewMode === "day" ? "default" : "outline"}
               size="sm"
-              onClick={() => setViewMode('day')}
+              onClick={() => setViewMode("day")}
             >
               Day
             </Button>
@@ -2033,15 +2426,17 @@ function CalendarView({
           {weekDays.map((day, index) => {
             const tasksForDate = getTasksForDate(day);
             const isToday = day.toDateString() === new Date().toDateString();
-            
+
             return (
               <div key={index} className="space-y-2">
-                <div className={`text-center p-2 rounded ${isToday ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                <div
+                  className={`text-center p-2 rounded ${isToday ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+                >
                   <div className="font-medium">{dayNames[day.getDay()]}</div>
                   <div className="text-lg">{day.getDate()}</div>
                 </div>
                 <div className="space-y-1 min-h-48">
-                  {tasksForDate.map(task => (
+                  {tasksForDate.map((task) => (
                     <div
                       key={task.id}
                       className={`text-xs p-2 rounded border cursor-pointer hover:scale-105 transition-transform ${getPriorityColor(task.priority)}`}
@@ -2055,7 +2450,7 @@ function CalendarView({
                       )}
                     </div>
                   ))}
-                  <div 
+                  <div
                     className="text-xs p-2 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-gray-400 transition-colors text-center text-gray-500"
                     onClick={() => handleDateClick(day)}
                   >
@@ -2071,9 +2466,9 @@ function CalendarView({
   };
 
   let content;
-  if (viewMode === 'day') {
+  if (viewMode === "day") {
     content = renderDayView();
-  } else if (viewMode === 'week') {
+  } else if (viewMode === "week") {
     content = renderWeekView();
   } else {
     content = renderMonthView();
@@ -2082,15 +2477,21 @@ function CalendarView({
   return (
     <div className="space-y-4">
       {content}
-      
+
       {/* Create Task Dialog */}
-      <Dialog open={showCreateTaskDialog} onOpenChange={setShowCreateTaskDialog}>
+      <Dialog
+        open={showCreateTaskDialog}
+        onOpenChange={setShowCreateTaskDialog}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create New Task</DialogTitle>
           </DialogHeader>
           <Form {...createTaskForm}>
-            <form onSubmit={createTaskForm.handleSubmit(onCreateTaskSubmit)} className="space-y-4">
+            <form
+              onSubmit={createTaskForm.handleSubmit(onCreateTaskSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={createTaskForm.control}
                 name="title"
@@ -2126,16 +2527,29 @@ function CalendarView({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {["general", "maintenance", "inspection", "financial", "administrative", "legal", "marketing", "emergency"].map((category) => (
+                          {[
+                            "general",
+                            "maintenance",
+                            "inspection",
+                            "financial",
+                            "administrative",
+                            "legal",
+                            "marketing",
+                            "emergency",
+                          ].map((category) => (
                             <SelectItem key={category} value={category}>
-                              {category.charAt(0).toUpperCase() + category.slice(1)}
+                              {category.charAt(0).toUpperCase() +
+                                category.slice(1)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -2150,7 +2564,10 @@ function CalendarView({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -2173,7 +2590,10 @@ function CalendarView({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -2181,7 +2601,9 @@ function CalendarView({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="in_progress">
+                            In Progress
+                          </SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
                           <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
@@ -2199,7 +2621,10 @@ function CalendarView({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -2207,7 +2632,9 @@ function CalendarView({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="in_progress">
+                            In Progress
+                          </SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
                           <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
@@ -2248,7 +2675,10 @@ function CalendarView({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Property (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select property" />
@@ -2275,7 +2705,10 @@ function CalendarView({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Unit (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select unit" />
@@ -2284,7 +2717,10 @@ function CalendarView({
                         <SelectContent>
                           {units?.map((unit: any) => (
                             <SelectItem key={unit.id} value={unit.id}>
-                              Unit {unit.unitNumber} - {properties?.find((p: any) => p.id === unit.propertyId)?.name || 'Property'}
+                              Unit {unit.unitNumber} -{" "}
+                              {properties?.find(
+                                (p: any) => p.id === unit.propertyId,
+                              )?.name || "Property"}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -2299,7 +2735,10 @@ function CalendarView({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tenant (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select tenant" />
@@ -2320,7 +2759,11 @@ function CalendarView({
               </div>
 
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setShowCreateTaskDialog(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateTaskDialog(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={createTaskMutation.isPending}>
