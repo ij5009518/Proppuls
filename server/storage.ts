@@ -1432,14 +1432,12 @@ class Storage {
     const communication = {
       id: crypto.randomUUID(),
       taskId: communicationData.taskId,
-      type: communicationData.method as "email" | "sms", // Map method to type field
+      method: communicationData.method as "email" | "sms",
       recipient: communicationData.recipient,
       subject: communicationData.subject || null,
       message: communicationData.message,
       status: "pending" as const,
       sentAt: null,
-      deliveredAt: null,
-      errorMessage: null,
       createdAt: new Date()
     };
 
@@ -1460,27 +1458,23 @@ class Storage {
         await db.update(taskCommunications)
           .set({ 
             status: "delivered",
-            sentAt: new Date(),
-            deliveredAt: new Date()
+            sentAt: new Date()
           })
           .where(eq(taskCommunications.id, communication.id));
           
         communication.status = "delivered";
         communication.sentAt = new Date();
-        communication.deliveredAt = new Date();
       } catch (error: any) {
         console.error("Error sending email:", error);
         // Update status to failed
         await db.update(taskCommunications)
           .set({ 
             status: "failed", 
-            errorMessage: error?.message || "Email sending failed",
             sentAt: new Date()
           })
           .where(eq(taskCommunications.id, communication.id));
           
         communication.status = "failed";
-        communication.errorMessage = error?.message || "Email sending failed";
         communication.sentAt = new Date();
       }
     }
@@ -1492,11 +1486,11 @@ class Storage {
     const result = await db.select({
       id: taskCommunications.id,
       taskId: taskCommunications.taskId,
-      type: taskCommunications.method, // Map method to type
+      method: taskCommunications.method,
       recipient: taskCommunications.recipient,
       subject: taskCommunications.subject,
       message: taskCommunications.message,
-      status: sql<string>`CASE WHEN ${taskCommunications.sentAt} IS NOT NULL THEN 'delivered' ELSE 'pending' END`,
+      status: taskCommunications.status,
       sentAt: taskCommunications.sentAt,
       createdAt: taskCommunications.createdAt,
     })
@@ -1520,13 +1514,10 @@ class Storage {
       id: crypto.randomUUID(),
       taskId: historyData.taskId,
       action: historyData.action,
-      field: historyData.field,
-      oldValue: historyData.oldValue,
-      newValue: historyData.newValue,
-      userId: historyData.userId,
-      notes: historyData.notes,
-      createdAt: new Date(),
-      ...historyData
+      changes: historyData.notes || historyData.changes,
+      changedBy: historyData.userId || historyData.changedBy || "System",
+      changedAt: new Date(),
+      createdAt: new Date()
     };
 
     await db.insert(taskHistory).values(history);
@@ -1538,10 +1529,10 @@ class Storage {
       id: taskHistory.id,
       taskId: taskHistory.taskId,
       action: taskHistory.action,
-      notes: taskHistory.changes, // Map changes to notes
-      createdAt: taskHistory.createdAt,
+      changes: taskHistory.changes,
       changedBy: taskHistory.changedBy,
       changedAt: taskHistory.changedAt,
+      createdAt: taskHistory.createdAt,
     })
       .from(taskHistory)
       .where(eq(taskHistory.taskId, taskId))
