@@ -132,6 +132,7 @@ export default function Tasks() {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setIsAddDialogOpen(false);
       form.reset();
+      setUploadedDocument(null); // Clear uploaded document
       toast({
         title: "Success",
         description: "Task created successfully",
@@ -278,6 +279,11 @@ export default function Tasks() {
     const file = event.target.files?.[0];
     if (file) {
       setUploadedDocument(file);
+      // Update form with file information
+      form.setValue('attachmentName', file.name);
+      // In a real implementation, you would upload the file to a server here
+      // For now, we'll create a mock URL
+      form.setValue('attachmentUrl', `uploads/${file.name}`);
     }
   };
 
@@ -381,7 +387,8 @@ export default function Tasks() {
                   )}
                 />
 
-                <div className="grid grid-cols-3 gap-4">
+                {/* First line: Category, Priority, Status, Due Date */}
+                <div className="grid grid-cols-4 gap-4">
                   <FormField
                     control={form.control}
                     name="category"
@@ -456,9 +463,6 @@ export default function Tasks() {
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <div className="grid grid-cols-4 gap-4">
                   <FormField
                     control={form.control}
                     name="dueDate"
@@ -472,6 +476,10 @@ export default function Tasks() {
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Second line: Assigned To, Property, Unit, Tenant */}
+                <div className="grid grid-cols-4 gap-4">
                   <FormField
                     control={form.control}
                     name="assignedTo"
@@ -533,9 +541,6 @@ export default function Tasks() {
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
                     name="tenantId"
