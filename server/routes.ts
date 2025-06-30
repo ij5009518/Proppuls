@@ -16,6 +16,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export function registerRoutes(app: Express) {
   
+  // Serve static files from uploads directory
+  app.use('/uploads', express.static('uploads'));
+  
   // User authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {

@@ -1432,12 +1432,14 @@ class Storage {
     const communication = {
       id: crypto.randomUUID(),
       taskId: communicationData.taskId,
-      type: communicationData.method, // Map method to type field
+      type: communicationData.method as "email" | "sms", // Map method to type field
       recipient: communicationData.recipient,
       subject: communicationData.subject || null,
       message: communicationData.message,
-      status: "sent" as const,
-      sentAt: new Date(),
+      status: "pending" as const,
+      sentAt: null,
+      deliveredAt: null,
+      errorMessage: null,
       createdAt: new Date()
     };
 
@@ -1454,16 +1456,32 @@ class Storage {
           html: `<p>${communicationData.message.replace(/\n/g, '<br>')}</p>`
         });
         
-        // Update status to delivered (note: deliveredAt column may not exist in current schema)
+        // Update status to delivered
         await db.update(taskCommunications)
-          .set({ status: "delivered" })
+          .set({ 
+            status: "delivered",
+            sentAt: new Date(),
+            deliveredAt: new Date()
+          })
           .where(eq(taskCommunications.id, communication.id));
-      } catch (error) {
+          
+        communication.status = "delivered";
+        communication.sentAt = new Date();
+        communication.deliveredAt = new Date();
+      } catch (error: any) {
         console.error("Error sending email:", error);
         // Update status to failed
         await db.update(taskCommunications)
-          .set({ status: "failed", errorMessage: error.message })
+          .set({ 
+            status: "failed", 
+            errorMessage: error?.message || "Email sending failed",
+            sentAt: new Date()
+          })
           .where(eq(taskCommunications.id, communication.id));
+          
+        communication.status = "failed";
+        communication.errorMessage = error?.message || "Email sending failed";
+        communication.sentAt = new Date();
       }
     }
     
