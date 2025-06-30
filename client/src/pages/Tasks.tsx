@@ -84,6 +84,9 @@ export default function Tasks() {
       category: "general",
       dueDate: "",
       assignedTo: "",
+      propertyId: "",
+      unitId: "",
+      tenantId: "",
     },
   });
 
@@ -266,6 +269,9 @@ export default function Tasks() {
       category: task.category,
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "",
       assignedTo: task.assignedTo || "",
+      propertyId: task.propertyId || "",
+      unitId: task.unitId || "",
+      tenantId: task.tenantId || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -799,45 +805,19 @@ export default function Tasks() {
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {["general", "maintenance", "inspection", "financial", "administrative", "legal", "marketing", "emergency"].map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category.charAt(0).toUpperCase() + category.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={editForm.control}
@@ -853,7 +833,36 @@ export default function Tasks() {
                 )}
               />
 
-              <div className="grid grid-cols-3 gap-4">
+              {/* First line: Category, Priority, Status, Due Date */}
+              <div className="grid grid-cols-4 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="inspection">Inspection</SelectItem>
+                          <SelectItem value="repair">Repair</SelectItem>
+                          <SelectItem value="cleaning">Cleaning</SelectItem>
+                          <SelectItem value="landscaping">Landscaping</SelectItem>
+                          <SelectItem value="legal">Legal</SelectItem>
+                          <SelectItem value="financial">Financial</SelectItem>
+                          <SelectItem value="administrative">Administrative</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={editForm.control}
                   name="priority"
@@ -915,7 +924,8 @@ export default function Tasks() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              {/* Second line: Assigned To, Property, Unit, Tenant */}
+              <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={editForm.control}
                   name="assignedTo"
@@ -977,9 +987,6 @@ export default function Tasks() {
                     </FormItem>
                   )}
                 />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={editForm.control}
                   name="tenantId"
@@ -1004,95 +1011,6 @@ export default function Tasks() {
                     </FormItem>
                   )}
                 />
-              </div>
-
-              <FormField
-                control={editForm.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={editForm.control}
-                name="assignedTo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assigned To</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter assignee name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Communication Settings */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="text-sm font-medium">Communication Settings</h3>
-                
-                <FormField
-                  control={editForm.control}
-                  name="communicationMethod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Communication Method</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="email">Email</SelectItem>
-                          <SelectItem value="sms">SMS</SelectItem>
-                          <SelectItem value="both">Both Email & SMS</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {(editForm.watch("communicationMethod") === "email" || editForm.watch("communicationMethod") === "both") && (
-                  <FormField
-                    control={editForm.control}
-                    name="recipientEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recipient Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" placeholder="Enter recipient email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                {(editForm.watch("communicationMethod") === "sms" || editForm.watch("communicationMethod") === "both") && (
-                  <FormField
-                    control={editForm.control}
-                    name="recipientPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recipient Phone</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="tel" placeholder="Enter recipient phone number" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
               </div>
 
               {/* Document Upload Section */}
