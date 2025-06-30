@@ -1978,6 +1978,82 @@ export default function Tenants() {
                 />
               </div>
 
+              {/* Property, Unit, and Tenant Selection */}
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={taskForm.control}
+                  name="propertyId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Property (Optional)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select property" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {properties?.map((property: Property) => (
+                            <SelectItem key={property.id} value={property.id}>
+                              {property.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={taskForm.control}
+                  name="unitId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit (Optional)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select unit" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {units?.map((unit: Unit) => (
+                            <SelectItem key={unit.id} value={unit.id}>
+                              Unit {unit.unitNumber} - {getPropertyName(unit.propertyId)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={taskForm.control}
+                  name="tenantId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tenant (Optional)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select tenant" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {tenants?.map((tenant: any) => (
+                            <SelectItem key={tenant.id} value={tenant.id}>
+                              {tenant.firstName} {tenant.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={taskForm.control}
                 name="notes"
