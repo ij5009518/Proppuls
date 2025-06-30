@@ -236,8 +236,11 @@ export default function Tasks() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      // TODO: Implement file upload functionality
-      console.log("Files selected:", files);
+      setUploadedDocument(files[0]);
+      toast({
+        title: "File Selected",
+        description: `Selected: ${files[0].name}`,
+      });
     }
   };
 
@@ -1454,6 +1457,11 @@ export default function Tasks() {
                   <Textarea
                     value={selectedTaskForDetails.description || ""}
                     onChange={(e) => {
+                      // Update the local state immediately for responsive UI
+                      setSelectedTaskForDetails(prev => prev ? {...prev, description: e.target.value} : null);
+                    }}
+                    onBlur={(e) => {
+                      // Save to database when user finishes editing
                       updateTaskMutation.mutate({ 
                         id: selectedTaskForDetails.id, 
                         taskData: { ...selectedTaskForDetails, description: e.target.value }
@@ -1467,36 +1475,35 @@ export default function Tasks() {
 
               {/* File Attachments */}
               <Card>
-                <CardHeader className="flex flex-col space-y-1.5 p-6 pt-[0px] pb-[0px]">
+                <CardHeader>
                   <CardTitle className="text-lg">Attachments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-                      <input
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Attach Document</label>
+                    <div className="flex items-center gap-2">
+                      <Input
                         type="file"
-                        multiple
-                        className="hidden"
-                        id="file-upload"
                         onChange={handleFileUpload}
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        className="flex-1"
                       />
-                      <label htmlFor="file-upload" className="cursor-pointer">
-                        <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-600">
-                          Click to upload files or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          PDF, DOC, JPG, PNG up to 10MB
-                        </p>
-                      </label>
+                      <Upload className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <div className="text-xs text-gray-500 flex items-center">
-                        <Paperclip className="mr-1 h-3 w-3" />
-                        No files attached yet
+                    {uploadedDocument && (
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                        <Paperclip className="h-4 w-4" />
+                        <span className="text-sm">{uploadedDocument.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setUploadedDocument(null)}
+                        >
+                          Remove
+                        </Button>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
