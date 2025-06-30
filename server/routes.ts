@@ -1609,8 +1609,46 @@ export function registerRoutes(app: Express) {
   app.post("/api/tasks/:taskId/communications", async (req, res) => {
     try {
       const taskId = req.params.taskId;
-      const communicationData = { ...req.body, taskId };
+      const { method, subject, message, recipient } = req.body;
+      
+      // Create communication record
+      const communicationData = { 
+        taskId, 
+        method, 
+        subject, 
+        message, 
+        recipient,
+        status: 'pending'
+      };
+      
       const communication = await storage.createTaskCommunication(communicationData);
+      
+      // Send the communication
+      if (method === 'email') {
+        try {
+          const { emailService } = require('./email');
+          await emailService.sendEmail({
+            to: recipient,
+            subject: subject,
+            html: message,
+            text: message
+          });
+          
+          // Update status to delivered
+          await storage.updateTaskCommunication(communication.id, { status: 'delivered' });
+          communication.status = 'delivered';
+        } catch (emailError) {
+          console.error("Error sending email:", emailError);
+          // Update status to failed with error message
+          await storage.updateTaskCommunication(communication.id, { 
+            status: 'failed',
+            errorMessage: emailError instanceof Error ? emailError.message : 'Email sending failed'
+          });
+          communication.status = 'failed';
+          communication.errorMessage = emailError instanceof Error ? emailError.message : 'Email sending failed';
+        }
+      }
+      
       res.json(communication);
     } catch (error) {
       console.error("Error creating task communication:", error);
