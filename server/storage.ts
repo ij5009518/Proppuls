@@ -1488,8 +1488,18 @@ class Storage {
     return communication;
   }
 
-  async getTaskCommunications(taskId: string): Promise<TaskCommunication[]> {
-    const result = await db.select()
+  async getTaskCommunications(taskId: string): Promise<any[]> {
+    const result = await db.select({
+      id: taskCommunications.id,
+      taskId: taskCommunications.taskId,
+      type: taskCommunications.method, // Map method to type
+      recipient: taskCommunications.recipient,
+      subject: taskCommunications.subject,
+      message: taskCommunications.message,
+      status: sql<string>`CASE WHEN ${taskCommunications.sentAt} IS NOT NULL THEN 'delivered' ELSE 'pending' END`,
+      sentAt: taskCommunications.sentAt,
+      createdAt: taskCommunications.createdAt,
+    })
       .from(taskCommunications)
       .where(eq(taskCommunications.taskId, taskId))
       .orderBy(desc(taskCommunications.createdAt));
@@ -1523,8 +1533,16 @@ class Storage {
     return history;
   }
 
-  async getTaskHistory(taskId: string): Promise<TaskHistory[]> {
-    const result = await db.select()
+  async getTaskHistory(taskId: string): Promise<any[]> {
+    const result = await db.select({
+      id: taskHistory.id,
+      taskId: taskHistory.taskId,
+      action: taskHistory.action,
+      notes: taskHistory.changes, // Map changes to notes
+      createdAt: taskHistory.createdAt,
+      changedBy: taskHistory.changedBy,
+      changedAt: taskHistory.changedAt,
+    })
       .from(taskHistory)
       .where(eq(taskHistory.taskId, taskId))
       .orderBy(desc(taskHistory.createdAt));
