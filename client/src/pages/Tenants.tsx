@@ -1346,7 +1346,6 @@ export default function Tenants() {
             </DialogContent>
         </Dialog>
       </div>
-
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <Input
@@ -1716,7 +1715,6 @@ export default function Tenants() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Edit Payment Dialog */}
       <Dialog open={isEditPaymentDialogOpen} onOpenChange={setIsEditPaymentDialogOpen}>
         <DialogContent>
@@ -1837,7 +1835,6 @@ export default function Tenants() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Task Dialog */}
       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
         <DialogContent>
@@ -2090,7 +2087,7 @@ export default function Tenants() {
                 <TabsTrigger value="details">Basic</TabsTrigger>
                 <TabsTrigger value="lease">Lease & Screening</TabsTrigger>
                 <TabsTrigger value="payments">Payments</TabsTrigger>
-                <TabsTrigger value="tasks">Tasks & Communication</TabsTrigger>
+                <TabsTrigger value="tasks">Tasks </TabsTrigger>
               </TabsList>
 
               <TabsContent value="details" className="space-y-4">
@@ -2707,31 +2704,7 @@ export default function Tenants() {
                   })()}
                 </div>
                 
-                {/* Communication Section */}
-                <div className="space-y-4 pt-6 border-t">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Communication</h3>
-                    <Button size="sm" variant="outline">
-                      <MessageSquare className="h-4 w-4 mr-1" />
-                      Send Message
-                    </Button>
-                  </div>
-                  
-                  <div className="text-center py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
-                    <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-muted-foreground mb-4">No messages yet</p>
-                    <div className="flex gap-2 justify-center">
-                      <Button variant="outline" size="sm">
-                        <Mail className="h-4 w-4 mr-2" />
-                        Send Email
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Phone className="h-4 w-4 mr-2" />
-                        Call Tenant
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                
               </TabsContent>
             </Tabs>
           )}
@@ -3375,7 +3348,6 @@ export default function Tenants() {
           </Form>
         </DialogContent>
       </Dialog>
-
       {/* Task Detail Dialog */}
       {selectedTask && (
         <Dialog open={isTaskDetailOpen} onOpenChange={setIsTaskDetailOpen}>
@@ -3395,7 +3367,6 @@ export default function Tenants() {
           </DialogContent>
         </Dialog>
       )}
-
       {/* Edit Billing Record Dialog */}
       <Dialog open={isEditBillingDialogOpen} onOpenChange={setIsEditBillingDialogOpen}>
         <DialogContent className="max-w-md">
