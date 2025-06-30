@@ -1250,8 +1250,14 @@ class Storage {
   }
 
   async updateTask(id: string, taskData: any): Promise<Task | null> {
+    // Convert date string to Date object if present
+    const updateData: any = { ...taskData, updatedAt: new Date() };
+    if (updateData.dueDate && typeof updateData.dueDate === 'string') {
+      updateData.dueDate = new Date(updateData.dueDate);
+    }
+    
     const [task] = await db.update(tasks)
-      .set({ ...taskData, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(tasks.id, id))
       .returning();
     return task || null;

@@ -42,6 +42,57 @@ const communicationFormSchema = z.object({
 type TaskFormData = z.infer<typeof taskFormSchema>;
 type CommunicationFormData = z.infer<typeof communicationFormSchema>;
 
+// Task Communications Component
+function TaskCommunications({ taskId }: { taskId: string }) {
+  const { data: communications = [], isLoading } = useQuery({
+    queryKey: ["/api/tasks", taskId, "communications"],
+    queryFn: () => apiRequest("GET", `/api/tasks/${taskId}/communications`),
+  });
+
+  if (isLoading) {
+    return <div className="text-center py-4">Loading communications...</div>;
+  }
+
+  if (communications.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
+        <p className="mt-2 text-sm text-muted-foreground">No communications yet</p>
+        <p className="text-xs text-muted-foreground mt-1">Communications will appear here when sent</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 max-h-60 overflow-y-auto">
+      {communications.map((comm: any) => (
+        <div key={comm.id} className="border rounded-lg p-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              {comm.method === 'email' && <Mail className="h-4 w-4 text-blue-500" />}
+              {comm.method === 'sms' && <Phone className="h-4 w-4 text-green-500" />}
+              <span className="font-medium capitalize">{comm.method}</span>
+              <Badge variant={comm.status === 'delivered' ? 'default' : comm.status === 'failed' ? 'destructive' : 'secondary'}>
+                {comm.status}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              {new Date(comm.createdAt).toLocaleString()}
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">{comm.recipient}</p>
+          {comm.subject && <p className="text-sm font-medium mt-1">{comm.subject}</p>}
+          <p className="text-sm mt-1">{comm.message}</p>
+          {comm.errorMessage && (
+            <p className="text-xs text-destructive mt-1">Error: {comm.errorMessage}</p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Tasks() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -1562,11 +1613,8 @@ export default function Tasks() {
                     </Button>
                   </div>
                   
-                  <div className="text-center py-8">
-                    <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
-                    <p className="mt-2 text-sm text-muted-foreground">No communications yet</p>
-                    <p className="text-xs text-muted-foreground mt-1">Communications will appear here when sent</p>
-                  </div>
+                  {/* Query and display task communications */}
+                  <TaskCommunications taskId={selectedTaskForDetails.id} />
                 </TabsContent>
 
                 <TabsContent value="history" className="space-y-4">
