@@ -224,11 +224,19 @@ export default function Tasks() {
 
   const { data: taskCommunications = [] } = useQuery({
     queryKey: ["/api/tasks", selectedTaskForDetails?.id, "communications"],
+    queryFn: () => 
+      selectedTaskForDetails?.id 
+        ? apiRequest("GET", `/api/tasks/${selectedTaskForDetails.id}/communications`)
+        : Promise.resolve([]),
     enabled: !!selectedTaskForDetails?.id,
   });
 
   const { data: taskHistory = [] } = useQuery({
     queryKey: ["/api/tasks", selectedTaskForDetails?.id, "history"],
+    queryFn: () => 
+      selectedTaskForDetails?.id 
+        ? apiRequest("GET", `/api/tasks/${selectedTaskForDetails.id}/history`)
+        : Promise.resolve([]),
     enabled: !!selectedTaskForDetails?.id,
   });
 
@@ -1382,25 +1390,29 @@ export default function Tasks() {
                     <div key={comm.id} className="border rounded-lg p-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          {comm.method === "email" && (
+                          {comm.type === "email" && (
                             <Mail className="h-4 w-4 text-blue-500" />
                           )}
-                          {comm.method === "sms" && (
+                          {comm.type === "sms" && (
                             <Phone className="h-4 w-4 text-green-500" />
                           )}
                           <span className="font-medium capitalize">
-                            {comm.method}
+                            {comm.type}
                           </span>
                           <Badge
                             variant={
-                              comm.status === "sent"
+                              comm.status === "delivered"
                                 ? "default"
                                 : comm.status === "failed"
                                   ? "destructive"
-                                  : "secondary"
+                                  : comm.status === "pending"
+                                    ? "secondary"
+                                    : "outline"
                             }
                           >
-                            {comm.status}
+                            {comm.status === "delivered" ? "Sent" : 
+                             comm.status === "pending" ? "Sending..." :
+                             comm.status === "failed" ? "Failed" : comm.status}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -1871,53 +1883,38 @@ export default function Tasks() {
                 </CardContent>
               </Card>
 
-              {/* File Attachments */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Attachments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {selectedTaskForDetails.attachmentUrl &&
-                    selectedTaskForDetails.attachmentName ? (
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                          Current Attachment
-                        </label>
-                        <div className="flex items-center gap-2 p-3 bg-muted rounded-md border">
-                          <Paperclip className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm flex-1">
-                            {selectedTaskForDetails.attachmentName}
-                          </span>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleDownloadAttachment(selectedTaskForDetails)
-                            }
-                            className="flex items-center gap-1"
-                          >
-                            <Download className="h-3 w-3" />
-                            Download
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4">
-                        <Paperclip className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">
-                          No attachments available
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Attachments can be added when creating or editing
-                          tasks
-                        </p>
-                      </div>
-                    )}
+              {/* File Attachments - Compact Size */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Attachments</label>
+                {selectedTaskForDetails.attachmentUrl &&
+                selectedTaskForDetails.attachmentName ? (
+                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md border">
+                    <Paperclip className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm flex-1">
+                      {selectedTaskForDetails.attachmentName}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleDownloadAttachment(selectedTaskForDetails)
+                      }
+                      className="flex items-center gap-1"
+                    >
+                      <Download className="h-3 w-3" />
+                      Download
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+                ) : (
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md border border-dashed">
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      No attachments
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {/* Communications Tab */}
               <Tabs defaultValue="communications" className="space-y-4">
