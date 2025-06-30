@@ -246,36 +246,8 @@ export default function Tasks() {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: async (data: { taskData: InsertTask; file?: File }) => {
-      const formData = new FormData();
-      
-      // Add all task data to form data
-      Object.entries(data.taskData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value.toString());
-        }
-      });
-      
-      // Add file if present
-      if (data.file) {
-        formData.append('attachment', data.file);
-      }
-      
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create task');
-      }
-      
-      return response.json();
-    },
+    mutationFn: (taskData: InsertTask) =>
+      apiRequest("POST", "/api/tasks", taskData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setIsAddDialogOpen(false);
@@ -380,10 +352,7 @@ export default function Tasks() {
       ...data,
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
     };
-    createTaskMutation.mutate({ 
-      taskData,
-      file: uploadedDocument || undefined 
-    });
+    createTaskMutation.mutate(taskData);
   };
 
   const onEditSubmit = (data: TaskFormData) => {
