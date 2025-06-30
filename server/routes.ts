@@ -1495,9 +1495,9 @@ export function registerRoutes(app: Express) {
       
       // Handle file attachment if present
       if (req.file) {
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
         if (!allowedTypes.includes(req.file.mimetype)) {
-          return res.status(400).json({ message: "Only JPEG, PNG, and PDF files are allowed" });
+          return res.status(400).json({ message: "Only JPEG, PNG, PDF, TXT, DOC, and DOCX files are allowed" });
         }
         
         // Save file to uploads directory

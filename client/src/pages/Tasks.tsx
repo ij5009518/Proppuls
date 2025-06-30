@@ -714,7 +714,7 @@ export default function Tasks() {
 
                   {/* File attachment */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Attachment (Required)</label>
+                    <label className="text-sm font-medium">Attachment (Optional)</label>
                     <div className="flex gap-2">
                       <Button 
                         type="button" 
@@ -795,14 +795,15 @@ export default function Tasks() {
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTasks.map((task: Task) => (
-            <Card key={task.id} className="cursor-pointer hover:shadow-md transition-shadow">
+            <Card 
+              key={task.id} 
+              className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+              onClick={() => openTaskDetails(task)}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle 
-                      className="text-lg hover:text-blue-600 cursor-pointer"
-                      onClick={() => openTaskDetails(task)}
-                    >
+                    <CardTitle className="text-lg text-slate-900 group-hover:text-blue-600">
                       {task.title}
                     </CardTitle>
                     <div className="flex items-center space-x-2 mt-2">
@@ -814,84 +815,124 @@ export default function Tasks() {
                       </Badge>
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openTaskDetails(task)}>
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openEditDialog(task)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openSendCommunication(task)}>
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Send Communication
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openTaskHistory(task)}>
-                        <History className="h-4 w-4 mr-2" />
-                        View History
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => deleteTaskMutation.mutate(task.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                   {task.description}
                 </p>
-                <div className="space-y-1 text-sm">
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                    <span>Due: {formatDate(task.dueDate)}</span>
+                
+                {/* Task Information Grid */}
+                <div className="space-y-2 text-sm">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                      <span>Due: {formatDate(task.dueDate)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Tag className="h-4 w-4 mr-2 text-gray-400" />
+                      <span className="capitalize">{task.category}</span>
+                    </div>
                   </div>
+                  
                   {task.assignedTo && (
                     <div className="flex items-center">
                       <User className="h-4 w-4 mr-2 text-gray-400" />
-                      <span>{task.assignedTo}</span>
+                      <span>Assigned: {task.assignedTo}</span>
                     </div>
                   )}
-                  <div className="flex items-center">
-                    <Tag className="h-4 w-4 mr-2 text-gray-400" />
-                    <span className="capitalize">{task.category}</span>
-                  </div>
+                  
+                  {task.communicationMethod && task.communicationMethod !== 'none' && (
+                    <div className="flex items-center">
+                      <MessageSquare className="h-4 w-4 mr-2 text-gray-400" />
+                      <span>Communication: {task.communicationMethod.toUpperCase()}</span>
+                    </div>
+                  )}
+                  
+                  {task.recipientEmail && (
+                    <div className="flex items-center">
+                      <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                      <span className="text-xs truncate">{task.recipientEmail}</span>
+                    </div>
+                  )}
+                  
+                  {task.recipientPhone && (
+                    <div className="flex items-center">
+                      <Phone className="h-4 w-4 mr-2 text-gray-400" />
+                      <span className="text-xs">{task.recipientPhone}</span>
+                    </div>
+                  )}
+                  
                   {task.attachmentName && (
                     <div className="flex items-center">
                       <Paperclip className="h-4 w-4 mr-2 text-gray-400" />
-                      <span className="text-blue-600">{task.attachmentName}</span>
+                      <span className="text-blue-600 text-xs truncate">{task.attachmentName}</span>
                     </div>
                   )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between mt-4 pt-3 border-t">
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditDialog(task);
+                      }}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    {task.communicationMethod && task.communicationMethod !== 'none' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openSendCommunication(task);
+                        }}
+                      >
+                        <Send className="h-3 w-3 mr-1" />
+                        Send
+                      </Button>
+                    )}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm("Are you sure you want to delete this task?")) {
+                        deleteTaskMutation.mutate(task.id);
+                      }
+                    }}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
-        // List view implementation would go here
         <div className="space-y-4">
           {filteredTasks.map((task: Task) => (
-            <Card key={task.id} className="p-4">
+            <Card 
+              key={task.id} 
+              className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => openTaskDetails(task)}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <h3 
-                    className="font-semibold cursor-pointer hover:text-blue-600"
-                    onClick={() => openTaskDetails(task)}
-                  >
+                  <h3 className="font-semibold text-slate-900">
                     {task.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-                  <div className="flex items-center space-x-4 mt-2">
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
+                  
+                  <div className="flex items-center space-x-4 mt-3">
                     <Badge className={getPriorityColor(task.priority)}>
                       {task.priority}
                     </Badge>
@@ -899,39 +940,57 @@ export default function Tasks() {
                       {task.status.replace("_", " ")}
                     </Badge>
                     <span className="text-sm text-gray-500">Due: {formatDate(task.dueDate)}</span>
+                    {task.assignedTo && (
+                      <span className="text-sm text-gray-500">Assigned: {task.assignedTo}</span>
+                    )}
+                    {task.attachmentName && (
+                      <span className="text-sm text-blue-600 flex items-center">
+                        <Paperclip className="h-3 w-3 mr-1" />
+                        {task.attachmentName}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openTaskDetails(task)}>
-                      View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openEditDialog(task)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openSendCommunication(task)}>
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Send Communication
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openTaskHistory(task)}>
-                      <History className="h-4 w-4 mr-2" />
-                      View History
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => deleteTaskMutation.mutate(task.id)}
-                      className="text-red-600"
+                
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditDialog(task);
+                    }}
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                  {task.communicationMethod && task.communicationMethod !== 'none' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openSendCommunication(task);
+                      }}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <Send className="h-3 w-3 mr-1" />
+                      Send
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm("Are you sure you want to delete this task?")) {
+                        deleteTaskMutation.mutate(task.id);
+                      }
+                    }}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
