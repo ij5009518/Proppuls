@@ -1241,6 +1241,14 @@ class Storage {
     return result[0] || null;
   }
 
+  async getTaskById(id: string): Promise<Task | null> {
+    const result = await db.select()
+      .from(tasks)
+      .where(eq(tasks.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
   async updateTask(id: string, taskData: any): Promise<Task | null> {
     const [task] = await db.update(tasks)
       .set({ ...taskData, updatedAt: new Date() })
@@ -1440,9 +1448,9 @@ class Storage {
           html: `<p>${communicationData.message.replace(/\n/g, '<br>')}</p>`
         });
         
-        // Update status to delivered
+        // Update status to delivered (note: deliveredAt column may not exist in current schema)
         await db.update(taskCommunications)
-          .set({ status: "delivered", deliveredAt: new Date() })
+          .set({ status: "delivered" })
           .where(eq(taskCommunications.id, communication.id));
       } catch (error) {
         console.error("Error sending email:", error);
