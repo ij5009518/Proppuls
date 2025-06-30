@@ -156,6 +156,10 @@ export default function Tasks() {
       setIsEditDialogOpen(false);
       setSelectedTask(null);
       editForm.reset();
+      // Refresh task history if task details dialog is open
+      if (selectedTaskForDetails) {
+        queryClient.invalidateQueries({ queryKey: ["/api/tasks", selectedTaskForDetails.id, "history"] });
+      }
       toast({
         title: "Success",
         description: "Task updated successfully",
@@ -280,6 +284,27 @@ export default function Tasks() {
       // In a real implementation, you would upload the file to a server here
       // For now, we'll create a mock URL
       form.setValue('attachmentUrl', `uploads/${file.name}`);
+      toast({
+        title: "File Selected",
+        description: `Ready to attach: ${file.name}`,
+      });
+    }
+  };
+
+  const handleDownloadAttachment = (task: Task) => {
+    if (task.attachmentUrl && task.attachmentName) {
+      // Create a download link for the file
+      const link = document.createElement('a');
+      link.href = task.attachmentUrl;
+      link.download = task.attachmentName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download Started",
+        description: `Downloading ${task.attachmentName}`,
+      });
     }
   };
 
@@ -1481,29 +1506,30 @@ export default function Tasks() {
                   <CardTitle className="text-lg">Attachments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Attach Document</label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="file"
-                        onChange={handleFileUpload}
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                        className="flex-1"
-                      />
-                      <Upload className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    {uploadedDocument && (
-                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                        <Paperclip className="h-4 w-4" />
-                        <span className="text-sm">{uploadedDocument.name}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setUploadedDocument(null)}
-                        >
-                          Remove
-                        </Button>
+                  <div className="space-y-3">
+                    {selectedTaskForDetails.attachmentUrl && selectedTaskForDetails.attachmentName ? (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Current Attachment</label>
+                        <div className="flex items-center gap-2 p-3 bg-muted rounded-md border">
+                          <Paperclip className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm flex-1">{selectedTaskForDetails.attachmentName}</span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadAttachment(selectedTaskForDetails)}
+                            className="flex items-center gap-1"
+                          >
+                            <Download className="h-3 w-3" />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <Paperclip className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">No attachments available</p>
+                        <p className="text-xs text-muted-foreground mt-1">Attachments can be added when creating or editing tasks</p>
                       </div>
                     )}
                   </div>
