@@ -1918,6 +1918,10 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* 4-column grid for Status, Due Date, Assigned To, Property */}
+              <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="status"
@@ -1941,10 +1945,6 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
-              </div>
-
-              {/* 2-column grid for Due Date and Assigned To */}
-              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="dueDate"
@@ -1976,10 +1976,6 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
-              </div>
-
-              {/* Property, Unit, and Tenant Selection */}
-              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="propertyId"
@@ -2004,6 +2000,10 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* 2-column grid for Unit and Tenant */}
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="unitId"
