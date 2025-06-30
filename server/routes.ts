@@ -1501,7 +1501,81 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ message: "Organization ID required" });
       }
       const id = req.params.id;
+      
+      // Get the original task to track changes
+      const originalTask = await storage.getTaskById(id);
+      
       const task = await storage.updateTask(id, req.body);
+      
+      // Create history entry for significant changes
+      if (originalTask) {
+        const changes = [];
+        if (req.body.status && req.body.status !== originalTask.status) {
+          changes.push(`Status changed from ${originalTask.status} to ${req.body.status}`);
+        }
+        if (req.body.priority && req.body.priority !== originalTask.priority) {
+          changes.push(`Priority changed from ${originalTask.priority} to ${req.body.priority}`);
+        }
+        if (req.body.description && req.body.description !== originalTask.description) {
+          changes.push(`Description updated`);
+        }
+        if (req.body.assignedTo && req.body.assignedTo !== originalTask.assignedTo) {
+          changes.push(`Assigned to changed`);
+        }
+        
+        if (changes.length > 0) {
+          await storage.createTaskHistory({
+            taskId: id,
+            action: 'task_updated',
+            notes: changes.join('; ')
+          });
+        }
+      }
+      
+      res.json(task);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      res.status(500).json({ message: "Failed to update task" });
+    }
+  });
+
+  app.patch("/api/tasks/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+      const id = req.params.id;
+      
+      // Get the original task to track changes
+      const originalTask = await storage.getTaskById(id);
+      
+      const task = await storage.updateTask(id, req.body);
+      
+      // Create history entry for significant changes
+      if (originalTask) {
+        const changes = [];
+        if (req.body.status && req.body.status !== originalTask.status) {
+          changes.push(`Status changed from ${originalTask.status} to ${req.body.status}`);
+        }
+        if (req.body.priority && req.body.priority !== originalTask.priority) {
+          changes.push(`Priority changed from ${originalTask.priority} to ${req.body.priority}`);
+        }
+        if (req.body.description && req.body.description !== originalTask.description) {
+          changes.push(`Description updated`);
+        }
+        if (req.body.assignedTo && req.body.assignedTo !== originalTask.assignedTo) {
+          changes.push(`Assigned to changed`);
+        }
+        
+        if (changes.length > 0) {
+          await storage.createTaskHistory({
+            taskId: id,
+            action: 'task_updated',
+            notes: changes.join('; ')
+          });
+        }
+      }
+      
       res.json(task);
     } catch (error) {
       console.error("Error updating task:", error);

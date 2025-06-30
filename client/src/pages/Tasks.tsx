@@ -1461,11 +1461,13 @@ export default function Tasks() {
                       setSelectedTaskForDetails(prev => prev ? {...prev, description: e.target.value} : null);
                     }}
                     onBlur={(e) => {
-                      // Save to database when user finishes editing
-                      updateTaskMutation.mutate({ 
-                        id: selectedTaskForDetails.id, 
-                        taskData: { ...selectedTaskForDetails, description: e.target.value }
-                      });
+                      // Only save if description actually changed
+                      if (e.target.value !== selectedTaskForDetails.description) {
+                        updateTaskMutation.mutate({ 
+                          id: selectedTaskForDetails.id, 
+                          taskData: { description: e.target.value }
+                        });
+                      }
                     }}
                     className="min-h-[100px] border-dashed resize-none focus:border-solid"
                     placeholder="Enter task description..."
