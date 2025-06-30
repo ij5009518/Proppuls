@@ -225,26 +225,7 @@ export default function Tasks() {
     },
   });
 
-  const sendCommunicationMutation = useMutation({
-    mutationFn: (data: CommunicationFormData & { taskId: string }) =>
-      apiRequest("POST", `/api/tasks/${data.taskId}/communications`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks", selectedTask?.id, "communications"] });
-      setIsSendCommunicationOpen(false);
-      communicationForm.reset();
-      toast({
-        title: "Success",
-        description: "Communication sent successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+
 
   const deleteTaskMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
@@ -259,6 +240,28 @@ export default function Tasks() {
       toast({
         title: "Error",
         description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const sendCommunicationMutation = useMutation({
+    mutationFn: (communicationData: any) => apiRequest("POST", `/api/tasks/${communicationData.taskId}/communications`, communicationData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      if (selectedTaskForDetails) {
+        queryClient.invalidateQueries({ queryKey: ["/api/tasks", selectedTaskForDetails.id, "communications"] });
+      }
+      toast({
+        title: "Communication sent",
+        description: "The communication has been sent successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error sending communication:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send communication. Please try again.",
         variant: "destructive",
       });
     },
@@ -282,8 +285,8 @@ export default function Tasks() {
   };
 
   const onSendCommunication = (data: CommunicationFormData) => {
-    if (!selectedTask) return;
-    sendCommunicationMutation.mutate({ ...data, taskId: selectedTask.id });
+    if (!selectedTaskForDetails) return;
+    sendCommunicationMutation.mutate({ ...data, taskId: selectedTaskForDetails.id });
   };
 
 
