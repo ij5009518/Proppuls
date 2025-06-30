@@ -986,7 +986,8 @@ export default function Tasks() {
                   name="subject"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Subject</FormLabel                      <FormControl>
+                      <FormLabel>Subject</FormLabel>
+                      <FormControl>
                         <Input {...field} />
                       </FormControl>
                       <FormMessage />
