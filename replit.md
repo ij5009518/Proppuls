@@ -151,6 +151,13 @@ A comprehensive property management and financial intelligence platform that pro
   - Fixed password reset email URLs to use correct Replit domain instead of localhost
   - Fixed unit creation authentication - Properties page now properly sends auth tokens when creating units
   - Units now correctly link to user's organization and appear in dashboard
+  - June 30, 2025: Standardized all task creation forms across the application
+    - Updated Units page task dialog with proper 3-column grid layout (Category/Priority/Status) and 2-column grid (Due Date/Assigned To)
+    - Updated Tenant page task dialog to match main task page layout with consistent UI structure
+    - Added mandatory file attachment fields to all task creation forms for document uploads
+    - Fixed Tenant page data updating issues with comprehensive query invalidation and refresh mechanisms
+    - Removed aggressive caching that was preventing real-time data updates
+    - All task creation forms now have identical professional layout and functionality
 
 ## Changelog
 
