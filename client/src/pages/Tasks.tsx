@@ -1308,7 +1308,7 @@ export default function Tasks() {
                         onValueChange={(value) => {
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { ...selectedTaskForDetails, category: value }
+                            taskData: { category: value }
                           });
                         }}
                       >
@@ -1332,7 +1332,7 @@ export default function Tasks() {
                         onValueChange={(value) => {
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { ...selectedTaskForDetails, priority: value as any }
+                            taskData: { priority: value as any }
                           });
                         }}
                       >
@@ -1354,7 +1354,7 @@ export default function Tasks() {
                         onValueChange={(value) => {
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { ...selectedTaskForDetails, status: value as any }
+                            taskData: { status: value as any }
                           });
                         }}
                       >
@@ -1378,7 +1378,7 @@ export default function Tasks() {
                           const newDate = e.target.value ? new Date(e.target.value) : undefined;
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { ...selectedTaskForDetails, dueDate: newDate }
+                            taskData: { dueDate: newDate }
                           });
                         }}
                       />
@@ -1391,10 +1391,10 @@ export default function Tasks() {
                       <label className="text-sm font-medium">Assigned To</label>
                       <Input
                         value={selectedTaskForDetails.assignedTo || ""}
-                        onChange={(e) => {
+                        onBlur={(e) => {
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { ...selectedTaskForDetails, assignedTo: e.target.value }
+                            taskData: { assignedTo: e.target.value }
                           });
                         }}
                         placeholder="Enter assignee name"
@@ -1407,7 +1407,7 @@ export default function Tasks() {
                         onValueChange={(value) => {
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { ...selectedTaskForDetails, propertyId: value || null }
+                            taskData: { propertyId: value || null }
                           });
                         }}
                       >
@@ -1453,7 +1453,7 @@ export default function Tasks() {
                         onValueChange={(value) => {
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { ...selectedTaskForDetails, tenantId: value || null }
+                            taskData: { tenantId: value || null }
                           });
                         }}
                       >
