@@ -55,8 +55,6 @@ export default function Tasks() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
-  const [editingDescription, setEditingDescription] = useState(false);
-  const [editingDescriptionValue, setEditingDescriptionValue] = useState("");
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -233,18 +231,7 @@ export default function Tasks() {
     sendCommunicationMutation.mutate({ ...data, taskId: selectedTask.id });
   };
 
-  const handleSaveDescription = () => {
-    if (!selectedTaskForDetails) return;
-    
-    updateTaskMutation.mutate({ 
-      id: selectedTaskForDetails.id, 
-      taskData: { ...selectedTaskForDetails, description: editingDescriptionValue }
-    }, {
-      onSuccess: () => {
-        setEditingDescription(false);
-      }
-    });
-  };
+
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -1281,18 +1268,19 @@ export default function Tasks() {
           
           {selectedTaskForDetails && (
             <div className="space-y-6">
-              {/* Quick Edit Fields */}
+              {/* Task Details with Same Layout as Forms */}
               <Card>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <CardContent className="p-6 space-y-4">
+                  {/* First line: Category, Priority, Status, Due Date */}
+                  <div className="grid grid-cols-4 gap-4">
                     <div>
-                      <label className="text-sm font-medium">Status</label>
+                      <label className="text-sm font-medium">Category</label>
                       <Select 
-                        value={selectedTaskForDetails.status} 
+                        value={selectedTaskForDetails.category} 
                         onValueChange={(value) => {
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { ...selectedTaskForDetails, status: value as any }
+                            taskData: { ...selectedTaskForDetails, category: value }
                           });
                         }}
                       >
@@ -1300,10 +1288,12 @@ export default function Tasks() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="inspection">Inspection</SelectItem>
+                          <SelectItem value="repair">Repair</SelectItem>
+                          <SelectItem value="cleaning">Cleaning</SelectItem>
+                          <SelectItem value="administrative">Administrative</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1330,6 +1320,28 @@ export default function Tasks() {
                       </Select>
                     </div>
                     <div>
+                      <label className="text-sm font-medium">Status</label>
+                      <Select 
+                        value={selectedTaskForDetails.status} 
+                        onValueChange={(value) => {
+                          updateTaskMutation.mutate({ 
+                            id: selectedTaskForDetails.id, 
+                            taskData: { ...selectedTaskForDetails, status: value as any }
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
                       <label className="text-sm font-medium">Due Date</label>
                       <Input
                         type="date"
@@ -1343,6 +1355,10 @@ export default function Tasks() {
                         }}
                       />
                     </div>
+                  </div>
+
+                  {/* Second line: Assigned To, Property, Unit, Tenant */}
+                  <div className="grid grid-cols-4 gap-4">
                     <div>
                       <label className="text-sm font-medium">Assigned To</label>
                       <Input
@@ -1353,58 +1369,99 @@ export default function Tasks() {
                             taskData: { ...selectedTaskForDetails, assignedTo: e.target.value }
                           });
                         }}
-                        placeholder="Enter assignee"
+                        placeholder="Enter assignee name"
                       />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Property (Optional)</label>
+                      <Select 
+                        value={selectedTaskForDetails.propertyId || ""} 
+                        onValueChange={(value) => {
+                          updateTaskMutation.mutate({ 
+                            id: selectedTaskForDetails.id, 
+                            taskData: { ...selectedTaskForDetails, propertyId: value || null }
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select property" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {properties?.map((property: any) => (
+                            <SelectItem key={property.id} value={property.id}>
+                              {property.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Unit (Optional)</label>
+                      <Select 
+                        value={selectedTaskForDetails.unitId || ""} 
+                        onValueChange={(value) => {
+                          updateTaskMutation.mutate({ 
+                            id: selectedTaskForDetails.id, 
+                            taskData: { ...selectedTaskForDetails, unitId: value || null }
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {units?.map((unit: any) => (
+                            <SelectItem key={unit.id} value={unit.id}>
+                              Unit {unit.unitNumber} - {properties?.find((p: any) => p.id === unit.propertyId)?.name || 'Property'}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Tenant (Optional)</label>
+                      <Select 
+                        value={selectedTaskForDetails.tenantId || ""} 
+                        onValueChange={(value) => {
+                          updateTaskMutation.mutate({ 
+                            id: selectedTaskForDetails.id, 
+                            taskData: { ...selectedTaskForDetails, tenantId: value || null }
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select tenant" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tenants?.map((tenant: any) => (
+                            <SelectItem key={tenant.id} value={tenant.id}>
+                              {tenant.firstName} {tenant.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Task Description */}
+              {/* Inline Editable Description */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Description</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {editingDescription ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={editingDescriptionValue}
-                        onChange={(e) => setEditingDescriptionValue(e.target.value)}
-                        className="min-h-[80px]"
-                        placeholder="Enter task description..."
-                      />
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          onClick={handleSaveDescription}
-                          disabled={updateTaskMutation.isPending}
-                        >
-                          Save
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => {
-                            setEditingDescription(false);
-                            setEditingDescriptionValue(selectedTaskForDetails.description);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div 
-                      className="text-sm text-muted-foreground whitespace-pre-wrap cursor-pointer hover:bg-gray-50 p-2 rounded border-dashed border border-transparent hover:border-gray-300 min-h-[40px]"
-                      onClick={() => {
-                        setEditingDescription(true);
-                        setEditingDescriptionValue(selectedTaskForDetails.description);
-                      }}
-                    >
-                      {selectedTaskForDetails.description || "Click to add description..."}
-                    </div>
-                  )}
+                  <Textarea
+                    value={selectedTaskForDetails.description || ""}
+                    onChange={(e) => {
+                      updateTaskMutation.mutate({ 
+                        id: selectedTaskForDetails.id, 
+                        taskData: { ...selectedTaskForDetails, description: e.target.value }
+                      });
+                    }}
+                    className="min-h-[100px] border-dashed resize-none focus:border-solid"
+                    placeholder="Enter task description..."
+                  />
                 </CardContent>
               </Card>
 
