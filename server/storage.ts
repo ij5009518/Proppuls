@@ -1418,15 +1418,41 @@ class Storage {
     const communication = {
       id: crypto.randomUUID(),
       taskId: communicationData.taskId,
-      method: communicationData.method,
+      type: communicationData.method, // Map method to type field
       recipient: communicationData.recipient,
       subject: communicationData.subject || null,
       message: communicationData.message,
+      status: "sent" as const,
       sentAt: new Date(),
       createdAt: new Date()
     };
 
     await db.insert(taskCommunications).values(communication);
+    
+    // If it's an email, send it using the email service
+    if (communicationData.method === "email") {
+      try {
+        const { emailService } = await import("./email");
+        await emailService.sendEmail({
+          to: communicationData.recipient,
+          subject: communicationData.subject || "Task Communication",
+          text: communicationData.message,
+          html: `<p>${communicationData.message.replace(/\n/g, '<br>')}</p>`
+        });
+        
+        // Update status to delivered
+        await db.update(taskCommunications)
+          .set({ status: "delivered", deliveredAt: new Date() })
+          .where(eq(taskCommunications.id, communication.id));
+      } catch (error) {
+        console.error("Error sending email:", error);
+        // Update status to failed
+        await db.update(taskCommunications)
+          .set({ status: "failed", errorMessage: error.message })
+          .where(eq(taskCommunications.id, communication.id));
+      }
+    }
+    
     return communication;
   }
 
