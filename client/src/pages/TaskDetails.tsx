@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,6 +43,9 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [description, setDescription] = useState(task.description);
+  const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -132,6 +135,43 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
       });
     },
   });
+
+  const autoSaveMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      apiRequest("PATCH", `/api/tasks/${id}`, data),
+    onSuccess: () => {
+      setIsSaving(false);
+      onTaskUpdated();
+    },
+    onError: (error: any) => {
+      setIsSaving(false);
+      toast({
+        title: "Error",
+        description: "Failed to auto-save changes",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Auto-save description after 2 seconds of no typing
+  useEffect(() => {
+    if (description !== task.description) {
+      setIsSaving(true);
+      const timer = setTimeout(() => {
+        autoSaveMutation.mutate({
+          id: task.id,
+          data: { description }
+        });
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [description, task.description, task.id]);
+
+  // Update local description when task prop changes
+  useEffect(() => {
+    setDescription(task.description);
+  }, [task.description]);
 
   const onEditSubmit = (data: TaskFormData) => {
     const taskData = {
@@ -322,10 +362,16 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
                 <p className="text-sm text-muted-foreground">{formatDate(task.createdAt)}</p>
               </div>
               <div className="pt-2 border-t">
-                <label className="text-sm font-medium">Description</label>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">
-                  {task.description}
-                </p>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Description</label>
+                  {isSaving && <span className="text-xs text-blue-500">Saving...</span>}
+                </div>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full mt-1 p-2 text-sm border border-gray-200 rounded-md resize-none min-h-[60px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter task description..."
+                />
               </div>
             </CardContent>
           </Card>
@@ -370,9 +416,22 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
               <CardTitle className="text-sm">Attachments</CardTitle>
             </CardHeader>
             <CardContent className="p-3">
-              <div className="text-xs text-muted-foreground">
-                No attachments available
-              </div>
+              {task.attachmentUrl && task.attachmentName ? (
+                <div className="flex items-center gap-2">
+                  <Paperclip className="h-4 w-4 text-gray-400" />
+                  <a 
+                    href={task.attachmentUrl} 
+                    download={task.attachmentName}
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    {task.attachmentName}
+                  </a>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">
+                  No attachments available
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
