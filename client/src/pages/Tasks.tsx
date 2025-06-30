@@ -1391,6 +1391,10 @@ export default function Tasks() {
                       <label className="text-sm font-medium">Assigned To</label>
                       <Input
                         value={selectedTaskForDetails.assignedTo || ""}
+                        onChange={(e) => {
+                          // Update the local state immediately for responsive UI
+                          setSelectedTaskForDetails(prev => prev ? {...prev, assignedTo: e.target.value} : null);
+                        }}
                         onBlur={(e) => {
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
@@ -1430,7 +1434,7 @@ export default function Tasks() {
                         onValueChange={(value) => {
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { ...selectedTaskForDetails, unitId: value || null }
+                            taskData: { unitId: value || null }
                           });
                         }}
                       >
