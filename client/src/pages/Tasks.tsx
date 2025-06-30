@@ -26,6 +26,9 @@ const taskFormSchema = z.object({
   status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
   dueDate: z.string().optional(),
   assignedTo: z.string().optional(),
+  propertyId: z.string().optional(),
+  unitId: z.string().optional(),
+  tenantId: z.string().optional(),
   attachmentUrl: z.string().optional(),
   attachmentName: z.string().optional(),
 });
@@ -65,6 +68,9 @@ export default function Tasks() {
       category: "general",
       dueDate: "",
       assignedTo: "",
+      propertyId: "",
+      unitId: "",
+      tenantId: "",
     },
   });
 

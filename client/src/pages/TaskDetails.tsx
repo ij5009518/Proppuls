@@ -555,65 +555,7 @@ export default function TaskDetails({ task, onBack, onTaskUpdated, onTaskDeleted
                 </div>
               </div>
 
-              {/* Communication Settings */}
-              <div className="space-y-4">
-                <h3 className="font-semibold">Communication Settings</h3>
-                <FormField
-                  control={form.control}
-                  name="communicationMethod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Communication Method</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="email">Email</SelectItem>
-                          <SelectItem value="sms">SMS</SelectItem>
-                          <SelectItem value="both">Both</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {(form.watch("communicationMethod") === "email" || form.watch("communicationMethod") === "both") && (
-                  <FormField
-                    control={form.control}
-                    name="recipientEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recipient Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                {(form.watch("communicationMethod") === "sms" || form.watch("communicationMethod") === "both") && (
-                  <FormField
-                    control={form.control}
-                    name="recipientPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Recipient Phone</FormLabel>
-                        <FormControl>
-                          <Input type="tel" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
+              
 
               <div className="flex gap-2 pt-4">
                 <Button type="submit" disabled={updateTaskMutation.isPending}>
