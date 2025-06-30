@@ -1436,7 +1436,7 @@ export default function Units() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="dueDate"
@@ -1453,7 +1453,6 @@ export default function Units() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={taskForm.control}
                   name="assignedTo"
@@ -1470,10 +1469,6 @@ export default function Units() {
                     </FormItem>
                   )}
                 />
-              </div>
-
-              {/* Property, Unit, and Tenant Selection */}
-              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="propertyId"
@@ -1498,6 +1493,9 @@ export default function Units() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="unitId"
