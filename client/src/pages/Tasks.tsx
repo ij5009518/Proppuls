@@ -1437,6 +1437,9 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.category} 
                         onValueChange={(value) => {
+                          // Update local state immediately
+                          setSelectedTaskForDetails(prev => prev ? {...prev, category: value} : null);
+                          // Persist the change
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
                             taskData: { category: value }
@@ -1461,6 +1464,9 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.priority} 
                         onValueChange={(value) => {
+                          // Update local state immediately
+                          setSelectedTaskForDetails(prev => prev ? {...prev, priority: value as any} : null);
+                          // Persist the change
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
                             taskData: { priority: value as any }
@@ -1483,6 +1489,9 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.status} 
                         onValueChange={(value) => {
+                          // Update local state immediately
+                          setSelectedTaskForDetails(prev => prev ? {...prev, status: value as any} : null);
+                          // Persist the change
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
                             taskData: { status: value as any }
@@ -1507,6 +1516,9 @@ export default function Tasks() {
                         value={selectedTaskForDetails.dueDate ? new Date(selectedTaskForDetails.dueDate).toISOString().split('T')[0] : ""}
                         onChange={(e) => {
                           const newDate = e.target.value ? new Date(e.target.value) : undefined;
+                          // Update local state immediately
+                          setSelectedTaskForDetails(prev => prev ? {...prev, dueDate: newDate} : null);
+                          // Persist the change
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
                             taskData: { dueDate: newDate }
@@ -1674,16 +1686,49 @@ export default function Tasks() {
                       <div className="flex items-center gap-2">
                         <Input
                           type="file"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const files = e.target.files;
                             if (files && files.length > 0) {
-                              // Handle file upload for additional documents
-                              const formData = new FormData();
-                              formData.append('document', files[0]);
-                              formData.append('taskId', selectedTaskForDetails.id);
+                              const file = files[0];
+                              if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                                toast({
+                                  title: "File too large",
+                                  description: "Please select a file smaller than 10MB",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
                               
-                              // You can add upload logic here
-                              console.log('File selected for upload:', files[0].name);
+                              const formData = new FormData();
+                              formData.append('attachments', file);
+                              
+                              try {
+                                // Upload file and update task
+                                const response = await fetch(`/api/tasks/${selectedTaskForDetails.id}`, {
+                                  method: 'PUT',
+                                  headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('auth-token')}`,
+                                  },
+                                  body: formData,
+                                });
+                                
+                                if (response.ok) {
+                                  toast({
+                                    title: "Document uploaded",
+                                    description: `${file.name} has been attached to the task`,
+                                  });
+                                  // Refresh task list
+                                  queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+                                } else {
+                                  throw new Error('Upload failed');
+                                }
+                              } catch (error) {
+                                toast({
+                                  title: "Upload failed",
+                                  description: "Failed to upload document. Please try again.",
+                                  variant: "destructive",
+                                });
+                              }
                             }
                           }}
                           accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
