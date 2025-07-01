@@ -674,30 +674,41 @@ export default function Tasks() {
 
 
 
-                {/* Document Upload Section */}
+                {/* Multiple Document Upload Section */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Attach Document</label>
+                  <label className="text-sm font-medium">Attach Documents (up to 5 files)</label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="file"
                       onChange={handleDocumentUpload}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                      multiple
                       className="flex-1"
                     />
                     <Upload className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  {uploadedDocument && (
-                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                      <Paperclip className="h-4 w-4" />
-                      <span className="text-sm">{uploadedDocument.name}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setUploadedDocument(null)}
-                      >
-                        Remove
-                      </Button>
+                  {uploadedDocument && Array.isArray(uploadedDocument) && uploadedDocument.length > 0 && (
+                    <div className="space-y-2">
+                      {uploadedDocument.map((file, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                          <Paperclip className="h-4 w-4" />
+                          <span className="text-sm flex-1">{file.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {(file.size / 1024).toFixed(1)}KB
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const newFiles = uploadedDocument.filter((_, i) => i !== index);
+                              setUploadedDocument(newFiles.length > 0 ? newFiles : null);
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
