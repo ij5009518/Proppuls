@@ -1735,11 +1735,20 @@ export function registerRoutes(app: Express) {
   // Add attachment to existing task
   app.post("/api/tasks/:taskId/attachments", authenticateToken, upload.single('attachment'), async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+
       const taskId = req.params.taskId;
       const task = await storage.getTaskById(taskId);
       
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
+      }
+
+      // Verify the task belongs to the user's organization
+      if (task.organizationId !== req.user.organizationId) {
+        return res.status(403).json({ message: "Access denied: Task does not belong to your organization" });
       }
       
       if (!req.file) {
