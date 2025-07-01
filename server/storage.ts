@@ -1432,12 +1432,12 @@ class Storage {
     const communication = {
       id: crypto.randomUUID(),
       taskId: communicationData.taskId,
-      method: communicationData.method as "email" | "sms",
+      type: communicationData.method, // Map method to type field
       recipient: communicationData.recipient,
       subject: communicationData.subject || null,
       message: communicationData.message,
-      status: "pending" as const,
-      sentAt: null,
+      status: "sent" as const,
+      sentAt: new Date(),
       createdAt: new Date()
     };
 
@@ -1454,46 +1454,24 @@ class Storage {
           html: `<p>${communicationData.message.replace(/\n/g, '<br>')}</p>`
         });
         
-        // Update status to delivered
+        // Update status to delivered (note: deliveredAt column may not exist in current schema)
         await db.update(taskCommunications)
-          .set({ 
-            status: "delivered",
-            sentAt: new Date()
-          })
+          .set({ status: "delivered" })
           .where(eq(taskCommunications.id, communication.id));
-          
-        communication.status = "delivered";
-        communication.sentAt = new Date();
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error sending email:", error);
         // Update status to failed
         await db.update(taskCommunications)
-          .set({ 
-            status: "failed", 
-            sentAt: new Date()
-          })
+          .set({ status: "failed", errorMessage: error.message })
           .where(eq(taskCommunications.id, communication.id));
-          
-        communication.status = "failed";
-        communication.sentAt = new Date();
       }
     }
     
     return communication;
   }
 
-  async getTaskCommunications(taskId: string): Promise<any[]> {
-    const result = await db.select({
-      id: taskCommunications.id,
-      taskId: taskCommunications.taskId,
-      method: taskCommunications.method,
-      recipient: taskCommunications.recipient,
-      subject: taskCommunications.subject,
-      message: taskCommunications.message,
-      status: taskCommunications.status,
-      sentAt: taskCommunications.sentAt,
-      createdAt: taskCommunications.createdAt,
-    })
+  async getTaskCommunications(taskId: string): Promise<TaskCommunication[]> {
+    const result = await db.select()
       .from(taskCommunications)
       .where(eq(taskCommunications.taskId, taskId))
       .orderBy(desc(taskCommunications.createdAt));
@@ -1514,26 +1492,21 @@ class Storage {
       id: crypto.randomUUID(),
       taskId: historyData.taskId,
       action: historyData.action,
-      changes: historyData.notes || historyData.changes,
-      changedBy: historyData.userId || historyData.changedBy || "System",
-      changedAt: new Date(),
-      createdAt: new Date()
+      field: historyData.field,
+      oldValue: historyData.oldValue,
+      newValue: historyData.newValue,
+      userId: historyData.userId,
+      notes: historyData.notes,
+      createdAt: new Date(),
+      ...historyData
     };
 
     await db.insert(taskHistory).values(history);
     return history;
   }
 
-  async getTaskHistory(taskId: string): Promise<any[]> {
-    const result = await db.select({
-      id: taskHistory.id,
-      taskId: taskHistory.taskId,
-      action: taskHistory.action,
-      changes: taskHistory.changes,
-      changedBy: taskHistory.changedBy,
-      changedAt: taskHistory.changedAt,
-      createdAt: taskHistory.createdAt,
-    })
+  async getTaskHistory(taskId: string): Promise<TaskHistory[]> {
+    const result = await db.select()
       .from(taskHistory)
       .where(eq(taskHistory.taskId, taskId))
       .orderBy(desc(taskHistory.createdAt));

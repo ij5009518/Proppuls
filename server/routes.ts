@@ -16,9 +16,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export function registerRoutes(app: Express) {
   
-  // Serve static files from uploads directory
-  app.use('/uploads', express.static('uploads'));
-  
   // User authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
@@ -1476,50 +1473,18 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/tasks", authenticateToken, upload.single('attachment'), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/tasks", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.organizationId) {
         return res.status(400).json({ message: "Organization ID required" });
       }
-      
-      // Parse the task data from the request body
+      // Convert date string to Date object if present
       const taskData = { 
         ...req.body,
         organizationId: req.user.organizationId
       };
-      
-      // Convert date string to Date object if present
       if (taskData.dueDate) {
         taskData.dueDate = new Date(taskData.dueDate);
-      }
-      
-      // Handle file attachment if present
-      if (req.file) {
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-        if (!allowedTypes.includes(req.file.mimetype)) {
-          return res.status(400).json({ message: "Only JPEG, PNG, and PDF files are allowed" });
-        }
-        
-        // Save file to uploads directory
-        const fs = require('fs');
-        const path = require('path');
-        const uploadsDir = path.join(process.cwd(), 'uploads');
-        
-        // Create uploads directory if it doesn't exist
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-        
-        const fileExtension = path.extname(req.file.originalname);
-        const fileName = `task_${Date.now()}_${crypto.randomUUID()}${fileExtension}`;
-        const filePath = path.join(uploadsDir, fileName);
-        
-        // Write file to disk
-        fs.writeFileSync(filePath, req.file.buffer);
-        
-        // Add attachment info to task data
-        taskData.attachmentUrl = `/uploads/${fileName}`;
-        taskData.attachmentName = req.file.originalname;
       }
       
       const task = await storage.createTask(taskData);
