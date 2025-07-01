@@ -1050,17 +1050,131 @@ export default function Units() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="tasks" className="space-y-4">
+              <TabsContent value="tasks" className="space-y-6">
+                {/* Task Management Header */}
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Unit Tasks</h3>
+                  <Button onClick={() => setIsTaskDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Task
+                  </Button>
+                </div>
+
+                {/* Task Filters */}
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-4">
+                    <Input
+                      placeholder="Search tasks..."
+                      value={taskSearchTerm}
+                      onChange={(e) => setTaskSearchTerm(e.target.value)}
+                      className="max-w-sm"
+                    />
+                    <Select value={taskStatusFilter} onValueChange={setTaskStatusFilter}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filter by status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tasks</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant={taskViewMode === "grid" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTaskViewMode("grid")}
+                    >
+                      <Grid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={taskViewMode === "list" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTaskViewMode("list")}
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
                 {(() => {
-                  const unitTasks = tasks?.filter(task => task.unitId === selectedUnit.id) || [];
-                  return unitTasks.length === 0 ? (
-                    <div className="text-center py-8">
-                      <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-muted-foreground mb-4">No tasks assigned to this unit yet</p>
-                      <Button variant="outline" onClick={() => setIsTaskDialogOpen(true)}>
-                        <CheckSquare className="h-4 w-4 mr-2" />
-                        Add Task
-                      </Button>
+                  const unitTasks = tasks?.filter(task => {
+                    const matchesUnit = task.unitId === selectedUnit.id;
+                    const matchesSearch = !taskSearchTerm || 
+                      task.title.toLowerCase().includes(taskSearchTerm.toLowerCase()) ||
+                      task.description.toLowerCase().includes(taskSearchTerm.toLowerCase());
+                    const matchesStatus = taskStatusFilter === "all" || task.status === taskStatusFilter;
+                    return matchesUnit && matchesSearch && matchesStatus;
+                  }) || [];
+                  if (unitTasks.length === 0) {
+                    return (
+                      <div className="text-center py-12">
+                        <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {taskSearchTerm ? "Try adjusting your search terms." : "Get started by creating a new task for this unit."}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return taskViewMode === "grid" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {unitTasks.map((task: Task) => (
+                        <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
+                          setSelectedTask(task);
+                          setIsTaskDetailOpen(true);
+                        }}>
+                          <CardHeader className="flex flex-col space-y-1.5 p-6 pt-[0px] pb-[0px]">
+                            <CardTitle className="text-lg">{task.title}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-muted-foreground mb-3">{task.description}</p>
+                            <div className="flex items-center gap-2 mb-3">
+                              <Badge variant={
+                                task.priority === "urgent" ? "destructive" :
+                                task.priority === "high" ? "secondary" :
+                                task.priority === "medium" ? "outline" :
+                                "outline"
+                              }>
+                                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                              </Badge>
+                              <Badge variant={
+                                task.status === "completed" ? "default" :
+                                task.status === "in_progress" ? "secondary" :
+                                "outline"
+                              }>
+                                {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <span className="block">Category: {task.category}</span>
+                              {task.dueDate && (
+                                <span className="text-muted-foreground">
+                                  Due: {formatDate(task.dueDate)}
+                                </span>
+                              )}
+                              {task.assignedTo && (
+                                <span className="block">Assigned to: {task.assignedTo}</span>
+                              )}
+                            </div>
+                            {((task.attachments && task.attachments.length > 0) || task.attachmentUrl) && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <Paperclip className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">
+                                  {task.attachments && task.attachments.length > 0 
+                                    ? `${task.attachments.length} attachment${task.attachments.length > 1 ? 's' : ''}`
+                                    : task.attachmentName || '1 attachment'
+                                  }
+                                </span>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   ) : (
                     <div className="space-y-4">
