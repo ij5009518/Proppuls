@@ -375,6 +375,23 @@ export default function Units() {
     },
   });
 
+  // Update task mutation for inline editing
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Task> }) =>
+      apiRequest("PATCH", `/api/tasks/${id}`, updates),
+    onSuccess: () => {
+      toast({ title: "Task updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      setPendingChanges({});
+      setHasUnsavedChanges(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error updating task", description: error.message, variant: "destructive" });
+    },
+  });
+
+
+
 
 
   const onCreateSubmit = (data: UnitFormData) => {
