@@ -1463,24 +1463,7 @@ export default function Tasks() {
             <div className="space-y-6">
               {/* Task Details with Same Layout as Forms */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-4">
-                  <CardTitle className="text-lg">Task Details</CardTitle>
-                  <div className="flex items-center gap-2">
-                    {hasUnsavedChanges && (
-                      <span className="text-sm text-amber-600 bg-amber-50 px-2 py-1 rounded">
-                        Unsaved changes
-                      </span>
-                    )}
-                    <Button 
-                      onClick={handleSaveChanges}
-                      disabled={!hasUnsavedChanges || updateTaskMutation.isPending}
-                      size="sm"
-                    >
-                      {updateTaskMutation.isPending ? "Saving..." : "Save"}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-4">
+                <CardContent className="p-6 space-y-4">
                   {/* First line: Category, Priority, Status, Due Date */}
                   <div className="grid grid-cols-4 gap-4">
                     <div>
