@@ -1735,35 +1735,19 @@ export function registerRoutes(app: Express) {
   // Add attachment to existing task
   app.post("/api/tasks/:taskId/attachments", authenticateToken, upload.single('attachment'), async (req: AuthenticatedRequest, res) => {
     try {
-      console.log("=== ATTACHMENT UPLOAD DEBUG ===");
-      console.log("Task ID:", req.params.taskId);
-      console.log("Has User:", !!req.user);
-      console.log("User Org ID:", req.user?.organizationId);
-      console.log("Has File:", !!req.file);
-
       if (!req.user?.organizationId) {
-        console.log("DEBUG: No organization ID in request");
         return res.status(400).json({ message: "Organization ID required" });
       }
 
       const taskId = req.params.taskId;
       const task = await storage.getTaskById(taskId);
       
-      console.log("DEBUG: Task retrieval result:", {
-        found: !!task,
-        taskId: task?.id,
-        taskOrgId: task?.organizationId,
-        userOrgId: req.user.organizationId
-      });
-
       if (!task) {
-        console.log("DEBUG: Task not found:", taskId);
         return res.status(404).json({ message: "Task not found" });
       }
 
       // Verify the task belongs to the user's organization
       if (task.organizationId !== req.user.organizationId) {
-        console.log("DEBUG: Organization mismatch - Access denied");
         return res.status(403).json({ message: "Access denied: Task does not belong to your organization" });
       }
       
