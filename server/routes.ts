@@ -1773,10 +1773,27 @@ export function registerRoutes(app: Express) {
       // Save file to disk
       await writeFile(filePath, req.file.buffer);
       
-      // Update task with new attachment
+      // Get current attachments array or initialize empty array
+      const currentAttachments = task.attachments || [];
+      
+      // Create new attachment object
+      const newAttachment = {
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
+        filename: req.file.originalname,
+        url: `/uploads/${uniqueFilename}`,
+        uploadedAt: new Date().toISOString(),
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      };
+      
+      // Add new attachment to the array
+      const updatedAttachments = [...currentAttachments, newAttachment];
+      
+      // Update task with new attachments array and maintain legacy fields for the latest attachment
       const updatedTaskData = {
-        attachmentUrl: `/uploads/${uniqueFilename}`,
-        attachmentName: req.file.originalname,
+        attachments: updatedAttachments,
+        attachmentUrl: `/uploads/${uniqueFilename}`, // Keep for backward compatibility
+        attachmentName: req.file.originalname, // Keep for backward compatibility
         updatedAt: new Date()
       };
       
@@ -1796,6 +1813,52 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Error uploading attachment:", error);
       res.status(500).json({ message: "Failed to upload attachment" });
+    }
+  });
+
+  // Delete specific attachment from task
+  app.delete("/api/tasks/:taskId/attachments/:attachmentId", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user?.organizationId) {
+        return res.status(400).json({ message: "Organization ID required" });
+      }
+
+      const { taskId, attachmentId } = req.params;
+      const task = await storage.getTaskById(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+
+      // Verify the task belongs to the user's organization
+      if (task.organizationId !== req.user.organizationId) {
+        return res.status(403).json({ message: "Access denied: Task does not belong to your organization" });
+      }
+
+      // Get current attachments and remove the specified one
+      const currentAttachments = task.attachments || [];
+      const updatedAttachments = currentAttachments.filter((att: any) => att.id !== attachmentId);
+
+      // Update task with filtered attachments
+      const updatedTask = await storage.updateTask(taskId, {
+        attachments: updatedAttachments,
+        updatedAt: new Date()
+      });
+
+      // Create task history entry
+      await storage.createTaskHistory({
+        taskId,
+        action: 'updated',
+        field: 'attachment',
+        oldValue: `Removed attachment: ${attachmentId}`,
+        notes: 'Attachment deleted',
+        userId: req.user?.id
+      });
+
+      res.json(updatedTask);
+    } catch (error) {
+      console.error("Error deleting attachment:", error);
+      res.status(500).json({ message: "Failed to delete attachment" });
     }
   });
 
