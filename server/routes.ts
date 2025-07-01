@@ -1647,6 +1647,22 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.get("/api/tasks/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const task = await storage.getTaskById(id);
+      
+      if (!task || task.organizationId !== req.user.organizationId) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      
+      res.json(task);
+    } catch (error) {
+      console.error('Error fetching task:', error);
+      res.status(500).json({ error: 'Failed to fetch task' });
+    }
+  });
+
   app.delete("/api/tasks/:id", async (req, res) => {
     try {
       const id = req.params.id;
@@ -1729,6 +1745,47 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching task history:", error);
       res.status(500).json({ message: "Failed to fetch task history" });
+    }
+  });
+
+  // Add attachments to existing task
+  app.post("/api/tasks/:id/attachments", authenticateToken, upload.array('attachments', 5), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: 'No files uploaded' });
+      }
+
+      // Get current task to verify ownership and add to existing attachments
+      const currentTask = await storage.getTaskById(id);
+      if (!currentTask || currentTask.organizationId !== req.user.organizationId) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+
+      // Create attachment objects
+      const newAttachments = files.map(file => ({
+        url: `/uploads/${file.filename}`,
+        name: file.originalname,
+        uploadedAt: new Date()
+      }));
+
+      // Merge with existing attachments
+      const existingAttachments = currentTask.attachments || [];
+      const allAttachments = [...existingAttachments, ...newAttachments];
+
+      // Update task with new attachments
+      const updatedTask = await storage.updateTask(id, { attachments: allAttachments });
+      
+      res.json({
+        success: true,
+        attachments: newAttachments,
+        task: updatedTask
+      });
+    } catch (error) {
+      console.error('Error uploading task attachments:', error);
+      res.status(500).json({ error: 'Failed to upload attachments' });
     }
   });
 
