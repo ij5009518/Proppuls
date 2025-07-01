@@ -368,11 +368,6 @@ export default function Tasks() {
     const file = event.target.files?.[0];
     if (file) {
       setUploadedDocument(file);
-      // Update form with file information
-      form.setValue('attachmentName', file.name);
-      // In a real implementation, you would upload the file to a server here
-      // For now, we'll create a mock URL
-      form.setValue('attachmentUrl', `uploads/${file.name}`);
       toast({
         title: "File Selected",
         description: `Ready to attach: ${file.name}`,
