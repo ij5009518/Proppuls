@@ -254,6 +254,9 @@ export default function Tasks() {
       setIsEditDialogOpen(false);
       setSelectedTask(null);
       editForm.reset();
+      // Clear pending changes after successful save
+      setPendingChanges({});
+      setHasUnsavedChanges(false);
       // Refresh task history if task details dialog is open
       if (selectedTaskForDetails) {
         queryClient.invalidateQueries({ queryKey: ["/api/tasks", selectedTaskForDetails.id, "history"] });
@@ -1452,13 +1455,7 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.category} 
                         onValueChange={(value) => {
-                          // Update local state immediately
-                          setSelectedTaskForDetails(prev => prev ? {...prev, category: value} : null);
-                          // Persist the change
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { category: value }
-                          });
+                          updatePendingChange('category', value);
                         }}
                       >
                         <SelectTrigger>
@@ -1479,13 +1476,7 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.priority} 
                         onValueChange={(value) => {
-                          // Update local state immediately
-                          setSelectedTaskForDetails(prev => prev ? {...prev, priority: value as any} : null);
-                          // Persist the change
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { priority: value as any }
-                          });
+                          updatePendingChange('priority', value as any);
                         }}
                       >
                         <SelectTrigger>
@@ -1504,13 +1495,7 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.status} 
                         onValueChange={(value) => {
-                          // Update local state immediately
-                          setSelectedTaskForDetails(prev => prev ? {...prev, status: value as any} : null);
-                          // Persist the change
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { status: value as any }
-                          });
+                          updatePendingChange('status', value as any);
                         }}
                       >
                         <SelectTrigger>
@@ -1531,13 +1516,7 @@ export default function Tasks() {
                         value={selectedTaskForDetails.dueDate ? new Date(selectedTaskForDetails.dueDate).toISOString().split('T')[0] : ""}
                         onChange={(e) => {
                           const newDate = e.target.value ? new Date(e.target.value) : undefined;
-                          // Update local state immediately
-                          setSelectedTaskForDetails(prev => prev ? {...prev, dueDate: newDate} : null);
-                          // Persist the change - send ISO string to backend
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { dueDate: e.target.value || null }
-                          });
+                          updatePendingChange('dueDate', newDate);
                         }}
                       />
                     </div>
@@ -1550,14 +1529,7 @@ export default function Tasks() {
                       <Input
                         value={selectedTaskForDetails.assignedTo || ""}
                         onChange={(e) => {
-                          // Update the local state immediately for responsive UI
-                          setSelectedTaskForDetails(prev => prev ? {...prev, assignedTo: e.target.value} : null);
-                        }}
-                        onBlur={(e) => {
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { assignedTo: e.target.value }
-                          });
+                          updatePendingChange('assignedTo', e.target.value);
                         }}
                         placeholder="Enter assignee name"
                       />
@@ -1567,13 +1539,7 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.propertyId || ""} 
                         onValueChange={(value) => {
-                          // Update local state immediately
-                          setSelectedTaskForDetails(prev => prev ? {...prev, propertyId: value || null} : null);
-                          // Persist the change
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { propertyId: value || null }
-                          });
+                          updatePendingChange('propertyId', value || null);
                         }}
                       >
                         <SelectTrigger>
@@ -1593,13 +1559,7 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.unitId || ""} 
                         onValueChange={(value) => {
-                          // Update local state immediately
-                          setSelectedTaskForDetails(prev => prev ? {...prev, unitId: value || null} : null);
-                          // Persist the change
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { unitId: value || null }
-                          });
+                          updatePendingChange('unitId', value || null);
                         }}
                       >
                         <SelectTrigger>
