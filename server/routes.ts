@@ -1735,12 +1735,11 @@ export function registerRoutes(app: Express) {
   // Add attachment to existing task
   app.post("/api/tasks/:taskId/attachments", authenticateToken, upload.single('attachment'), async (req: AuthenticatedRequest, res) => {
     try {
-      console.log("DEBUG: Attachment upload request:", {
-        taskId: req.params.taskId,
-        hasUser: !!req.user,
-        userOrgId: req.user?.organizationId,
-        hasFile: !!req.file
-      });
+      console.log("=== ATTACHMENT UPLOAD DEBUG ===");
+      console.log("Task ID:", req.params.taskId);
+      console.log("Has User:", !!req.user);
+      console.log("User Org ID:", req.user?.organizationId);
+      console.log("Has File:", !!req.file);
 
       if (!req.user?.organizationId) {
         console.log("DEBUG: No organization ID in request");
