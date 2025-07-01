@@ -281,7 +281,14 @@ export const taskSchema = z.object({
   communicationMethod: z.enum(["none", "email", "sms", "both"]).default("none"),
   recipientEmail: z.string().optional(),
   recipientPhone: z.string().optional(),
-  // Document attachment
+  // Document attachments (supports multiple files)
+  attachments: z.array(z.object({
+    url: z.string(),
+    name: z.string(),
+    size: z.number().optional(),
+    uploadedAt: z.date().optional()
+  })).optional(),
+  // Legacy single attachment fields (for backward compatibility)
   attachmentUrl: z.string().optional(),
   attachmentName: z.string().optional(),
   createdAt: z.date(),

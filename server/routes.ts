@@ -1473,7 +1473,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/tasks", authenticateToken, upload.single('attachment'), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/tasks", authenticateToken, upload.array('attachments', 5), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.organizationId) {
         return res.status(400).json({ message: "Organization ID required" });
@@ -1488,10 +1488,12 @@ export function registerRoutes(app: Express) {
         taskData.dueDate = new Date(taskData.dueDate);
       }
       
-      // Handle file attachment if present
-      if (req.file) {
-        const { createWriteStream, mkdirSync, existsSync } = await import('node:fs');
+      // Handle multiple file attachments if present
+      const attachments = [];
+      if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+        const { mkdirSync, existsSync } = await import('node:fs');
         const { join, extname } = await import('node:path');
+        const { writeFile } = await import('node:fs/promises');
         
         // Create uploads directory if it doesn't exist
         const uploadsDir = join(process.cwd(), 'uploads');
@@ -1499,18 +1501,32 @@ export function registerRoutes(app: Express) {
           mkdirSync(uploadsDir, { recursive: true });
         }
         
-        // Generate unique filename
-        const fileExtension = extname(req.file.originalname);
-        const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
-        const filePath = join(uploadsDir, uniqueFilename);
+        // Process each uploaded file
+        for (const file of req.files) {
+          const fileExtension = extname(file.originalname);
+          const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
+          const filePath = join(uploadsDir, uniqueFilename);
+          
+          // Save file to disk
+          await writeFile(filePath, file.buffer);
+          
+          // Add to attachments array
+          attachments.push({
+            url: `/uploads/${uniqueFilename}`,
+            name: file.originalname,
+            size: file.size,
+            uploadedAt: new Date()
+          });
+        }
         
-        // Save file to disk using writeFile async
-        const { writeFile } = await import('node:fs/promises');
-        await writeFile(filePath, req.file.buffer);
+        // Set attachments data
+        taskData.attachments = attachments;
         
-        // Add attachment info to task data
-        taskData.attachmentUrl = `/uploads/${uniqueFilename}`;
-        taskData.attachmentName = req.file.originalname;
+        // For backward compatibility, set first attachment as legacy fields
+        if (attachments.length > 0) {
+          taskData.attachmentUrl = attachments[0].url;
+          taskData.attachmentName = attachments[0].name;
+        }
       }
       
       const task = await storage.createTask(taskData);
