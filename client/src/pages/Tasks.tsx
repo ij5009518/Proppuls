@@ -392,6 +392,49 @@ export default function Tasks() {
         description: `Ready to attach ${fileArray.length} file(s)`,
       });
     }
+  }
+
+  const handleTaskAttachmentUpload = async (taskId: string, files: File[]) => {
+    const formData = new FormData();
+    
+    // Add files to FormData
+    files.forEach((file) => {
+      formData.append('attachments', file);
+    });
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/tasks/${taskId}/attachments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload attachments');
+      }
+      
+      // Refresh task data
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      if (selectedTaskForDetails) {
+        const updatedTask = await apiRequest("GET", `/api/tasks/${taskId}`);
+        setSelectedTaskForDetails(updatedTask);
+      }
+      
+      toast({
+        title: "Attachments Uploaded",
+        description: `Successfully uploaded ${files.length} file(s)`,
+      });
+    } catch (error) {
+      console.error('Error uploading attachments:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload attachments. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDownloadAttachment = (task: Task) => {
@@ -1654,9 +1697,11 @@ export default function Tasks() {
                     Attachments
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  {/* Existing Attachments */}
                   {selectedTaskForDetails.attachmentUrl && selectedTaskForDetails.attachmentName ? (
                     <div className="space-y-2">
+                      <label className="text-sm font-medium">Current Attachments</label>
                       <div className="flex items-center gap-2 p-2 bg-muted rounded border">
                         <Paperclip className="h-4 w-4 text-blue-600" />
                         <span className="text-sm flex-1">{selectedTaskForDetails.attachmentName}</span>
@@ -1677,6 +1722,30 @@ export default function Tasks() {
                       <p className="text-sm text-muted-foreground">No attachments</p>
                     </div>
                   )}
+                  
+                  {/* Add New Attachments */}
+                  <div className="space-y-2 border-t pt-4">
+                    <label className="text-sm font-medium">Add New Attachments</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          if (files && files.length > 0) {
+                            const fileArray = Array.from(files).slice(0, 5);
+                            handleTaskAttachmentUpload(selectedTaskForDetails.id, fileArray);
+                          }
+                        }}
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                        multiple
+                        className="flex-1"
+                      />
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Select up to 5 files (PDF, DOC, DOCX, JPG, PNG, TXT)
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
 
