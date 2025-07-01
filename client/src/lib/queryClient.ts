@@ -25,22 +25,13 @@ export async function apiRequest(
 ): Promise<any> {
   const headers = {
     ...getAuthHeaders(),
+    ...(data ? { "Content-Type": "application/json" } : {}),
   };
-
-  let body: string | FormData | undefined;
-  
-  if (data instanceof FormData) {
-    // Don't set Content-Type for FormData - let browser set it with boundary
-    body = data;
-  } else if (data) {
-    headers["Content-Type"] = "application/json";
-    body = JSON.stringify(data);
-  }
 
   const res = await fetch(url, {
     method,
     headers,
-    body,
+    body: data ? JSON.stringify(data) : undefined,
   });
 
   await throwIfResNotOk(res);

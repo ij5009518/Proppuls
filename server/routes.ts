@@ -1473,20 +1473,11 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/tasks", authenticateToken, upload.array('attachments', 5), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/tasks", authenticateToken, upload.single('attachment'), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.organizationId) {
         return res.status(400).json({ message: "Organization ID required" });
       }
-      
-      // Debug: Log what's being received
-      console.log('=== TASK CREATION DEBUG ===');
-      console.log('Request body:', req.body);
-      console.log('Request files:', req.files);
-      console.log('Request body keys:', Object.keys(req.body || {}));
-      console.log('Request body values:', Object.values(req.body || {}));
-      console.log('User org ID:', req.user.organizationId);
-      console.log('=== END DEBUG ===');
       
       // Convert date string to Date object if present
       const taskData = { 
@@ -1497,12 +1488,10 @@ export function registerRoutes(app: Express) {
         taskData.dueDate = new Date(taskData.dueDate);
       }
       
-      // Handle multiple file attachments if present
-      const attachments = [];
-      if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-        const { mkdirSync, existsSync } = await import('node:fs');
+      // Handle file attachment if present
+      if (req.file) {
+        const { createWriteStream, mkdirSync, existsSync } = await import('node:fs');
         const { join, extname } = await import('node:path');
-        const { writeFile } = await import('node:fs/promises');
         
         // Create uploads directory if it doesn't exist
         const uploadsDir = join(process.cwd(), 'uploads');
@@ -1510,32 +1499,18 @@ export function registerRoutes(app: Express) {
           mkdirSync(uploadsDir, { recursive: true });
         }
         
-        // Process each uploaded file
-        for (const file of req.files) {
-          const fileExtension = extname(file.originalname);
-          const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
-          const filePath = join(uploadsDir, uniqueFilename);
-          
-          // Save file to disk
-          await writeFile(filePath, file.buffer);
-          
-          // Add to attachments array
-          attachments.push({
-            url: `/uploads/${uniqueFilename}`,
-            name: file.originalname,
-            size: file.size,
-            uploadedAt: new Date()
-          });
-        }
+        // Generate unique filename
+        const fileExtension = extname(req.file.originalname);
+        const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
+        const filePath = join(uploadsDir, uniqueFilename);
         
-        // Set attachments data
-        taskData.attachments = attachments;
+        // Save file to disk using writeFile async
+        const { writeFile } = await import('node:fs/promises');
+        await writeFile(filePath, req.file.buffer);
         
-        // For backward compatibility, set first attachment as legacy fields
-        if (attachments.length > 0) {
-          taskData.attachmentUrl = attachments[0].url;
-          taskData.attachmentName = attachments[0].name;
-        }
+        // Add attachment info to task data
+        taskData.attachmentUrl = `/uploads/${uniqueFilename}`;
+        taskData.attachmentName = req.file.originalname;
       }
       
       const task = await storage.createTask(taskData);
@@ -1656,22 +1631,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get("/api/tasks/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
-    try {
-      const { id } = req.params;
-      const task = await storage.getTaskById(id);
-      
-      if (!task || task.organizationId !== req.user.organizationId) {
-        return res.status(404).json({ error: 'Task not found' });
-      }
-      
-      res.json(task);
-    } catch (error) {
-      console.error('Error fetching task:', error);
-      res.status(500).json({ error: 'Failed to fetch task' });
-    }
-  });
-
   app.delete("/api/tasks/:id", async (req, res) => {
     try {
       const id = req.params.id;
@@ -1754,47 +1713,6 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching task history:", error);
       res.status(500).json({ message: "Failed to fetch task history" });
-    }
-  });
-
-  // Add attachments to existing task
-  app.post("/api/tasks/:id/attachments", authenticateToken, upload.array('attachments', 5), async (req: AuthenticatedRequest, res) => {
-    try {
-      const { id } = req.params;
-      const files = req.files as Express.Multer.File[];
-      
-      if (!files || files.length === 0) {
-        return res.status(400).json({ error: 'No files uploaded' });
-      }
-
-      // Get current task to verify ownership and add to existing attachments
-      const currentTask = await storage.getTaskById(id);
-      if (!currentTask || currentTask.organizationId !== req.user.organizationId) {
-        return res.status(404).json({ error: 'Task not found' });
-      }
-
-      // Create attachment objects
-      const newAttachments = files.map(file => ({
-        url: `/uploads/${file.filename}`,
-        name: file.originalname,
-        uploadedAt: new Date()
-      }));
-
-      // Merge with existing attachments
-      const existingAttachments = currentTask.attachments || [];
-      const allAttachments = [...existingAttachments, ...newAttachments];
-
-      // Update task with new attachments
-      const updatedTask = await storage.updateTask(id, { attachments: allAttachments });
-      
-      res.json({
-        success: true,
-        attachments: newAttachments,
-        task: updatedTask
-      });
-    } catch (error) {
-      console.error('Error uploading task attachments:', error);
-      res.status(500).json({ error: 'Failed to upload attachments' });
     }
   });
 

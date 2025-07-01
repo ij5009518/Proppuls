@@ -164,14 +164,6 @@ A comprehensive property management and financial intelligence platform that pro
     - Made description field inline editable without separate edit mode
     - All task detail fields update in real-time when changed
     - Communication section positioned at bottom of task details
-    - July 1, 2025: Enhanced task editing functionality with file attachments for existing tasks
-      - Added attachments column to database as JSONB array supporting multiple file uploads
-      - Implemented handleTaskAttachmentUpload function for adding files to existing tasks
-      - Created POST /api/tasks/:id/attachments route for backend file upload processing
-      - Added GET /api/tasks/:id route for fetching individual task data
-      - Enhanced task details dialog with file upload capability for existing tasks
-      - Added Edit/Save button functionality to task details dialog footer
-      - Tasks now support inline file uploads when viewing existing task details
 
 ## Changelog
 
