@@ -11,14 +11,31 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
+  if (req.url.includes('/attachments')) {
+    console.log("=== ATTACHMENT AUTH DEBUG ===");
+    console.log("Auth Header:", authHeader);
+    console.log("Extracted Token:", token ? `${token.substring(0, 10)}...` : 'null');
+  }
+
   if (!token) {
+    if (req.url.includes('/attachments')) {
+      console.log("No token found in request");
+    }
     return res.status(401).json({ message: "Access token required" });
   }
 
   try {
     const sessionData = await storage.getSessionById(token);
     
+    if (req.url.includes('/attachments')) {
+      console.log("Session Data Found:", !!sessionData);
+      console.log("User Org ID:", sessionData?.user?.organizationId);
+    }
+    
     if (!sessionData) {
+      if (req.url.includes('/attachments')) {
+        console.log("Session not found for token");
+      }
       return res.status(403).json({ message: "Invalid or expired token" });
     }
 
