@@ -321,8 +321,13 @@ export default function Tasks() {
     // Check if we have files to upload
     console.log('uploadedDocument:', uploadedDocument);
     console.log('uploadedDocument type:', typeof uploadedDocument);
-    console.log('uploadedDocument is File:', uploadedDocument instanceof File);
+    console.log('uploadedDocument is null:', uploadedDocument === null);
     console.log('uploadedDocument is Array:', Array.isArray(uploadedDocument));
+    if (Array.isArray(uploadedDocument)) {
+      console.log('uploadedDocument length:', uploadedDocument.length);
+      console.log('uploadedDocument content:', uploadedDocument);
+      console.log('All items are Files:', uploadedDocument.every(file => file instanceof File));
+    }
     
     const hasFiles = uploadedDocument && Array.isArray(uploadedDocument) && 
       uploadedDocument.length > 0 && 
