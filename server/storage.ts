@@ -1226,6 +1226,8 @@ class Storage {
           communicationMethod: task.communication_method,
           recipientEmail: task.recipient_email,
           recipientPhone: task.recipient_phone,
+          attachmentUrl: task.attachment_url,
+          attachmentName: task.attachment_name,
           createdAt: task.created_at,
           updatedAt: task.updated_at
         }));
