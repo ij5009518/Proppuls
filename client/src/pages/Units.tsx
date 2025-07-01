@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Eye, Edit, Trash2, Grid, List, CheckSquare, Home, Bed, Bath, Maximize, DollarSign, Users, FileText, Wrench, History } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Grid, List, CheckSquare, Home, Bed, Bath, Maximize, DollarSign, Users, FileText, Wrench, History, Calendar, ChevronLeft, ChevronRight, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X, History as HistoryIcon, CalendarIcon, Save, Download, Paperclip, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Unit, InsertUnit, Property, Tenant, Task, InsertTask } from "@shared/schema";
-import TaskDetails from "./TaskDetails";
 
 const unitSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
@@ -37,8 +36,17 @@ const taskSchema = z.object({
   status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
   dueDate: z.string().optional(),
   assignedTo: z.string().optional(),
+  propertyId: z.string().optional(),
+  unitId: z.string().optional(),
+  tenantId: z.string().optional(),
   attachmentUrl: z.string().optional(),
   attachmentName: z.string().optional(),
+});
+
+const communicationFormSchema = z.object({
+  method: z.enum(["email", "sms"]),
+  recipient: z.string().min(1, "Recipient is required"),
+  message: z.string().min(1, "Message is required"),
 });
 
 const assignTenantSchema = z.object({
@@ -53,8 +61,60 @@ const tenantStatusSchema = z.object({
 
 type UnitFormData = z.infer<typeof unitSchema>;
 type TaskFormData = z.infer<typeof taskSchema>;
+type CommunicationFormData = z.infer<typeof communicationFormSchema>;
 type AssignTenantFormData = z.infer<typeof assignTenantSchema>;
 type TenantStatusFormData = z.infer<typeof tenantStatusSchema>;
+
+// Task Communications Component
+function TaskCommunications({ taskId }: { taskId: string }) {
+  const { data: communications = [], isLoading } = useQuery({
+    queryKey: ["/api/tasks", taskId, "communications"],
+    queryFn: () => apiRequest("GET", `/api/tasks/${taskId}/communications`),
+  });
+
+  if (isLoading) {
+    return <div className="text-center py-4">Loading communications...</div>;
+  }
+
+  if (communications.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
+        <p className="mt-2 text-sm text-muted-foreground">No communications yet</p>
+        <p className="text-xs text-muted-foreground mt-1">Communications will appear here when sent</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 max-h-60 overflow-y-auto">
+      {communications.map((comm: any) => (
+        <div key={comm.id} className="border rounded-lg p-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              {comm.method === 'email' && <Mail className="h-4 w-4 text-blue-500" />}
+              {comm.method === 'sms' && <Phone className="h-4 w-4 text-green-500" />}
+              <span className="font-medium capitalize">{comm.method}</span>
+              <Badge variant={comm.status === 'delivered' ? 'default' : comm.status === 'failed' ? 'destructive' : 'secondary'}>
+                {comm.status}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              {new Date(comm.createdAt).toLocaleString()}
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">{comm.recipient}</p>
+          {comm.subject && <p className="text-sm font-medium mt-1">{comm.subject}</p>}
+          <p className="text-sm mt-1">{comm.message}</p>
+          {comm.errorMessage && (
+            <p className="text-xs text-destructive mt-1">Error: {comm.errorMessage}</p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function Units() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -73,6 +133,21 @@ export default function Units() {
   const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
   const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  
+  // Task management states from Tasks page
+  const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
+  const [isEditTaskDialogOpen, setIsEditTaskDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [isSendCommunicationOpen, setIsSendCommunicationOpen] = useState(false);
+  const [selectedTaskForAction, setSelectedTaskForAction] = useState<Task | null>(null);
+  const [taskViewMode, setTaskViewMode] = useState<"grid" | "list">("grid");
+  const [isTaskDetailsDialogOpen, setIsTaskDetailsDialogOpen] = useState(false);
+  const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<Task | null>(null);
+  const [taskSearchTerm, setTaskSearchTerm] = useState("");
+  const [taskStatusFilter, setTaskStatusFilter] = useState("all");
+  const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
+  const [pendingChanges, setPendingChanges] = useState<Partial<Task>>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const { data: units = [], isLoading } = useQuery<Unit[]>({
     queryKey: ["/api/units"],
