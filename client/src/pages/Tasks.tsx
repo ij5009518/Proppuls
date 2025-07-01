@@ -105,7 +105,7 @@ export default function Tasks() {
   const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<Task | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [uploadedDocument, setUploadedDocument] = useState<File[] | null>(null);
+  const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -180,52 +180,42 @@ export default function Tasks() {
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: InsertTask) => {
-      // Check if we have files to upload
-      const hasFiles = uploadedDocument && Array.isArray(uploadedDocument) && 
-        uploadedDocument.length > 0 && 
-        uploadedDocument.every(file => file instanceof File && file.size > 0 && file.name);
+      const formData = new FormData();
       
-      if (hasFiles) {
-        const formData = new FormData();
-        
-        // Add all task fields to FormData
-        Object.entries(taskData).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            if (key === 'dueDate' && value instanceof Date) {
-              formData.append(key, value.toISOString());
-            } else {
-              formData.append(key, value.toString());
-            }
+      // Add all task fields to FormData
+      Object.entries(taskData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (key === 'dueDate' && value instanceof Date) {
+            formData.append(key, value.toISOString());
+          } else {
+            formData.append(key, value.toString());
           }
-        });
-        
-        // Add multiple files if present
-        if (uploadedDocument && Array.isArray(uploadedDocument)) {
-          uploadedDocument.forEach((file) => {
-            formData.append('attachments', file);
-          });
         }
-        
-        // Use fetch instead of apiRequest for FormData
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/tasks', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-          body: formData,
+      });
+      
+      // Add multiple files if present
+      if (uploadedDocument && Array.isArray(uploadedDocument)) {
+        uploadedDocument.forEach((file) => {
+          formData.append('attachments', file);
         });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to create task');
-        }
-        
-        return response.json();
-      } else {
-        // No files, send as JSON
-        return apiRequest("POST", "/api/tasks", taskData);
       }
+      
+      // Use fetch instead of apiRequest for FormData
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create task');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
@@ -315,11 +305,27 @@ export default function Tasks() {
   });
 
   const onCreateSubmit = (data: TaskFormData) => {
-    const taskData: InsertTask = {
-      ...data,
-      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
-    };
-    createTaskMutation.mutate(taskData);
+    const formData = new FormData();
+    
+    // Add task data fields
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (key === 'dueDate' && value) {
+          formData.append(key, new Date(value).toISOString());
+        } else {
+          formData.append(key, value.toString());
+        }
+      }
+    });
+    
+    // Add multiple file attachments
+    if (uploadedDocument && Array.isArray(uploadedDocument)) {
+      uploadedDocument.forEach((file) => {
+        formData.append('attachments', file);
+      });
+    }
+    
+    createTaskMutation.mutate(formData);
   };
 
   const onEditSubmit = (data: TaskFormData) => {
@@ -341,11 +347,10 @@ export default function Tasks() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      const fileArray = Array.from(files).slice(0, 5); // Limit to 5 files
-      setUploadedDocument(fileArray);
+      setUploadedDocument(files[0]);
       toast({
-        title: "Files Selected",
-        description: `Selected ${fileArray.length} file(s)`,
+        title: "File Selected",
+        description: `Selected: ${files[0].name}`,
       });
     }
   };
@@ -384,7 +389,7 @@ export default function Tasks() {
       setUploadedDocument(fileArray);
       toast({
         title: "Files Selected",
-        description: `Selected ${fileArray.length} file(s)`,
+        description: `Ready to attach ${fileArray.length} file(s)`,
       });
     }
   };
@@ -688,30 +693,41 @@ export default function Tasks() {
 
 
 
-                {/* Document Upload Section */}
+                {/* Multiple Document Upload Section */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Attach Document</label>
+                  <label className="text-sm font-medium">Attach Documents (up to 5 files)</label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="file"
                       onChange={handleDocumentUpload}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                      multiple
                       className="flex-1"
                     />
                     <Upload className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  {uploadedDocument && (
-                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                      <Paperclip className="h-4 w-4" />
-                      <span className="text-sm">{uploadedDocument.name}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setUploadedDocument(null)}
-                      >
-                        Remove
-                      </Button>
+                  {uploadedDocument && Array.isArray(uploadedDocument) && uploadedDocument.length > 0 && (
+                    <div className="space-y-2">
+                      {uploadedDocument.map((file, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                          <Paperclip className="h-4 w-4" />
+                          <span className="text-sm flex-1">{file.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {(file.size / 1024).toFixed(1)}KB
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const newFiles = uploadedDocument.filter((_, i) => i !== index);
+                              setUploadedDocument(newFiles.length > 0 ? newFiles : null);
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1632,37 +1648,35 @@ export default function Tasks() {
 
               {/* File Attachments */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Attachments</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Paperclip className="h-4 w-4" />
+                    Attachments
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {selectedTaskForDetails.attachmentUrl && selectedTaskForDetails.attachmentName ? (
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Current Attachment</label>
-                        <div className="flex items-center gap-2 p-3 bg-muted rounded-md border">
-                          <Paperclip className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm flex-1">{selectedTaskForDetails.attachmentName}</span>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownloadAttachment(selectedTaskForDetails)}
-                            className="flex items-center gap-1"
-                          >
-                            <Download className="h-3 w-3" />
-                            Download
-                          </Button>
-                        </div>
+                  {selectedTaskForDetails.attachmentUrl && selectedTaskForDetails.attachmentName ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded border">
+                        <Paperclip className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm flex-1">{selectedTaskForDetails.attachmentName}</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadAttachment(selectedTaskForDetails)}
+                          className="flex items-center gap-1 h-8"
+                        >
+                          <Download className="h-3 w-3" />
+                          Download
+                        </Button>
                       </div>
-                    ) : (
-                      <div className="text-center py-4">
-                        <Paperclip className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">No attachments available</p>
-                        <p className="text-xs text-muted-foreground mt-1">Attachments can be added when creating or editing tasks</p>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-2">
+                      <p className="text-sm text-muted-foreground">No attachments</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

@@ -1226,6 +1226,14 @@ class Storage {
           communicationMethod: task.communication_method,
           recipientEmail: task.recipient_email,
           recipientPhone: task.recipient_phone,
+          // Handle both new multiple attachments and legacy single attachment
+          attachments: task.attachments || (task.attachment_url ? [{
+            url: task.attachment_url,
+            name: task.attachment_name || 'Attachment',
+            uploadedAt: task.created_at
+          }] : []),
+          attachmentUrl: task.attachment_url,
+          attachmentName: task.attachment_name,
           createdAt: task.created_at,
           updatedAt: task.updated_at
         }));
