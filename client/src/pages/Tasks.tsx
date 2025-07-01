@@ -181,24 +181,11 @@ export default function Tasks() {
   const createTaskMutation = useMutation({
     mutationFn: async (taskData: InsertTask) => {
       // Check if we have files to upload
-      console.log('uploadedDocument:', uploadedDocument);
-      console.log('uploadedDocument type:', typeof uploadedDocument);
-      console.log('uploadedDocument is null:', uploadedDocument === null);
-      console.log('uploadedDocument is Array:', Array.isArray(uploadedDocument));
-      if (Array.isArray(uploadedDocument)) {
-        console.log('uploadedDocument length:', uploadedDocument.length);
-        console.log('uploadedDocument content:', uploadedDocument);
-        console.log('All items are Files:', uploadedDocument.every(file => file instanceof File && file.size > 0 && file.name));
-      }
-      
       const hasFiles = uploadedDocument && Array.isArray(uploadedDocument) && 
         uploadedDocument.length > 0 && 
         uploadedDocument.every(file => file instanceof File && file.size > 0 && file.name);
       
-      console.log('hasFiles:', hasFiles);
-      
       if (hasFiles) {
-        console.log('Sending FormData with files');
         const formData = new FormData();
         
         // Add all task fields to FormData
@@ -236,7 +223,6 @@ export default function Tasks() {
         
         return response.json();
       } else {
-        console.log('Sending JSON without files');
         // No files, send as JSON
         return apiRequest("POST", "/api/tasks", taskData);
       }
