@@ -1518,10 +1518,10 @@ export default function Tasks() {
                           const newDate = e.target.value ? new Date(e.target.value) : undefined;
                           // Update local state immediately
                           setSelectedTaskForDetails(prev => prev ? {...prev, dueDate: newDate} : null);
-                          // Persist the change
+                          // Persist the change - send ISO string to backend
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { dueDate: newDate }
+                            taskData: { dueDate: newDate?.toISOString() }
                           });
                         }}
                       />
@@ -1552,6 +1552,9 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.propertyId || ""} 
                         onValueChange={(value) => {
+                          // Update local state immediately
+                          setSelectedTaskForDetails(prev => prev ? {...prev, propertyId: value || null} : null);
+                          // Persist the change
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
                             taskData: { propertyId: value || null }
@@ -1575,6 +1578,9 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.unitId || ""} 
                         onValueChange={(value) => {
+                          // Update local state immediately
+                          setSelectedTaskForDetails(prev => prev ? {...prev, unitId: value || null} : null);
+                          // Persist the change
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
                             taskData: { unitId: value || null }
@@ -1598,6 +1604,9 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.tenantId || ""} 
                         onValueChange={(value) => {
+                          // Update local state immediately
+                          setSelectedTaskForDetails(prev => prev ? {...prev, tenantId: value || null} : null);
+                          // Persist the change
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
                             taskData: { tenantId: value || null }
