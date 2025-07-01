@@ -1245,16 +1245,49 @@ class Storage {
   }
 
   async getTaskById(id: string): Promise<Task | null> {
-    const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
-    return result[0] || null;
-  }
-
-  async getTaskById(id: string): Promise<Task | null> {
-    const result = await db.select()
-      .from(tasks)
-      .where(eq(tasks.id, id))
-      .limit(1);
-    return result[0] || null;
+    return await withRetry(async () => {
+      const result = await db.select()
+        .from(tasks)
+        .where(eq(tasks.id, id))
+        .limit(1);
+      
+      if (result.length === 0) {
+        return null;
+      }
+      
+      const task = result[0];
+      return {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        priority: task.priority as "low" | "medium" | "high" | "urgent" || "medium",
+        status: task.status as "pending" | "in_progress" | "completed" | "cancelled" || "pending",
+        dueDate: task.dueDate,
+        assignedTo: task.assignedTo,
+        propertyId: task.propertyId,
+        unitId: task.unitId,
+        tenantId: task.tenantId,
+        vendorId: task.vendorId,
+        rentPaymentId: task.rentPaymentId,
+        category: task.category || 'general',
+        notes: task.notes,
+        isRecurring: task.isRecurring || false,
+        recurrencePeriod: task.recurrencePeriod,
+        organizationId: task.organizationId,
+        communicationMethod: task.communicationMethod,
+        recipientEmail: task.recipientEmail,
+        recipientPhone: task.recipientPhone,
+        attachments: task.attachments || (task.attachmentUrl ? [{
+          url: task.attachmentUrl,
+          name: task.attachmentName || 'Attachment',
+          uploadedAt: task.createdAt
+        }] : []),
+        attachmentUrl: task.attachmentUrl,
+        attachmentName: task.attachmentName,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt
+      };
+    });
   }
 
   async updateTask(id: string, taskData: any): Promise<Task | null> {
