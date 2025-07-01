@@ -1473,11 +1473,12 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/tasks", authenticateToken, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/tasks", authenticateToken, upload.single('attachment'), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.organizationId) {
         return res.status(400).json({ message: "Organization ID required" });
       }
+      
       // Convert date string to Date object if present
       const taskData = { 
         ...req.body,
@@ -1487,11 +1488,57 @@ export function registerRoutes(app: Express) {
         taskData.dueDate = new Date(taskData.dueDate);
       }
       
+      // Handle file attachment if present
+      if (req.file) {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        // Generate unique filename
+        const fileExtension = path.extname(req.file.originalname);
+        const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
+        const filePath = path.join(uploadsDir, uniqueFilename);
+        
+        // Save file to disk
+        fs.writeFileSync(filePath, req.file.buffer);
+        
+        // Add attachment info to task data
+        taskData.attachmentUrl = `/uploads/${uniqueFilename}`;
+        taskData.attachmentName = req.file.originalname;
+      }
+      
       const task = await storage.createTask(taskData);
       res.json(task);
     } catch (error) {
       console.error("Error creating task:", error);
       res.status(500).json({ message: "Failed to create task" });
+    }
+  });
+
+  // Serve uploaded files
+  app.get("/uploads/:filename", (req, res) => {
+    try {
+      const path = require('path');
+      const fs = require('fs');
+      
+      const filename = req.params.filename;
+      const filePath = path.join(process.cwd(), 'uploads', filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      // Send the file
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error("Error serving file:", error);
+      res.status(500).json({ message: "Error serving file" });
     }
   });
 
