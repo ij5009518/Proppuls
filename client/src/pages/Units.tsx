@@ -149,6 +149,13 @@ export default function Units() {
   const [pendingChanges, setPendingChanges] = useState<Partial<Task>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // Helper function to update pending changes
+  const updatePendingChange = (field: keyof Task, value: any) => {
+    setPendingChanges(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
+    setSelectedTaskForDetails(prev => prev ? { ...prev, [field]: value } : null);
+  };
+
   const { data: units = [], isLoading } = useQuery<Unit[]>({
     queryKey: ["/api/units"],
   });
@@ -222,6 +229,48 @@ export default function Units() {
       status: "",
       moveOutDate: "",
       moveOutReason: "",
+    },
+  });
+
+  // Task forms 
+  const createTaskForm = useForm<TaskFormData>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      priority: "medium",
+      status: "pending",
+      category: "general",
+      dueDate: "",
+      assignedTo: "",
+      propertyId: "",
+      unitId: "",
+      tenantId: "",
+    },
+  });
+
+  const editTaskForm = useForm<TaskFormData>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      priority: "medium",
+      status: "pending",
+      category: "general",
+      dueDate: "",
+      assignedTo: "",
+      propertyId: "",
+      unitId: "",
+      tenantId: "",
+    },
+  });
+
+  const communicationForm = useForm<CommunicationFormData>({
+    resolver: zodResolver(communicationFormSchema),
+    defaultValues: {
+      method: "email",
+      recipient: "",
+      message: "",
     },
   });
 
