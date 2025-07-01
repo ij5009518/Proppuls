@@ -106,6 +106,16 @@ export default function Tasks() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
+  const [pendingChanges, setPendingChanges] = useState<Partial<Task>>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Helper function to update pending changes
+  const updatePendingChange = (field: keyof Task, value: any) => {
+    setPendingChanges(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
+    // Also update the visual state immediately for responsive UI
+    setSelectedTaskForDetails(prev => prev ? { ...prev, [field]: value } : null);
+  };
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -1391,21 +1401,26 @@ export default function Tasks() {
               </DialogTitle>
               <div className="flex items-center gap-2">
                 <Button 
-                  variant="outline" 
+                  variant={hasUnsavedChanges ? "default" : "outline"}
                   size="sm"
                   onClick={() => {
-                    if (selectedTaskForDetails) {
-                      // Save any changes to the task
+                    if (selectedTaskForDetails && hasUnsavedChanges) {
+                      // Convert date to ISO string if it's a Date object
+                      const changesWithFormattedDate = { ...pendingChanges };
+                      if (changesWithFormattedDate.dueDate && changesWithFormattedDate.dueDate instanceof Date) {
+                        changesWithFormattedDate.dueDate = changesWithFormattedDate.dueDate.toISOString();
+                      }
+                      
                       updateTaskMutation.mutate({ 
                         id: selectedTaskForDetails.id, 
-                        taskData: selectedTaskForDetails
+                        taskData: changesWithFormattedDate
                       });
                     }
                   }}
-                  disabled={updateTaskMutation.isPending}
+                  disabled={updateTaskMutation.isPending || !hasUnsavedChanges}
                 >
                   <Save className="h-4 w-4 mr-1" />
-                  {updateTaskMutation.isPending ? "Saving..." : "Save"}
+                  {updateTaskMutation.isPending ? "Saving..." : hasUnsavedChanges ? "Save Changes" : "Saved"}
                 </Button>
                 <Button 
                   variant="outline" 
