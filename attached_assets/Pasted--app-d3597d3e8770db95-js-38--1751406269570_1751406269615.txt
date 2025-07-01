@@ -1,0 +1,106 @@
+_app-d3597d3e8770db95.js:38 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+_app-d3597d3e8770db95.js:38 [LaunchDarkly] LaunchDarkly client initialized
+6747e1e9-e570e18050afe274.js:1 Uncaught (in promise) TypeError: i.enterprise.execute is not a function
+    at 6747e1e9-e570e18050afe274.js:1:35441Understand this error
+_app-d3597d3e8770db95.js:38 Adding extension: GPT-Replit - ChatGPT in your Repl. Object
+PropertyPulse:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+stallwart.build.js:1 stallwart: failed ping 1
+25Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.Understand this error
+framework-85488053381e2251.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'battery'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+framework-85488053381e2251.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-85488053381e2251.js:1Understand this warning
+gravatar.com/avatar/a6f04e1d9348089c8fbc9e4e49f24979?d=404:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this error
+_app-d3597d3e8770db95.js:38 WARN: A component changed from uncontrolled to controlled.
+(anonymous) @ _app-d3597d3e8770db95.js:38Understand this warning
+gravatar.com/avatar/a6f04e1d9348089c8fbc9e4e49f24979?d=404:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this error
+gravatar.com/avatar/a6f04e1d9348089c8fbc9e4e49f24979?d=404:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this error
+_app-d3597d3e8770db95.js:38 WARN: A component changed from uncontrolled to controlled.
+(anonymous) @ _app-d3597d3e8770db95.js:38Understand this warning
+2656-53ac5a775181ae59.js:1 WebSocket connection to 'wss://eval.worf.platform.replit.com/wsv2/v2.public.Q2dZSXo1bVF3d1lTQmdqdXRaRERCaUlFZDI5eVpqQUFPdmNCQ2lRMVl6STNaR1JtTUMxa1l6QTBMVFJtTXpVdE9XTmlZeTAxTTJRMVl6VmlOVGM0WWpFU0EyNXBlQm9XY21Wd2JHbDBMWEpsY0d3dFptbHNaWE10ZDI5eVppSU5VSEp2Y0dWeWRIbFFkV3h6WlNvSmFXbzFNREE1TlRFNFFrNEtGM0psY0d4cGRDMXlaWEJzTFdKc2IyTnJjeTEzYjNKbUVoVnlaWEJzYVhRdGNtVndiQzF0WlhSaExYZHZjbVlhSEhKbGNHeHBkQzF0WVhKbllYSnBibVV0WW14dlkydHpMWGR2Y21aS0J3alk4YzRVRUFGUUFGb1BhVzUwWlc1MFgySjFjMmx1WlhOeldoSnZibUp2WVhKa2FXNW5YMnB2WWw5aWFYcGFGbTl1WW05aGNtUnBi...yYWxJeWVHWlhhbXhrUlhKSWIwVk5Ta1Z0WTNSaVMweHVhVUpKUW1kaFZsUjNjWEZVYldGSGMzRXlTMk5XWVZCMmFHRk1SVVZIYXpGclIwTlpTRWRFY1dveVZYb2xNa0pRTkhKR1dFOXRVRTh6U0hCT1VGcHJPVVV5VEhKRVlXa2xNa1kwV0RGTlIwWnNTRXAxTkZKT015VXlRalY1SlRKR2NWUkhkVWh3YlhkMmFIcENlWEZ2SlRKR2RGTnlTbWx3TURrbE1rWmxhR1F3VG1wSWJuRjJNMWhyYjNsd1MwRmtORkZ3WVd4TlMwTm9USEZ0VGxZM2EweHBXWFpqVFZvbE1rWnhWRFZXVkdGU01rWWxNa0pVVFdjbE0wUWxNMFE9CyB00HjOT7kyd3bFWbECdvO9y3NvlmxLghipOkycLokH8-tVqOFcL2Eo3xoudJ69gFKuKIL0w4NiA-_scYRtAw.Q2dad2NtOWtPak1pQ25KbGNHeHBkQzVqYjIwPQ' failed: 
+connect @ 2656-53ac5a775181ae59.js:1Understand this error
+_app-d3597d3e8770db95.js:25 WebSocket connection to 'wss://replit.com/graphql_subscriptions' failed: 
+(anonymous) @ _app-d3597d3e8770db95.js:25Understand this error
+/data/repls/5c27ddf0-dc04-4f35-9cbc-53d5c5b578b1/get_connection_metadata:1 
+            
+            
+           Failed to load resource: net::ERR_NETWORK_CHANGEDUnderstand this error
+_app-d3597d3e8770db95.js:38 WARN: A component changed from uncontrolled to controlled.
+(anonymous) @ _app-d3597d3e8770db95.js:38Understand this warning
+gravatar.com/avatar/a6f04e1d9348089c8fbc9e4e49f24979?d=404:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this error
+gravatar.com/avatar/a6f04e1d9348089c8fbc9e4e49f24979?d=404:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this error
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'battery'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warning
+Console.js:61 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+Mt.forEach.n.<computed> @ Console.js:61Understand this warning
+5c27ddf0-dc04-4f35-9cbc-53d5c5b578b1-00-39qn8gw5ivh2d.worf.replit.dev/api/tasks:1 
+            
+            
+           Failed to load resource: the server responded with a status of 500 (Internal Server Error)
