@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X, History as HistoryIcon, DollarSign, CalendarIcon } from "lucide-react";
+import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X, History as HistoryIcon, DollarSign, CalendarIcon, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -106,6 +106,7 @@ export default function Tasks() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
+  const [isTaskEditMode, setIsTaskEditMode] = useState(false);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -1810,6 +1811,47 @@ export default function Tasks() {
               </Tabs>
             </div>
           )}
+          
+          {/* Dialog Footer with Edit/Save Button */}
+          <div className="flex justify-between items-center p-6 border-t bg-muted/20">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsTaskDetailsDialogOpen(false);
+                setIsTaskEditMode(false);
+                setSelectedTaskForDetails(null);
+              }}
+            >
+              Close
+            </Button>
+            <Button
+              onClick={() => {
+                if (isTaskEditMode) {
+                  // Save changes logic can be added here if needed
+                  setIsTaskEditMode(false);
+                  toast({
+                    title: "Changes Saved",
+                    description: "Task has been updated successfully.",
+                  });
+                } else {
+                  setIsTaskEditMode(true);
+                }
+              }}
+              className="flex items-center gap-2"
+            >
+              {isTaskEditMode ? (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save
+                </>
+              ) : (
+                <>
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </>
+              )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
