@@ -306,9 +306,21 @@ export default function Tasks() {
   });
 
   const onCreateSubmit = (data: TaskFormData) => {
+    console.log('Form data received:', data);
+    
+    // Validate required fields before sending
+    if (!data.title || !data.description || !data.category) {
+      toast({
+        title: "Validation Error",
+        description: "Title, description, and category are required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const formData = new FormData();
     
-    // Add task data fields
+    // Add all form fields with proper handling
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         if (key === 'dueDate' && value) {
@@ -324,6 +336,14 @@ export default function Tasks() {
       uploadedDocument.forEach((file) => {
         formData.append('attachments', file);
       });
+    } else if (uploadedDocument) {
+      formData.append('attachments', uploadedDocument);
+    }
+    
+    // Debug: Log what's being sent
+    console.log('FormData entries:');
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
     }
     
     createTaskMutation.mutate(formData);
