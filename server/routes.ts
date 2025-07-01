@@ -1473,11 +1473,20 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/tasks", authenticateToken, upload.array('attachments', 5), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/tasks", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.organizationId) {
         return res.status(400).json({ message: "Organization ID required" });
       }
+      
+      // Debug: Log what's being received
+      console.log('=== TASK CREATION DEBUG ===');
+      console.log('Request body:', req.body);
+      console.log('Request files:', req.files);
+      console.log('Request body keys:', Object.keys(req.body || {}));
+      console.log('Request body values:', Object.values(req.body || {}));
+      console.log('User org ID:', req.user.organizationId);
+      console.log('=== END DEBUG ===');
       
       // Convert date string to Date object if present
       const taskData = { 

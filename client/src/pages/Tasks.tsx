@@ -346,6 +346,12 @@ export default function Tasks() {
       console.log(key, value);
     }
     
+    // Additional debugging: Check if FormData has all required fields
+    console.log('FormData has title:', formData.has('title'));
+    console.log('FormData get title:', formData.get('title'));
+    console.log('FormData has description:', formData.has('description'));
+    console.log('FormData get description:', formData.get('description'));
+    
     createTaskMutation.mutate(formData);
   };
 
