@@ -815,6 +815,20 @@ export default function Tasks() {
                             {getRelatedEntityName(task)}
                           </div>
                         )}
+                        {task.attachmentUrl && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <Paperclip className="h-4 w-4 text-muted-foreground" />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadAttachment(task);
+                              }}
+                              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {task.attachmentName || 'Download Attachment'}
+                            </button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))
@@ -862,6 +876,20 @@ export default function Tasks() {
                             {getRelatedEntityName(task) && (
                               <div className="mt-2 text-sm text-muted-foreground">
                                 {getRelatedEntityName(task)}
+                              </div>
+                            )}
+                            {task.attachmentUrl && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <Paperclip className="h-4 w-4 text-muted-foreground" />
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownloadAttachment(task);
+                                  }}
+                                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                  {task.attachmentName || 'Download Attachment'}
+                                </button>
                               </div>
                             )}
                           </div>
