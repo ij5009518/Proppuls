@@ -105,7 +105,7 @@ export default function Tasks() {
   const [selectedTaskForDetails, setSelectedTaskForDetails] = useState<Task | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
+  const [uploadedDocument, setUploadedDocument] = useState<File[] | null>(null);
   const [isTaskEditMode, setIsTaskEditMode] = useState(false);
 
   const form = useForm<TaskFormData>({
@@ -318,41 +318,61 @@ export default function Tasks() {
       return;
     }
     
-    const formData = new FormData();
+    // Check if we have files to upload
+    console.log('uploadedDocument:', uploadedDocument);
+    console.log('uploadedDocument type:', typeof uploadedDocument);
+    console.log('uploadedDocument is File:', uploadedDocument instanceof File);
+    console.log('uploadedDocument is Array:', Array.isArray(uploadedDocument));
     
-    // Add all form fields with proper handling
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        if (key === 'dueDate' && value) {
-          formData.append(key, new Date(value).toISOString());
-        } else {
-          formData.append(key, value.toString());
+    const hasFiles = uploadedDocument && Array.isArray(uploadedDocument) && 
+      uploadedDocument.length > 0 && 
+      uploadedDocument.every(file => file instanceof File);
+    
+    console.log('hasFiles:', hasFiles);
+    
+    if (hasFiles) {
+      // Use FormData for file uploads
+      const formData = new FormData();
+      
+      // Add all form fields
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          if (key === 'dueDate' && value) {
+            formData.append(key, new Date(value).toISOString());
+          } else {
+            formData.append(key, value.toString());
+          }
         }
-      }
-    });
-    
-    // Add multiple file attachments
-    if (uploadedDocument && Array.isArray(uploadedDocument)) {
-      uploadedDocument.forEach((file) => {
-        formData.append('attachments', file);
       });
-    } else if (uploadedDocument) {
-      formData.append('attachments', uploadedDocument);
+      
+      // Add files
+      if (Array.isArray(uploadedDocument)) {
+        uploadedDocument.forEach((file) => {
+          formData.append('attachments', file);
+        });
+      } else {
+        formData.append('attachments', uploadedDocument);
+      }
+      
+      console.log('Sending FormData with files');
+      createTaskMutation.mutate(formData);
+    } else {
+      // Use JSON for requests without files
+      const taskData = {
+        ...data,
+        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+      };
+      
+      // Remove empty fields
+      Object.keys(taskData).forEach(key => {
+        if (taskData[key] === '' || taskData[key] === undefined) {
+          delete taskData[key];
+        }
+      });
+      
+      console.log('Sending JSON data:', taskData);
+      createTaskMutation.mutate(taskData);
     }
-    
-    // Debug: Log what's being sent
-    console.log('FormData entries:');
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-    
-    // Additional debugging: Check if FormData has all required fields
-    console.log('FormData has title:', formData.has('title'));
-    console.log('FormData get title:', formData.get('title'));
-    console.log('FormData has description:', formData.has('description'));
-    console.log('FormData get description:', formData.get('description'));
-    
-    createTaskMutation.mutate(formData);
   };
 
   const onEditSubmit = (data: TaskFormData) => {
@@ -374,10 +394,11 @@ export default function Tasks() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      setUploadedDocument(files[0]);
+      const fileArray = Array.from(files).slice(0, 5); // Limit to 5 files
+      setUploadedDocument(fileArray);
       toast({
-        title: "File Selected",
-        description: `Selected: ${files[0].name}`,
+        title: "Files Selected",
+        description: `Selected ${fileArray.length} file(s)`,
       });
     }
   };

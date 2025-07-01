@@ -1473,7 +1473,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.post("/api/tasks", authenticateToken, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/tasks", authenticateToken, upload.array('attachments', 5), async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user?.organizationId) {
         return res.status(400).json({ message: "Organization ID required" });
