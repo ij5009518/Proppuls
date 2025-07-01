@@ -1521,7 +1521,7 @@ export default function Tasks() {
                           // Persist the change - send ISO string to backend
                           updateTaskMutation.mutate({ 
                             id: selectedTaskForDetails.id, 
-                            taskData: { dueDate: newDate?.toISOString() }
+                            taskData: { dueDate: e.target.value || null }
                           });
                         }}
                       />
@@ -1709,12 +1709,12 @@ export default function Tasks() {
                               }
                               
                               const formData = new FormData();
-                              formData.append('attachments', file);
+                              formData.append('attachment', file);
                               
                               try {
                                 // Upload file and update task
-                                const response = await fetch(`/api/tasks/${selectedTaskForDetails.id}`, {
-                                  method: 'PUT',
+                                const response = await fetch(`/api/tasks/${selectedTaskForDetails.id}/attachments`, {
+                                  method: 'POST',
                                   headers: {
                                     'Authorization': `Bearer ${localStorage.getItem('auth-token')}`,
                                   },
@@ -1722,12 +1722,17 @@ export default function Tasks() {
                                 });
                                 
                                 if (response.ok) {
+                                  const updatedTask = await response.json();
                                   toast({
                                     title: "Document uploaded",
                                     description: `${file.name} has been attached to the task`,
                                   });
+                                  // Update local state with the new attachment info
+                                  setSelectedTaskForDetails(updatedTask);
                                   // Refresh task list
                                   queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+                                  // Clear the file input
+                                  e.target.value = '';
                                 } else {
                                   throw new Error('Upload failed');
                                 }

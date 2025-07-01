@@ -1732,6 +1732,64 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Add attachment to existing task
+  app.post("/api/tasks/:taskId/attachments", authenticateToken, upload.single('attachment'), async (req: AuthenticatedRequest, res) => {
+    try {
+      const taskId = req.params.taskId;
+      const task = await storage.getTaskById(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      // Handle file upload
+      const { mkdirSync, existsSync } = await import('node:fs');
+      const { join, extname } = await import('node:path');
+      const { writeFile } = await import('node:fs/promises');
+      
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = join(process.cwd(), 'uploads');
+      if (!existsSync(uploadsDir)) {
+        mkdirSync(uploadsDir, { recursive: true });
+      }
+      
+      const fileExtension = extname(req.file.originalname);
+      const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
+      const filePath = join(uploadsDir, uniqueFilename);
+      
+      // Save file to disk
+      await writeFile(filePath, req.file.buffer);
+      
+      // Update task with new attachment
+      const updatedTaskData = {
+        attachmentUrl: `/uploads/${uniqueFilename}`,
+        attachmentName: req.file.originalname,
+        updatedAt: new Date()
+      };
+      
+      const updatedTask = await storage.updateTask(taskId, updatedTaskData);
+      
+      // Create task history entry
+      await storage.createTaskHistory({
+        taskId,
+        action: 'updated',
+        field: 'attachment',
+        newValue: req.file.originalname,
+        notes: `Attachment uploaded: ${req.file.originalname}`,
+        userId: req.user?.id
+      });
+      
+      res.json(updatedTask);
+    } catch (error) {
+      console.error("Error uploading attachment:", error);
+      res.status(500).json({ message: "Failed to upload attachment" });
+    }
+  });
+
   app.post("/api/tasks/:taskId/send-communication", async (req, res) => {
     try {
       const taskId = req.params.taskId;
