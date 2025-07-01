@@ -11,6 +11,8 @@ import { Home, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("admin@propertyflow.com");
+  const [password, setPassword] = useState("admin123");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { login } = useAuth();
@@ -51,10 +53,9 @@ export default function Login() {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
     const credentials = {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      email,
+      password,
     };
     loginMutation.mutate(credentials);
   };
@@ -88,6 +89,8 @@ export default function Login() {
                   type="email"
                   autoComplete="email"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                 />
               </div>
@@ -101,6 +104,8 @@ export default function Login() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                   />
                   <button
