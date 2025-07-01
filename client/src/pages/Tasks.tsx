@@ -799,35 +799,92 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* Tabs for Tasks, Maintenance, and Calendar */}
-      <Tabs defaultValue="tasks" className="w-full">
-        <TabsList>
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="tasks">
-          <div className="space-y-6">
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredTasks.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new task."}
-                    </p>
-                  </div>
-                ) : (
-                  filteredTasks.map((task: Task) => (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
-                      <CardHeader className="flex flex-col space-y-1.5 p-6 pt-[0px] pb-[0px]">
-                        <CardTitle className="text-lg">{task.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-muted-foreground mb-3">{task.description}</p>
-                        <div className="flex items-center gap-2 mb-3">
+      <div className="space-y-6">
+        {viewMode === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTasks.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new task."}
+                </p>
+              </div>
+            ) : (
+              filteredTasks.map((task: Task) => (
+                <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
+                  <CardHeader className="flex flex-col space-y-1.5 p-6 pt-[0px] pb-[0px]">
+                    <CardTitle className="text-lg">{task.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-3">{task.description}</p>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant={
+                        task.priority === "urgent" ? "destructive" :
+                        task.priority === "high" ? "secondary" :
+                        task.priority === "medium" ? "outline" :
+                        "outline"
+                      }>
+                        {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                      </Badge>
+                      <Badge variant={
+                        task.status === "completed" ? "default" :
+                        task.status === "in_progress" ? "secondary" :
+                        "outline"
+                      }>
+                        {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <span className="block">
+                        Category: {task.category}
+                      </span>
+                      {task.dueDate && (
+                        <span className="text-muted-foreground">
+                          Due: {formatDate(task.dueDate)}
+                        </span>
+                      )}
+                    </div>
+                    {getRelatedEntityName(task) && (
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        {getRelatedEntityName(task)}
+                      </div>
+                    )}
+                    {((task.attachments && task.attachments.length > 0) || task.attachmentUrl) && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <Paperclip className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {task.attachments && task.attachments.length > 0 
+                            ? `${task.attachments.length} attachment${task.attachments.length > 1 ? 's' : ''}`
+                            : task.attachmentName || '1 attachment'
+                          }
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredTasks.length === 0 ? (
+              <div className="text-center py-12">
+                <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new task."}
+                </p>
+              </div>
+            ) : (
+              filteredTasks.map((task: Task) => (
+                <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{task.title}</h3>
+                        <p className="text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
+                        <div className="flex items-center gap-4 mt-3">
                           <Badge variant={
                             task.priority === "urgent" ? "destructive" :
                             task.priority === "high" ? "secondary" :
@@ -843,15 +900,9 @@ export default function Tasks() {
                           }>
                             {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
                           </Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <span className="block">
-                            Category: {task.category}
-                          </span>
+                          <span className="text-sm text-muted-foreground">Category: {task.category}</span>
                           {task.dueDate && (
-                            <span className="text-muted-foreground">
-                              Due: {formatDate(task.dueDate)}
-                            </span>
+                            <span className="text-sm text-muted-foreground">Due: {formatDate(task.dueDate)}</span>
                           )}
                         </div>
                         {getRelatedEntityName(task) && (
@@ -859,111 +910,29 @@ export default function Tasks() {
                             {getRelatedEntityName(task)}
                           </div>
                         )}
-                        {((task.attachments && task.attachments.length > 0) || task.attachmentUrl) && (
+                        {task.attachmentUrl && (
                           <div className="mt-2 flex items-center gap-2">
                             <Paperclip className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground">
-                              {task.attachments && task.attachments.length > 0 
-                                ? `${task.attachments.length} attachment${task.attachments.length > 1 ? 's' : ''}`
-                                : task.attachmentName || '1 attachment'
-                              }
-                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadAttachment(task);
+                              }}
+                              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {task.attachmentName || 'Download Attachment'}
+                            </button>
                           </div>
                         )}
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredTasks.length === 0 ? (
-                  <div className="text-center py-12">
-                    <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new task."}
-                    </p>
-                  </div>
-                ) : (
-                  filteredTasks.map((task: Task) => (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleTaskClick(task)}>
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{task.title}</h3>
-                            <p className="text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
-                            <div className="flex items-center gap-4 mt-3">
-                              <Badge variant={
-                                task.priority === "urgent" ? "destructive" :
-                                task.priority === "high" ? "secondary" :
-                                task.priority === "medium" ? "outline" :
-                                "outline"
-                              }>
-                                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                              </Badge>
-                              <Badge variant={
-                                task.status === "completed" ? "default" :
-                                task.status === "in_progress" ? "secondary" :
-                                "outline"
-                              }>
-                                {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
-                              </Badge>
-                              <span className="text-sm text-muted-foreground">Category: {task.category}</span>
-                              {task.dueDate && (
-                                <span className="text-sm text-muted-foreground">Due: {formatDate(task.dueDate)}</span>
-                              )}
-                            </div>
-                            {getRelatedEntityName(task) && (
-                              <div className="mt-2 text-sm text-muted-foreground">
-                                {getRelatedEntityName(task)}
-                              </div>
-                            )}
-                            {task.attachmentUrl && (
-                              <div className="mt-2 flex items-center gap-2">
-                                <Paperclip className="h-4 w-4 text-muted-foreground" />
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDownloadAttachment(task);
-                                  }}
-                                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                                >
-                                  {task.attachmentName || 'Download Attachment'}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
             )}
           </div>
-        </TabsContent>
-        
-        <TabsContent value="maintenance">
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <Wrench className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-2 text-sm font-medium">Maintenance functionality</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Maintenance requests are now integrated with tasks for better organization.
-              </p>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="calendar">
-          <CalendarView 
-            tasks={filteredTasks} 
-            setSelectedTaskForDetails={setSelectedTaskForDetails}
-            setIsTaskDetailsDialogOpen={setIsTaskDetailsDialogOpen}
-          />
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
 
       {/* Edit Task Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -1739,7 +1708,6 @@ export default function Tasks() {
                   {/* Add Additional Documents Section */}
                   <div className="border-t pt-4 mt-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Add Additional Documents</label>
                       <div className="flex items-center gap-2">
                         <Input
                           type="file"
@@ -1806,65 +1774,7 @@ export default function Tasks() {
                 </CardContent>
               </Card>
 
-              {/* Communications Tab */}
-              <Tabs defaultValue="communications" className="space-y-4">
-                <TabsList>
-                  <TabsTrigger value="communications">Communications</TabsTrigger>
-                  <TabsTrigger value="history">History</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="communications" className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">Task Communications</h3>
-                    <Button 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedTask(selectedTaskForDetails);
-                        setIsSendCommunicationOpen(true);
-                      }}
-                    >
-                      <Send className="mr-2 h-4 w-4" />
-                      Send Message
-                    </Button>
-                  </div>
-                  
-                  {/* Query and display task communications */}
-                  <TaskCommunications taskId={selectedTaskForDetails.id} />
-                </TabsContent>
-
-                <TabsContent value="history" className="space-y-4">
-                  <h3 className="text-lg font-medium">Task History</h3>
-                  
-                  <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {taskHistory.map((history) => (
-                      <div key={history.id} className="border rounded-lg p-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium">{history.action}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {new Date(history.createdAt).toLocaleString()}
-                          </div>
-                        </div>
-                        {history.notes && (
-                          <div className="mt-2 text-sm text-muted-foreground">
-                            <p>{history.notes}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {taskHistory.length === 0 && (
-                      <div className="text-center py-8">
-                        <HistoryIcon className="mx-auto h-8 w-8 text-muted-foreground" />
-                        <p className="mt-2 text-sm text-muted-foreground">No history yet</p>
-                        <p className="text-xs text-muted-foreground mt-1">Task changes will be tracked here</p>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
+              
             </div>
           )}
         </DialogContent>
