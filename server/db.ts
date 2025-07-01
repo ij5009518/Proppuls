@@ -281,7 +281,9 @@ export const tasks = pgTable('tasks', {
   communicationMethod: text('communication_method').default('none'), // 'none', 'email', 'sms', 'both'
   recipientEmail: text('recipient_email'),
   recipientPhone: text('recipient_phone'),
-  // Document attachment
+  // Document attachments (multiple files support)
+  attachments: jsonb('attachments').default([]),
+  // Legacy single attachment fields (for backward compatibility)
   attachmentUrl: text('attachment_url'),
   attachmentName: text('attachment_name'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
