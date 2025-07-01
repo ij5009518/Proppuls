@@ -305,27 +305,12 @@ export default function Tasks() {
   });
 
   const onCreateSubmit = (data: TaskFormData) => {
-    const formData = new FormData();
+    const taskData = {
+      ...data,
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+    } as InsertTask;
     
-    // Add task data fields
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        if (key === 'dueDate' && value) {
-          formData.append(key, new Date(value).toISOString());
-        } else {
-          formData.append(key, value.toString());
-        }
-      }
-    });
-    
-    // Add multiple file attachments
-    if (uploadedDocument && Array.isArray(uploadedDocument)) {
-      uploadedDocument.forEach((file) => {
-        formData.append('attachments', file);
-      });
-    }
-    
-    createTaskMutation.mutate(formData);
+    createTaskMutation.mutate(taskData);
   };
 
   const onEditSubmit = (data: TaskFormData) => {
@@ -519,7 +504,7 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -547,7 +532,7 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Priority</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -570,7 +555,7 @@ export default function Tasks() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
