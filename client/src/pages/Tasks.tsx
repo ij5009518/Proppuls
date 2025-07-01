@@ -1691,7 +1691,7 @@ export default function Tasks() {
                                 const response = await fetch(`/api/tasks/${selectedTaskForDetails.id}/attachments`, {
                                   method: 'POST',
                                   headers: {
-                                    'Authorization': `Bearer ${localStorage.getItem('auth-token')}`,
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                                   },
                                   body: formData,
                                 });
