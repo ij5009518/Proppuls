@@ -179,7 +179,42 @@ export default function Tasks() {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: (taskData: InsertTask) => apiRequest("POST", "/api/tasks", taskData),
+    mutationFn: async (taskData: InsertTask) => {
+      const formData = new FormData();
+      
+      // Add all task fields to FormData
+      Object.entries(taskData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (key === 'dueDate' && value instanceof Date) {
+            formData.append(key, value.toISOString());
+          } else {
+            formData.append(key, value.toString());
+          }
+        }
+      });
+      
+      // Add file if present
+      if (uploadedDocument) {
+        formData.append('attachment', uploadedDocument);
+      }
+      
+      // Use fetch instead of apiRequest for FormData
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create task');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setIsAddDialogOpen(false);
