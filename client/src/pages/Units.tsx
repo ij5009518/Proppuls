@@ -351,44 +351,60 @@ export default function Units() {
     },
   });
 
+  // Task mutations
   const createTaskMutation = useMutation({
-    mutationFn: async (data: InsertTask) => apiRequest("POST", "/api/tasks", data),
+    mutationFn: (data: TaskFormData) => {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          formData.append(key, value.toString());
+        }
+      });
+      
+      if (uploadedDocument) {
+        formData.append('attachments', uploadedDocument);
+      }
+      
+      return apiRequest("POST", "/api/tasks", formData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      setIsTaskDialogOpen(false);
-      taskForm.reset();
+      setIsAddTaskDialogOpen(false);
+      createTaskForm.reset();
+      setUploadedDocument(null);
       toast({ title: "Task created successfully" });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({ title: "Failed to create task", description: error.message, variant: "destructive" });
     },
   });
 
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ id, taskData }: { id: string; taskData: Partial<Task> }) =>
+      apiRequest("PUT", `/api/tasks/${id}`, taskData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      setPendingChanges({});
+      setHasUnsavedChanges(false);
+      toast({ title: "Task updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update task", description: error.message, variant: "destructive" });
+    },
+  });
+
   const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/tasks/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       toast({ title: "Task deleted successfully" });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({ title: "Failed to delete task", description: error.message, variant: "destructive" });
     },
   });
 
-  // Update task mutation for inline editing
-  const updateTaskMutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Task> }) =>
-      apiRequest("PATCH", `/api/tasks/${id}`, updates),
-    onSuccess: () => {
-      toast({ title: "Task updated successfully" });
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      setPendingChanges({});
-      setHasUnsavedChanges(false);
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error updating task", description: error.message, variant: "destructive" });
-    },
-  });
+
 
 
 
@@ -1072,22 +1088,22 @@ export default function Units() {
                 {/* Task Management Header */}
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Unit Tasks</h3>
-                  <Button onClick={() => setIsTaskDialogOpen(true)}>
+                  <Button onClick={() => setIsAddTaskDialogOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Task
                   </Button>
                 </div>
 
                 {/* Task Filters */}
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center gap-4">
                   <div className="flex items-center space-x-4">
                     <Input
                       placeholder="Search tasks..."
-                      value={taskSearchTerm}
-                      onChange={(e) => setTaskSearchTerm(e.target.value)}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                       className="max-w-sm"
                     />
-                    <Select value={taskStatusFilter} onValueChange={setTaskStatusFilter}>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Filter by status" />
                       </SelectTrigger>
@@ -1102,16 +1118,16 @@ export default function Units() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button
-                      variant={taskViewMode === "grid" ? "default" : "outline"}
+                      variant={viewMode === "grid" ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setTaskViewMode("grid")}
+                      onClick={() => setViewMode("grid")}
                     >
                       <Grid className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant={taskViewMode === "list" ? "default" : "outline"}
+                      variant={viewMode === "list" ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setTaskViewMode("list")}
+                      onClick={() => setViewMode("list")}
                     >
                       <List className="h-4 w-4" />
                     </Button>
@@ -1121,41 +1137,68 @@ export default function Units() {
                 {(() => {
                   const unitTasks = tasks?.filter(task => {
                     const matchesUnit = task.unitId === selectedUnit.id;
-                    const matchesSearch = !taskSearchTerm || 
-                      task.title.toLowerCase().includes(taskSearchTerm.toLowerCase()) ||
-                      task.description.toLowerCase().includes(taskSearchTerm.toLowerCase());
-                    const matchesStatus = taskStatusFilter === "all" || task.status === taskStatusFilter;
+                    const matchesSearch = !searchTerm || 
+                      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      task.description.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
                     return matchesUnit && matchesSearch && matchesStatus;
                   }) || [];
+
                   if (unitTasks.length === 0) {
                     return (
                       <div className="text-center py-12">
                         <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
                         <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          {taskSearchTerm ? "Try adjusting your search terms." : "Get started by creating a new task for this unit."}
+                          {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new task for this unit."}
                         </p>
                       </div>
                     );
                   }
 
-                  return taskViewMode === "grid" ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  return viewMode === "grid" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {unitTasks.map((task: Task) => (
                         <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
                           setSelectedTaskForDetails(task);
                           setIsTaskDetailsDialogOpen(true);
                         }}>
-                          <CardHeader className="flex flex-col space-y-1.5 p-6 pt-[0px] pb-[0px]">
-                            <CardTitle className="text-lg">{task.title}</CardTitle>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <CardTitle className="text-base">{task.title}</CardTitle>
+                              <div className="flex gap-1 mt-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedTask(task);
+                                    setIsEditTaskDialogOpen(true);
+                                  }}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteTaskMutation.mutate(task.id);
+                                  }}
+                                  className="h-6 w-6 p-0 text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
                           </CardHeader>
-                          <CardContent>
-                            <p className="text-muted-foreground mb-3">{task.description}</p>
+                          <CardContent className="pt-0">
+                            <p className="text-muted-foreground mb-3 text-sm line-clamp-2">{task.description}</p>
                             <div className="flex items-center gap-2 mb-3">
                               <Badge variant={
                                 task.priority === "urgent" ? "destructive" :
                                 task.priority === "high" ? "secondary" :
-                                task.priority === "medium" ? "outline" :
                                 "outline"
                               }>
                                 {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
@@ -1169,14 +1212,18 @@ export default function Units() {
                               </Badge>
                             </div>
                             <div className="text-sm text-muted-foreground space-y-1">
-                              <span className="block">Category: {task.category}</span>
+                              <div>Category: {task.category}</div>
                               {task.dueDate && (
-                                <span className="text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
                                   Due: {formatDate(task.dueDate)}
-                                </span>
+                                </div>
                               )}
                               {task.assignedTo && (
-                                <span className="block">Assigned to: {task.assignedTo}</span>
+                                <div className="flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  {task.assignedTo}
+                                </div>
                               )}
                             </div>
                             {((task.attachments && task.attachments.length > 0) || task.attachmentUrl) && (
@@ -1195,106 +1242,74 @@ export default function Units() {
                       ))}
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-semibold">Unit Tasks</h4>
-                        <Button size="sm" onClick={() => setIsTaskDialogOpen(true)}>
-                          <Plus className="h-4 w-4 mr-1" />
-                          Create Task
-                        </Button>
-                      </div>
-                      <div className="grid gap-3">
-                        {unitTasks.map((task) => (
-                          <Card 
-                            key={task.id} 
-                            className="compact-task-card cursor-pointer"
-                            onClick={() => {
-                              setSelectedTask(task);
-                              setIsTaskDetailOpen(true);
-                            }}
-                          >
-                            <CardContent className="p-4">
-                              <div className="grid grid-cols-3 gap-4">
-                                {/* Main Task Info */}
-                                <div className="col-span-2 space-y-3">
-                                  <div className="flex items-center gap-2">
-                                    <h4 className="font-semibold text-sm">{task.title}</h4>
-                                    <Badge className={`text-xs ${
-                                      task.priority === "urgent" ? "bg-red-100 text-red-800 border-red-200" :
-                                      task.priority === "high" ? "bg-orange-100 text-orange-800 border-orange-200" :
-                                      task.priority === "medium" ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
-                                      "bg-green-100 text-green-800 border-green-200"
-                                    }`}>
-                                      {task.priority}
-                                    </Badge>
-                                    <Badge className={`text-xs ${
-                                      task.status === "completed" ? "bg-green-100 text-green-800 border-green-200" :
-                                      task.status === "in_progress" ? "bg-blue-100 text-blue-800 border-blue-200" :
-                                      task.status === "cancelled" ? "bg-gray-100 text-gray-800 border-gray-200" :
-                                      "bg-yellow-100 text-yellow-800 border-yellow-200"
-                                    }`}>
-                                      {task.status.replace('_', ' ')}
-                                    </Badge>
-                                  </div>
-
-                                  <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
-
-                                  <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <div>
-                                      <span className="font-medium">Category:</span>
-                                      <span className="ml-1 capitalize">{task.category}</span>
-                                    </div>
-                                    <div>
-                                      <span className="font-medium">Communication:</span>
-                                      <span className="ml-1 capitalize">{task.communicationMethod || 'None'}</span>
-                                    </div>
-                                    {task.dueDate && (
-                                      <div>
-                                        <span className="font-medium">Due Date:</span>
-                                        <span className="ml-1">{formatDate(task.dueDate)}</span>
-                                      </div>
-                                    )}
-                                    {task.assignedTo && (
-                                      <div>
-                                        <span className="font-medium">Assigned:</span>
-                                        <span className="ml-1">{task.assignedTo}</span>
-                                      </div>
-                                    )}
-                                    {task.isRecurring && (
-                                      <div>
-                                        <span className="font-medium">Recurring:</span>
-                                        <span className="ml-1 capitalize">{task.recurrencePeriod || 'Yes'}</span>
-                                      </div>
-                                    )}
-                                    <div>
-                                      <span className="font-medium">Created:</span>
-                                      <span className="ml-1">{formatDate(task.createdAt)}</span>
-                                    </div>
-                                  </div>
+                    <div className="space-y-2">
+                      {unitTasks.map((task: Task) => (
+                        <Card key={task.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
+                          setSelectedTaskForDetails(task);
+                          setIsTaskDetailsDialogOpen(true);
+                        }}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3">
+                                  <h4 className="font-medium">{task.title}</h4>
+                                  <Badge variant={
+                                    task.priority === "urgent" ? "destructive" :
+                                    task.priority === "high" ? "secondary" :
+                                    "outline"
+                                  } className="text-xs">
+                                    {task.priority}
+                                  </Badge>
+                                  <Badge variant={
+                                    task.status === "completed" ? "default" :
+                                    task.status === "in_progress" ? "secondary" :
+                                    "outline"
+                                  } className="text-xs">
+                                    {task.status.replace('_', ' ')}
+                                  </Badge>
+                                  <span className="text-sm text-muted-foreground">{task.category}</span>
+                                  {task.dueDate && (
+                                    <span className="text-sm text-muted-foreground">
+                                      Due: {formatDate(task.dueDate)}
+                                    </span>
+                                  )}
+                                  {task.assignedTo && (
+                                    <span className="text-sm text-muted-foreground">
+                                      Assigned: {task.assignedTo}
+                                    </span>
+                                  )}
                                 </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex flex-col justify-between items-end">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      deleteTaskMutation.mutate(task.id);
-                                    }}
-                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                  <div className="text-xs text-muted-foreground">
-                                    Click to view details
-                                  </div>
-                                </div>
+                                <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{task.description}</p>
                               </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedTask(task);
+                                    setIsEditTaskDialogOpen(true);
+                                  }}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteTaskMutation.mutate(task.id);
+                                  }}
+                                  className="h-8 w-8 p-0 text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   );
                 })()}
@@ -2271,6 +2286,297 @@ export default function Units() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Comprehensive Task Details Dialog with Forum Functionality */}
+      <Dialog open={isTaskDetailsDialogOpen} onOpenChange={setIsTaskDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckSquare className="h-5 w-5" />
+              Task Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedTaskForDetails && (
+            <div className="space-y-6">
+              {/* Save Changes Button */}
+              {hasUnsavedChanges && (
+                <div className="flex justify-end">
+                  <Button onClick={() => {
+                    if (!selectedTaskForDetails || Object.keys(pendingChanges).length === 0) return;
+                    
+                    const changesWithFormattedDate = { ...pendingChanges };
+                    if (changesWithFormattedDate.dueDate && changesWithFormattedDate.dueDate instanceof Date) {
+                      changesWithFormattedDate.dueDate = changesWithFormattedDate.dueDate.toISOString();
+                    }
+                    
+                    updateTaskMutation.mutate({ 
+                      id: selectedTaskForDetails.id, 
+                      taskData: changesWithFormattedDate
+                    });
+                  }}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </Button>
+                </div>
+              )}
+
+              {/* Task Details Grid */}
+              <div className="grid grid-cols-4 gap-4">
+                {/* Category */}
+                <div>
+                  <Label className="text-sm font-medium">Category</Label>
+                  <Select
+                    value={selectedTaskForDetails.category || ''}
+                    onValueChange={(value) => updatePendingChange('category', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                      <SelectItem value="inspection">Inspection</SelectItem>
+                      <SelectItem value="repair">Repair</SelectItem>
+                      <SelectItem value="cleaning">Cleaning</SelectItem>
+                      <SelectItem value="documentation">Documentation</SelectItem>
+                      <SelectItem value="tenant_communication">Tenant Communication</SelectItem>
+                      <SelectItem value="general">General</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <Label className="text-sm font-medium">Priority</Label>
+                  <Select
+                    value={selectedTaskForDetails.priority || ''}
+                    onValueChange={(value) => updatePendingChange('priority', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <Select
+                    value={selectedTaskForDetails.status || ''}
+                    onValueChange={(value) => updatePendingChange('status', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Due Date */}
+                <div>
+                  <Label className="text-sm font-medium">Due Date</Label>
+                  <Input
+                    type="date"
+                    value={selectedTaskForDetails.dueDate ? new Date(selectedTaskForDetails.dueDate).toISOString().split('T')[0] : ''}
+                    onChange={(e) => updatePendingChange('dueDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              {/* Second Row */}
+              <div className="grid grid-cols-4 gap-4">
+                {/* Assigned To */}
+                <div>
+                  <Label className="text-sm font-medium">Assigned To</Label>
+                  <Input
+                    value={selectedTaskForDetails.assignedTo || ''}
+                    onChange={(e) => updatePendingChange('assignedTo', e.target.value)}
+                    placeholder="Assign to..."
+                    className="mt-1"
+                  />
+                </div>
+
+                {/* Property */}
+                <div>
+                  <Label className="text-sm font-medium">Property</Label>
+                  <Select
+                    value={selectedTaskForDetails.propertyId || ''}
+                    onValueChange={(value) => updatePendingChange('propertyId', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select property" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {properties?.map((property: Property) => (
+                        <SelectItem key={property.id} value={property.id}>
+                          {property.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Unit */}
+                <div>
+                  <Label className="text-sm font-medium">Unit</Label>
+                  <Select
+                    value={selectedTaskForDetails.unitId || ''}
+                    onValueChange={(value) => updatePendingChange('unitId', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {units?.map((unit: Unit) => (
+                        <SelectItem key={unit.id} value={unit.id}>
+                          Unit {unit.unitNumber}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Tenant */}
+                <div>
+                  <Label className="text-sm font-medium">Tenant</Label>
+                  <Select
+                    value={selectedTaskForDetails.tenantId || ''}
+                    onValueChange={(value) => updatePendingChange('tenantId', value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select tenant" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tenants?.map((tenant: Tenant) => (
+                        <SelectItem key={tenant.id} value={tenant.id}>
+                          {tenant.firstName} {tenant.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <Label className="text-sm font-medium">Description</Label>
+                <Textarea
+                  value={selectedTaskForDetails.description || ''}
+                  onChange={(e) => updatePendingChange('description', e.target.value)}
+                  placeholder="Task description..."
+                  className="mt-1 min-h-[100px]"
+                />
+              </div>
+
+              {/* Title */}
+              <div>
+                <Label className="text-sm font-medium">Title</Label>
+                <Input
+                  value={selectedTaskForDetails.title || ''}
+                  onChange={(e) => updatePendingChange('title', e.target.value)}
+                  placeholder="Task title..."
+                  className="mt-1"
+                />
+              </div>
+
+              {/* Attachments */}
+              {((selectedTaskForDetails.attachments && selectedTaskForDetails.attachments.length > 0) || selectedTaskForDetails.attachmentUrl) && (
+                <div>
+                  <Label className="text-sm font-medium">Attachments</Label>
+                  <div className="mt-2 space-y-2">
+                    {selectedTaskForDetails.attachments?.map((attachment: any, index: number) => (
+                      <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                        <Paperclip className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{attachment.name}</span>
+                        <Button size="sm" variant="outline" className="ml-auto">
+                          <Download className="h-3 w-3 mr-1" />
+                          Download
+                        </Button>
+                      </div>
+                    ))}
+                    {selectedTaskForDetails.attachmentUrl && (
+                      <div className="flex items-center gap-2 p-2 border rounded">
+                        <Paperclip className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{selectedTaskForDetails.attachmentName || 'Attachment'}</span>
+                        <Button size="sm" variant="outline" className="ml-auto">
+                          <Download className="h-3 w-3 mr-1" />
+                          Download
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Forum/Communications Section */}
+              <div className="border-t pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Communications Forum</h3>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setIsSendCommunicationOpen(true)}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Send Communication
+                  </Button>
+                </div>
+                <TaskCommunications taskId={selectedTaskForDetails.id} />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between pt-4 border-t">
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedTask(selectedTaskForDetails);
+                      setIsHistoryDialogOpen(true);
+                    }}
+                  >
+                    <HistoryIcon className="h-4 w-4 mr-2" />
+                    View History
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsTaskDetailsDialogOpen(false);
+                      setPendingChanges({});
+                      setHasUnsavedChanges(false);
+                    }}
+                  >
+                    Close
+                  </Button>
+                  <Button 
+                    variant="destructive"
+                    onClick={() => {
+                      deleteTaskMutation.mutate(selectedTaskForDetails.id);
+                      setIsTaskDetailsDialogOpen(false);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Task
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
