@@ -859,18 +859,15 @@ export default function Tasks() {
                             {getRelatedEntityName(task)}
                           </div>
                         )}
-                        {task.attachmentUrl && (
+                        {((task.attachments && task.attachments.length > 0) || task.attachmentUrl) && (
                           <div className="mt-2 flex items-center gap-2">
                             <Paperclip className="h-4 w-4 text-muted-foreground" />
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDownloadAttachment(task);
-                              }}
-                              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                            >
-                              {task.attachmentName || 'Download Attachment'}
-                            </button>
+                            <span className="text-sm text-muted-foreground">
+                              {task.attachments && task.attachments.length > 0 
+                                ? `${task.attachments.length} attachment${task.attachments.length > 1 ? 's' : ''}`
+                                : task.attachmentName || '1 attachment'
+                              }
+                            </span>
                           </div>
                         )}
                       </CardContent>
@@ -1640,7 +1637,83 @@ export default function Tasks() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {selectedTaskForDetails.attachmentUrl && selectedTaskForDetails.attachmentName ? (
+                  {selectedTaskForDetails.attachments && selectedTaskForDetails.attachments.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedTaskForDetails.attachments.map((attachment: any, index: number) => (
+                        <div key={attachment.id || index} className="flex items-center gap-2 p-2 bg-muted rounded border">
+                          <Paperclip className="h-4 w-4 text-blue-600" />
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-medium block truncate">{attachment.filename}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {attachment.size ? `${Math.round(attachment.size / 1024)}KB` : ''} • 
+                              {attachment.uploadedAt ? new Date(attachment.uploadedAt).toLocaleDateString() : ''}
+                            </span>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = attachment.url;
+                                link.download = attachment.filename;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                toast({
+                                  title: "Download Started",
+                                  description: `Downloading ${attachment.filename}`,
+                                });
+                              }}
+                              className="flex items-center gap-1 h-8"
+                            >
+                              <Download className="h-3 w-3" />
+                              Download
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                if (confirm(`Delete ${attachment.filename}?`)) {
+                                  try {
+                                    const response = await fetch(`/api/tasks/${selectedTaskForDetails.id}/attachments/${attachment.id}`, {
+                                      method: 'DELETE',
+                                      headers: {
+                                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                      },
+                                    });
+                                    
+                                    if (response.ok) {
+                                      const updatedTask = await response.json();
+                                      setSelectedTaskForDetails(updatedTask);
+                                      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+                                      toast({
+                                        title: "Attachment deleted",
+                                        description: `${attachment.filename} has been removed`,
+                                      });
+                                    } else {
+                                      throw new Error('Delete failed');
+                                    }
+                                  } catch (error) {
+                                    toast({
+                                      title: "Delete failed",
+                                      description: "Failed to delete attachment. Please try again.",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }
+                              }}
+                              className="flex items-center gap-1 h-8 text-destructive hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : selectedTaskForDetails.attachmentUrl && selectedTaskForDetails.attachmentName ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 p-2 bg-muted rounded border">
                         <Paperclip className="h-4 w-4 text-blue-600" />
