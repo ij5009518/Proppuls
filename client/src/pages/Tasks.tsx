@@ -117,6 +117,22 @@ export default function Tasks() {
     setSelectedTaskForDetails(prev => prev ? { ...prev, [field]: value } : null);
   };
 
+  // Function to save all pending changes at once
+  const handleSaveChanges = () => {
+    if (!selectedTaskForDetails || Object.keys(pendingChanges).length === 0) return;
+    
+    // Convert date to ISO string if it's a Date object
+    const changesWithFormattedDate = { ...pendingChanges };
+    if (changesWithFormattedDate.dueDate && changesWithFormattedDate.dueDate instanceof Date) {
+      changesWithFormattedDate.dueDate = changesWithFormattedDate.dueDate.toISOString();
+    }
+    
+    updateTaskMutation.mutate({ 
+      id: selectedTaskForDetails.id, 
+      taskData: changesWithFormattedDate
+    });
+  };
+
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -1447,7 +1463,24 @@ export default function Tasks() {
             <div className="space-y-6">
               {/* Task Details with Same Layout as Forms */}
               <Card>
-                <CardContent className="p-6 space-y-4">
+                <CardHeader className="flex flex-row items-center justify-between pb-4">
+                  <CardTitle className="text-lg">Task Details</CardTitle>
+                  <div className="flex items-center gap-2">
+                    {hasUnsavedChanges && (
+                      <span className="text-sm text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                        Unsaved changes
+                      </span>
+                    )}
+                    <Button 
+                      onClick={handleSaveChanges}
+                      disabled={!hasUnsavedChanges || updateTaskMutation.isPending}
+                      size="sm"
+                    >
+                      {updateTaskMutation.isPending ? "Saving..." : "Save"}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 pt-0 space-y-4">
                   {/* First line: Category, Priority, Status, Due Date */}
                   <div className="grid grid-cols-4 gap-4">
                     <div>
@@ -1579,13 +1612,7 @@ export default function Tasks() {
                       <Select 
                         value={selectedTaskForDetails.tenantId || ""} 
                         onValueChange={(value) => {
-                          // Update local state immediately
-                          setSelectedTaskForDetails(prev => prev ? {...prev, tenantId: value || null} : null);
-                          // Persist the change
-                          updateTaskMutation.mutate({ 
-                            id: selectedTaskForDetails.id, 
-                            taskData: { tenantId: value || null }
-                          });
+                          updatePendingChange('tenantId', value || null);
                         }}
                       >
                         <SelectTrigger>
@@ -1613,17 +1640,7 @@ export default function Tasks() {
                   <Textarea
                     value={selectedTaskForDetails.description || ""}
                     onChange={(e) => {
-                      // Update the local state immediately for responsive UI
-                      setSelectedTaskForDetails(prev => prev ? {...prev, description: e.target.value} : null);
-                    }}
-                    onBlur={(e) => {
-                      // Only save if description actually changed
-                      if (e.target.value !== selectedTaskForDetails.description) {
-                        updateTaskMutation.mutate({ 
-                          id: selectedTaskForDetails.id, 
-                          taskData: { description: e.target.value }
-                        });
-                      }
+                      updatePendingChange('description', e.target.value);
                     }}
                     className="min-h-[100px] border-dashed resize-none focus:border-solid"
                     placeholder="Enter task description..."
