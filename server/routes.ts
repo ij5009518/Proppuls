@@ -1490,22 +1490,23 @@ export function registerRoutes(app: Express) {
       
       // Handle file attachment if present
       if (req.file) {
-        const fs = require('fs');
-        const path = require('path');
+        const { createWriteStream, mkdirSync, existsSync } = await import('node:fs');
+        const { join, extname } = await import('node:path');
         
         // Create uploads directory if it doesn't exist
-        const uploadsDir = path.join(process.cwd(), 'uploads');
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
+        const uploadsDir = join(process.cwd(), 'uploads');
+        if (!existsSync(uploadsDir)) {
+          mkdirSync(uploadsDir, { recursive: true });
         }
         
         // Generate unique filename
-        const fileExtension = path.extname(req.file.originalname);
+        const fileExtension = extname(req.file.originalname);
         const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
-        const filePath = path.join(uploadsDir, uniqueFilename);
+        const filePath = join(uploadsDir, uniqueFilename);
         
-        // Save file to disk
-        fs.writeFileSync(filePath, req.file.buffer);
+        // Save file to disk using writeFile async
+        const { writeFile } = await import('node:fs/promises');
+        await writeFile(filePath, req.file.buffer);
         
         // Add attachment info to task data
         taskData.attachmentUrl = `/uploads/${uniqueFilename}`;
@@ -1521,16 +1522,16 @@ export function registerRoutes(app: Express) {
   });
 
   // Serve uploaded files
-  app.get("/uploads/:filename", (req, res) => {
+  app.get("/uploads/:filename", async (req, res) => {
     try {
-      const path = require('path');
-      const fs = require('fs');
+      const { join } = await import('node:path');
+      const { existsSync } = await import('node:fs');
       
       const filename = req.params.filename;
-      const filePath = path.join(process.cwd(), 'uploads', filename);
+      const filePath = join(process.cwd(), 'uploads', filename);
       
       // Check if file exists
-      if (!fs.existsSync(filePath)) {
+      if (!existsSync(filePath)) {
         return res.status(404).json({ message: "File not found" });
       }
       

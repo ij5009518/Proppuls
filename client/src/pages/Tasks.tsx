@@ -199,7 +199,7 @@ export default function Tasks() {
       }
       
       // Use fetch instead of apiRequest for FormData
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
