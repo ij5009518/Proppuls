@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X, History as HistoryIcon, DollarSign, CalendarIcon } from "lucide-react";
+import { Plus, CheckSquare, Wrench, Calendar, Edit, Trash2, ChevronLeft, ChevronRight, Grid, List, FileText, Download, Eye, Paperclip, Upload, Mail, Phone, MessageSquare, Clock, User, Send, AlertCircle, X, History as HistoryIcon, DollarSign, CalendarIcon, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -1395,13 +1395,17 @@ export default function Tasks() {
                   size="sm"
                   onClick={() => {
                     if (selectedTaskForDetails) {
-                      handleEdit(selectedTaskForDetails);
-                      setIsTaskDetailsDialogOpen(false);
+                      // Save any changes to the task
+                      updateTaskMutation.mutate({ 
+                        id: selectedTaskForDetails.id, 
+                        taskData: selectedTaskForDetails
+                      });
                     }
                   }}
+                  disabled={updateTaskMutation.isPending}
                 >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
+                  <Save className="h-4 w-4 mr-1" />
+                  {updateTaskMutation.isPending ? "Saving..." : "Save"}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1662,6 +1666,36 @@ export default function Tasks() {
                       <p className="text-sm text-muted-foreground">No attachments</p>
                     </div>
                   )}
+                  
+                  {/* Add Additional Documents Section */}
+                  <div className="border-t pt-4 mt-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Add Additional Documents</label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          onChange={(e) => {
+                            const files = e.target.files;
+                            if (files && files.length > 0) {
+                              // Handle file upload for additional documents
+                              const formData = new FormData();
+                              formData.append('document', files[0]);
+                              formData.append('taskId', selectedTaskForDetails.id);
+                              
+                              // You can add upload logic here
+                              console.log('File selected for upload:', files[0].name);
+                            }
+                          }}
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                          className="flex-1"
+                        />
+                        <Upload className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Supported formats: PDF, DOC, DOCX, JPG, PNG, TXT (Max 10MB)
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
