@@ -354,18 +354,7 @@ export default function Units() {
 
   // Task mutations
   const createTaskMutation = useMutation({
-    mutationFn: (data: TaskFormData) => {
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          formData.append(key, value.toString());
-        }
-      });
-      
-      if (uploadedDocument) {
-        formData.append('attachments', uploadedDocument);
-      }
-      
+    mutationFn: (formData: FormData) => {
       return apiRequest("POST", "/api/tasks", formData);
     },
     onSuccess: () => {
@@ -2594,11 +2583,20 @@ export default function Units() {
           <Form {...createTaskForm}>
             <form onSubmit={createTaskForm.handleSubmit((data) => {
               const formData = new FormData();
-              Object.entries(data).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== '') {
-                  formData.append(key, value.toString());
-                }
-              });
+              
+              // Append all form fields, including required ones even if empty
+              formData.append('title', data.title || '');
+              formData.append('description', data.description || '');
+              formData.append('category', data.category || '');
+              formData.append('priority', data.priority || 'medium');
+              formData.append('status', data.status || 'pending');
+              
+              // Optional fields
+              if (data.dueDate) formData.append('dueDate', data.dueDate);
+              if (data.assignedTo) formData.append('assignedTo', data.assignedTo);
+              if (data.propertyId) formData.append('propertyId', data.propertyId);
+              if (data.unitId) formData.append('unitId', data.unitId);
+              if (data.tenantId) formData.append('tenantId', data.tenantId);
               
               if (uploadedDocument) {
                 formData.append('attachments', uploadedDocument);
