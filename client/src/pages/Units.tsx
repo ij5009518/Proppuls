@@ -1053,24 +1053,69 @@ export default function Units() {
               </TabsContent>
 
               <TabsContent value="maintenance" className="space-y-4">
-                <div className="text-center py-8">
-                  <Wrench className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">No maintenance requests yet</p>
-                  <Button variant="outline">
-                    <Wrench className="h-4 w-4 mr-2" />
-                    Add Maintenance Request
-                  </Button>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
+                      Maintenance Requests
+                    </h4>
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Request
+                    </Button>
+                  </div>
+                  
+                  {/* Sample maintenance requests would go here */}
+                  <div className="text-center py-8">
+                    <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">No maintenance requests for this unit</p>
+                    <p className="text-sm text-muted-foreground">
+                      Maintenance requests and work orders will appear here
+                    </p>
+                  </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="documents" className="space-y-4">
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">No documents uploaded yet</p>
-                  <Button variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Upload Documents
-                  </Button>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
+                      Unit Documents
+                    </h4>
+                    <Button variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Document
+                    </Button>
+                  </div>
+                  
+                  {/* Document categories */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="p-4 text-center">
+                      <FileText className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                      <p className="text-sm font-medium">Lease Documents</p>
+                      <p className="text-xs text-muted-foreground">0 files</p>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <FileText className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                      <p className="text-sm font-medium">Inspection Reports</p>
+                      <p className="text-xs text-muted-foreground">0 files</p>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <FileText className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                      <p className="text-sm font-medium">Photos</p>
+                      <p className="text-xs text-muted-foreground">0 files</p>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <FileText className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+                      <p className="text-sm font-medium">Other</p>
+                      <p className="text-xs text-muted-foreground">0 files</p>
+                    </Card>
+                  </div>
+                  
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">
+                      Upload and organize documents related to this unit
+                    </p>
+                  </div>
                 </div>
               </TabsContent>
 
