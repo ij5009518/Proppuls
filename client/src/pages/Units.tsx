@@ -203,19 +203,6 @@ export default function Units() {
     },
   });
 
-  const taskForm = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      priority: "medium",
-      status: "pending",
-      category: "general",
-      dueDate: "",
-      assignedTo: "",
-    },
-  });
-
   const assignTenantForm = useForm<AssignTenantFormData>({
     resolver: zodResolver(assignTenantSchema),
     defaultValues: {
@@ -232,24 +219,8 @@ export default function Units() {
     },
   });
 
-  // Task forms 
+  // Task form for creating new tasks
   const createTaskForm = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      priority: "medium",
-      status: "pending",
-      category: "general",
-      dueDate: "",
-      assignedTo: "",
-      propertyId: "",
-      unitId: "",
-      tenantId: "",
-    },
-  });
-
-  const editTaskForm = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
       title: "",
