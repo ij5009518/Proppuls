@@ -1819,26 +1819,6 @@ export default function Units() {
         </DialogContent>
       </Dialog>
 
-      {/* Task Detail Dialog */}
-      {selectedTask && (
-        <Dialog open={isTaskDetailOpen} onOpenChange={setIsTaskDetailOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <TaskDetails
-              task={selectedTask}
-              onBack={() => setIsTaskDetailOpen(false)}
-              onTaskUpdated={() => {
-                queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-                setIsTaskDetailOpen(false);
-              }}
-              onTaskDeleted={() => {
-                queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-                setIsTaskDetailOpen(false);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
-
       {/* Task Details Dialog with Forum Functionality */}
       <Dialog open={isTaskDetailsDialogOpen} onOpenChange={setIsTaskDetailsDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -1851,7 +1831,7 @@ export default function Units() {
           
           {selectedTaskForDetails && (
             <div className="space-y-6">
-              {/* Task Header - Inline Editable */}
+              {/* Task Header - Title and Description */}
               <div className="space-y-4">
                 <div>
                   <Label className="text-sm font-medium">Title</Label>
@@ -1872,7 +1852,7 @@ export default function Units() {
                 </div>
               </div>
 
-              {/* Task Details Grid */}
+              {/* First Row: Category, Priority, Status, Due Date */}
               <div className="grid grid-cols-4 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Category</Label>
@@ -1885,12 +1865,11 @@ export default function Units() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="repair">Repair</SelectItem>
                       <SelectItem value="inspection">Inspection</SelectItem>
+                      <SelectItem value="repair">Repair</SelectItem>
                       <SelectItem value="cleaning">Cleaning</SelectItem>
-                      <SelectItem value="landscaping">Landscaping</SelectItem>
-                      <SelectItem value="administrative">Administrative</SelectItem>
-                      <SelectItem value="emergency">Emergency</SelectItem>
+                      <SelectItem value="documentation">Documentation</SelectItem>
+                      <SelectItem value="tenant_communication">Tenant Communication</SelectItem>
                       <SelectItem value="general">General</SelectItem>
                     </SelectContent>
                   </Select>
@@ -1934,14 +1913,16 @@ export default function Units() {
 
                 <div>
                   <Label className="text-sm font-medium">Due Date</Label>
-                  <DatePicker
-                    date={selectedTaskForDetails.dueDate ? new Date(selectedTaskForDetails.dueDate) : undefined}
-                    onSelect={(date) => updatePendingChange('dueDate', date?.toISOString())}
+                  <Input
+                    type="date"
+                    value={selectedTaskForDetails.dueDate ? new Date(selectedTaskForDetails.dueDate).toISOString().split('T')[0] : ''}
+                    onChange={(e) => updatePendingChange('dueDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                    className="mt-1"
                   />
                 </div>
               </div>
 
-              {/* Second Row of Details */}
+              {/* Second Row: Assigned To, Property, Unit, Tenant */}
               <div className="grid grid-cols-4 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Assigned To</Label>
@@ -2019,14 +2000,14 @@ export default function Units() {
                       if (selectedTaskForDetails?.id && Object.keys(pendingChanges).length > 0) {
                         updateTaskMutation.mutate({
                           id: selectedTaskForDetails.id,
-                          updates: pendingChanges
+                          taskData: pendingChanges
                         });
                       }
                     }}
                     disabled={updateTaskMutation.isPending}
                     className="flex items-center gap-2"
                   >
-                    <AlertCircle className="h-4 w-4" />
+                    <Save className="h-4 w-4" />
                     {updateTaskMutation.isPending ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
@@ -2065,355 +2046,19 @@ export default function Units() {
                 </div>
                 <TaskCommunications taskId={selectedTaskForDetails.id} />
               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Send Communication Dialog */}
-      <Dialog open={isSendCommunicationOpen} onOpenChange={setIsSendCommunicationOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Send Communication</DialogTitle>
-          </DialogHeader>
-          <Form {...communicationForm}>
-            <form onSubmit={communicationForm.handleSubmit((data) => {
-              // Handle communication sending here
-              console.log('Sending communication:', data);
-              setIsSendCommunicationOpen(false);
-              communicationForm.reset();
-            })} className="space-y-4">
-              <FormField
-                control={communicationForm.control}
-                name="method"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Method</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select communication method" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="email">Email</SelectItem>
-                        <SelectItem value="sms">SMS</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={communicationForm.control}
-                name="recipient"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Recipient</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Email address or phone number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={communicationForm.control}
-                name="message"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Message</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter your message..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsSendCommunicationOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  <Send className="h-4 w-4 mr-2" />
-                  Send
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Comprehensive Task Details Dialog with Forum Functionality */}
-      <Dialog open={isTaskDetailsDialogOpen} onOpenChange={setIsTaskDetailsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckSquare className="h-5 w-5" />
-              Task Details
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedTaskForDetails && (
-            <div className="space-y-6">
-              {/* Save Changes Button */}
-              {hasUnsavedChanges && (
-                <div className="flex justify-end">
-                  <Button onClick={() => {
-                    if (!selectedTaskForDetails || Object.keys(pendingChanges).length === 0) return;
-                    
-                    const changesWithFormattedDate = { ...pendingChanges };
-                    if (changesWithFormattedDate.dueDate && changesWithFormattedDate.dueDate instanceof Date) {
-                      changesWithFormattedDate.dueDate = changesWithFormattedDate.dueDate.toISOString();
-                    }
-                    
-                    updateTaskMutation.mutate({ 
-                      id: selectedTaskForDetails.id, 
-                      taskData: changesWithFormattedDate
-                    });
-                  }}>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
-                  </Button>
-                </div>
-              )}
-
-              {/* Task Details Grid */}
-              <div className="grid grid-cols-4 gap-4">
-                {/* Category */}
-                <div>
-                  <Label className="text-sm font-medium">Category</Label>
-                  <Select
-                    value={selectedTaskForDetails.category || ''}
-                    onValueChange={(value) => updatePendingChange('category', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="inspection">Inspection</SelectItem>
-                      <SelectItem value="repair">Repair</SelectItem>
-                      <SelectItem value="cleaning">Cleaning</SelectItem>
-                      <SelectItem value="documentation">Documentation</SelectItem>
-                      <SelectItem value="tenant_communication">Tenant Communication</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Priority */}
-                <div>
-                  <Label className="text-sm font-medium">Priority</Label>
-                  <Select
-                    value={selectedTaskForDetails.priority || ''}
-                    onValueChange={(value) => updatePendingChange('priority', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <Label className="text-sm font-medium">Status</Label>
-                  <Select
-                    value={selectedTaskForDetails.status || ''}
-                    onValueChange={(value) => updatePendingChange('status', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Due Date */}
-                <div>
-                  <Label className="text-sm font-medium">Due Date</Label>
-                  <Input
-                    type="date"
-                    value={selectedTaskForDetails.dueDate ? new Date(selectedTaskForDetails.dueDate).toISOString().split('T')[0] : ''}
-                    onChange={(e) => updatePendingChange('dueDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-
-              {/* Second Row */}
-              <div className="grid grid-cols-4 gap-4">
-                {/* Assigned To */}
-                <div>
-                  <Label className="text-sm font-medium">Assigned To</Label>
-                  <Input
-                    value={selectedTaskForDetails.assignedTo || ''}
-                    onChange={(e) => updatePendingChange('assignedTo', e.target.value)}
-                    placeholder="Assign to..."
-                    className="mt-1"
-                  />
-                </div>
-
-                {/* Property */}
-                <div>
-                  <Label className="text-sm font-medium">Property</Label>
-                  <Select
-                    value={selectedTaskForDetails.propertyId || ''}
-                    onValueChange={(value) => updatePendingChange('propertyId', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select property" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {properties?.map((property: Property) => (
-                        <SelectItem key={property.id} value={property.id}>
-                          {property.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Unit */}
-                <div>
-                  <Label className="text-sm font-medium">Unit</Label>
-                  <Select
-                    value={selectedTaskForDetails.unitId || ''}
-                    onValueChange={(value) => updatePendingChange('unitId', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {units?.map((unit: Unit) => (
-                        <SelectItem key={unit.id} value={unit.id}>
-                          Unit {unit.unitNumber}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Tenant */}
-                <div>
-                  <Label className="text-sm font-medium">Tenant</Label>
-                  <Select
-                    value={selectedTaskForDetails.tenantId || ''}
-                    onValueChange={(value) => updatePendingChange('tenantId', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select tenant" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tenants?.map((tenant: Tenant) => (
-                        <SelectItem key={tenant.id} value={tenant.id}>
-                          {tenant.firstName} {tenant.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <Label className="text-sm font-medium">Description</Label>
-                <Textarea
-                  value={selectedTaskForDetails.description || ''}
-                  onChange={(e) => updatePendingChange('description', e.target.value)}
-                  placeholder="Task description..."
-                  className="mt-1 min-h-[100px]"
-                />
-              </div>
-
-              {/* Title */}
-              <div>
-                <Label className="text-sm font-medium">Title</Label>
-                <Input
-                  value={selectedTaskForDetails.title || ''}
-                  onChange={(e) => updatePendingChange('title', e.target.value)}
-                  placeholder="Task title..."
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Attachments */}
-              {((selectedTaskForDetails.attachments && selectedTaskForDetails.attachments.length > 0) || selectedTaskForDetails.attachmentUrl) && (
-                <div>
-                  <Label className="text-sm font-medium">Attachments</Label>
-                  <div className="mt-2 space-y-2">
-                    {selectedTaskForDetails.attachments?.map((attachment: any, index: number) => (
-                      <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                        <Paperclip className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{attachment.name}</span>
-                        <Button size="sm" variant="outline" className="ml-auto">
-                          <Download className="h-3 w-3 mr-1" />
-                          Download
-                        </Button>
-                      </div>
-                    ))}
-                    {selectedTaskForDetails.attachmentUrl && (
-                      <div className="flex items-center gap-2 p-2 border rounded">
-                        <Paperclip className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{selectedTaskForDetails.attachmentName || 'Attachment'}</span>
-                        <Button size="sm" variant="outline" className="ml-auto">
-                          <Download className="h-3 w-3 mr-1" />
-                          Download
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Forum/Communications Section */}
-              <div className="border-t pt-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">Communications Forum</h3>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setIsSendCommunicationOpen(true)}
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Send Communication
-                  </Button>
-                </div>
-                <TaskCommunications taskId={selectedTaskForDetails.id} />
-              </div>
 
               {/* Action Buttons */}
               <div className="flex justify-between pt-4 border-t">
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedTask(selectedTaskForDetails);
-                      setIsHistoryDialogOpen(true);
-                    }}
-                  >
-                    <HistoryIcon className="h-4 w-4 mr-2" />
-                    View History
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedTask(selectedTaskForDetails);
+                    setIsHistoryDialogOpen(true);
+                  }}
+                >
+                  <HistoryIcon className="h-4 w-4 mr-2" />
+                  View History
+                </Button>
                 <div className="flex gap-2">
                   <Button 
                     variant="outline" 
