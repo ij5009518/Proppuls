@@ -124,7 +124,6 @@ export default function Units() {
   const [isTenantHistoryDialogOpen, setIsTenantHistoryDialogOpen] = useState(false);
   const [selectedUnitForHistory, setSelectedUnitForHistory] = useState<Unit | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isAssignTenantDialogOpen, setIsAssignTenantDialogOpen] = useState(false);
   const [isTenantStatusDialogOpen, setIsTenantStatusDialogOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
@@ -132,11 +131,10 @@ export default function Units() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTask, setSelectedTask] = useState<any>(null);
-  const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
   const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   
-  // Task management states from Tasks page
+  // Task management states
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
   const [isEditTaskDialogOpen, setIsEditTaskDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
