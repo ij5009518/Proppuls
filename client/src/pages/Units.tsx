@@ -977,7 +977,10 @@ export default function Units() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleEditTenantStatus(tenant)}
+                                onClick={() => {
+                                  setEditingTenant(tenant);
+                                  setIsTenantStatusDialogOpen(true);
+                                }}
                                 className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
                               >
                                 <Edit className="h-4 w-4 mr-1" />
