@@ -1362,12 +1362,7 @@ export default function Units() {
 
 
 
-                                {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              <div>Category: {task.category}</div>
-                              {task.dueDate && (
+
                                 <div className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
                                   Due: {formatDate(task.dueDate)}
