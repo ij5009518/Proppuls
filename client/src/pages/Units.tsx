@@ -1457,7 +1457,7 @@ export default function Units() {
             </div>
           )}
         </DialogContent>
-      </Dialog>
+      </Dialog>>
       {/* Edit Unit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
