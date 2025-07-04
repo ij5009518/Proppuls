@@ -843,7 +843,7 @@ export default function Units() {
                     value="documents"
                     className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
                   >
-                    Documents
+                    Photos
                   </TabsTrigger>
                   <TabsTrigger 
                     value="tasks"
