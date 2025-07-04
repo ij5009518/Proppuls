@@ -853,17 +853,15 @@ export default function Units() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="details" className="space-y-4 mt-4">
-                  {/* Enhanced Status Banner */}
-                  <div className="relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-                    <div className="relative z-10 flex items-center justify-between">
+                <TabsContent value="details" className="space-y-3 mt-4">
+                  {/* Compact Status Banner */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800 p-3">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                            <Home className="h-6 w-6 text-white" />
-                          </div>
+                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                          <Home className="h-5 w-5 text-white" />
                         </div>
-                        <div className="space-y-1">
+                        <div>
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             Unit {selectedUnit.unitNumber}
                           </h3>
@@ -878,76 +876,67 @@ export default function Units() {
                     </div>
                   </div>
 
-                  {/* Enhanced Unit Specifications Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-4">
+                  {/* Compact Specifications Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-3">
                       <div className="flex items-center space-x-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-                        <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center">
-                          <Home className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                        <div className="w-4 h-4 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center">
+                          <Home className="h-2 w-2 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                          Specifications
-                        </h4>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Specifications</h4>
                       </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
-                            <Bed className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                          <div className="w-6 h-6 bg-blue-100 dark:bg-blue-800 rounded flex items-center justify-center">
+                            <Bed className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {selectedUnit.bedrooms} Bedroom{selectedUnit.bedrooms !== 1 ? 's' : ''}
                             </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Sleeping spaces</p>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
-                            <Bath className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <div className="flex items-center space-x-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                          <div className="w-6 h-6 bg-blue-100 dark:bg-blue-800 rounded flex items-center justify-center">
+                            <Bath className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div className="flex-1">
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {selectedUnit.bathrooms} Bathroom{selectedUnit.bathrooms !== '1' ? 's' : ''}
                             </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Full bathrooms</p>
                           </div>
                         </div>
                         {selectedUnit.squareFootage && (
-                          <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
-                              <Maximize className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <div className="flex items-center space-x-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                            <div className="w-6 h-6 bg-blue-100 dark:bg-blue-800 rounded flex items-center justify-center">
+                              <Maximize className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium text-gray-900 dark:text-gray-100">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                 {selectedUnit.squareFootage} sq ft
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">Living space</p>
                             </div>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div className="flex items-center space-x-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-                        <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center">
-                          <DollarSign className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                        <div className="w-4 h-4 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center">
+                          <DollarSign className="h-2 w-2 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                          Financial
-                        </h4>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Financial</h4>
                       </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-                            <DollarSign className="h-5 w-5 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                              {formatCurrency(selectedUnit.rentAmount)}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Monthly rent</p>
-                          </div>
+                      <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded border border-blue-200 dark:border-blue-700">
+                        <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+                          <DollarSign className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                            {formatCurrency(selectedUnit.rentAmount)}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Monthly rent</p>
                         </div>
                       </div>
                     </div>
