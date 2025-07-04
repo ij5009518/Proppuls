@@ -1357,17 +1357,7 @@ export default function Units() {
 
 
 
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <CardTitle className="text-base">{task.title}</CardTitle>
-                              <div className="flex gap-1 mt-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedTask(task);
-                                    setIsEditTaskDialogOpen(true);
+
                                   }}
                                   className="h-6 w-6 p-0"
                                 >
