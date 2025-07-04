@@ -1355,9 +1355,6 @@ export default function Units() {
       </Dialog>
       
       {/* Edit Unit Dialog */}
-                      ))}
-                    </div>
-                  ) : (
                     <div className="space-y-2">
                       {unitTasks.map((task: Task) => (
                         <Card key={task.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
