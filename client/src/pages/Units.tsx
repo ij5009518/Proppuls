@@ -1364,10 +1364,7 @@ export default function Units() {
 
 
 
-                              {task.assignedTo && (
-                                <div className="flex items-center gap-1">
-                                  <User className="h-3 w-3" />
-                                  {task.assignedTo}
+
                                 </div>
                               )}
                             </div>
