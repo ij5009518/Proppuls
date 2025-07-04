@@ -1358,16 +1358,7 @@ export default function Units() {
 
 
 
-                                  }}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
+
                                     deleteTaskMutation.mutate(task.id);
                                   }}
                                   className="h-6 w-6 p-0 text-destructive"
