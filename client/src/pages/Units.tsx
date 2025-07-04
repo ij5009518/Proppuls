@@ -1222,11 +1222,16 @@ export default function Units() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="tasks" className="space-y-6">
-                {/* Task Management Header */}
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Unit Tasks</h3>
-                  <Button onClick={() => setIsAddTaskDialogOpen(true)}>
+              <TabsContent value="tasks" className="space-y-6 mt-6">
+                {/* Enhanced Task Management Header */}
+                <div className="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-6 h-6 bg-indigo-100 dark:bg-indigo-900/40 rounded-md flex items-center justify-center">
+                      <CheckSquare className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Unit Tasks</h3>
+                  </div>
+                  <Button onClick={() => setIsAddTaskDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Task
                   </Button>
