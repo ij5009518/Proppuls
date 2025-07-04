@@ -1348,27 +1348,13 @@ export default function Units() {
                   </div>
                 </div>
               </TabsContent>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                <span className="text-sm text-muted-foreground">
+            </Tabs>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Unit Dialog */} className="text-sm text-muted-foreground">
                                   {task.attachments && task.attachments.length > 0 
                                     ? `${task.attachments.length} attachment${task.attachments.length > 1 ? 's' : ''}`
                                     : task.attachmentName || '1 attachment'
