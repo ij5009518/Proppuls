@@ -1354,8 +1354,7 @@ export default function Units() {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Unit Dialog */}
-                        <Card key={task.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
+      {/* Edit Unit Dialog */} key={task.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
                           setSelectedTaskForDetails(task);
                           setIsTaskDetailsDialogOpen(true);
                         }}>
