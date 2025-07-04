@@ -1349,7 +1349,7 @@ export default function Units() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="tasks" className="space-y-4 mt-4">
+
                 {/* Enhanced Task Management Header */}
                 <div className="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center space-x-2">
