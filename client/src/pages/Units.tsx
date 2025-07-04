@@ -1355,9 +1355,6 @@ export default function Units() {
       </Dialog>
       
       {/* Edit Unit Dialog */}
-                            )}
-                          </CardContent>
-                        </Card>
                       ))}
                     </div>
                   ) : (
