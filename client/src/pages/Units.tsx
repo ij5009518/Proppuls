@@ -1361,13 +1361,7 @@ export default function Units() {
 
 
 
-                                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-                              </Badge>
-                              <Badge variant={
-                                task.status === "completed" ? "default" :
-                                task.status === "in_progress" ? "secondary" :
-                                "outline"
-                              }>
+
                                 {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.replace('_', ' ').slice(1)}
                               </Badge>
                             </div>
