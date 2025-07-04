@@ -1359,15 +1359,7 @@ export default function Units() {
 
 
 
-                                    deleteTaskMutation.mutate(task.id);
-                                  }}
-                                  className="h-6 w-6 p-0 text-destructive"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          </CardHeader>
+
                           <CardContent className="pt-0">
                             <p className="text-muted-foreground mb-3 text-sm line-clamp-2">{task.description}</p>
                             <div className="flex items-center gap-2 mb-3">
