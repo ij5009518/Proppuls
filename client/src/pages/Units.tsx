@@ -1356,18 +1356,7 @@ export default function Units() {
 
 
 
-                        </p>
-                      </div>
-                    );
-                  }
 
-                  return viewMode === "grid" ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {unitTasks.map((task: Task) => (
-                        <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
-                          setSelectedTaskForDetails(task);
-                          setIsTaskDetailsDialogOpen(true);
-                        }}>
                           <CardHeader className="pb-3">
                             <div className="flex items-start justify-between">
                               <CardTitle className="text-base">{task.title}</CardTitle>
