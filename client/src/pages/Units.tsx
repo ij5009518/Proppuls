@@ -1378,6 +1378,7 @@ export default function Units() {
                             )}
                           </CardContent>
                         </Card>
+                      </Tabs>
                       ))}
                     </div>
                   ) : (
