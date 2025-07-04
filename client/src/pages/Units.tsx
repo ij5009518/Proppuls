@@ -1082,69 +1082,142 @@ export default function Units() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="maintenance" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
-                      Maintenance Requests
-                    </h4>
-                    <Button variant="outline" size="sm">
+              <TabsContent value="maintenance" className="space-y-6 mt-6">
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-orange-100 dark:bg-orange-900/40 rounded-md flex items-center justify-center">
+                        <Wrench className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        Maintenance Requests
+                      </h4>
+                    </div>
+                    <Button variant="outline" size="sm" className="hover:bg-orange-50 hover:border-orange-200 hover:text-orange-700 transition-colors">
                       <Plus className="h-4 w-4 mr-2" />
                       New Request
                     </Button>
                   </div>
                   
+                  {/* Enhanced maintenance overview cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-800">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
+                          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">0</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Urgent</p>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg flex items-center justify-center">
+                          <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">0</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">In Progress</p>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center">
+                          <CheckSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">0</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                  
                   {/* Sample maintenance requests would go here */}
-                  <div className="text-center py-8">
-                    <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground mb-4">No maintenance requests for this unit</p>
-                    <p className="text-sm text-muted-foreground">
-                      Maintenance requests and work orders will appear here
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <Wrench className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No maintenance requests</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      Maintenance requests and work orders for this unit will appear here
                     </p>
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Request
+                    </Button>
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="documents" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
-                      Unit Documents
-                    </h4>
-                    <Button variant="outline" size="sm">
+              <TabsContent value="documents" className="space-y-6 mt-6">
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/40 rounded-md flex items-center justify-center">
+                        <FileText className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        Unit Documents
+                      </h4>
+                    </div>
+                    <Button variant="outline" size="sm" className="hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700 transition-colors">
                       <Upload className="h-4 w-4 mr-2" />
                       Upload Document
                     </Button>
                   </div>
                   
-                  {/* Document categories */}
+                  {/* Enhanced document categories */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="p-4 text-center">
-                      <FileText className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-                      <p className="text-sm font-medium">Lease Documents</p>
-                      <p className="text-xs text-muted-foreground">0 files</p>
+                    <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer group">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <FileText className="h-6 w-6 text-white" />
+                      </div>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Lease Documents</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">0 files</p>
                     </Card>
-                    <Card className="p-4 text-center">
-                      <FileText className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                      <p className="text-sm font-medium">Inspection Reports</p>
-                      <p className="text-xs text-muted-foreground">0 files</p>
+                    <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer group">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <CheckSquare className="h-6 w-6 text-white" />
+                      </div>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Inspection Reports</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">0 files</p>
                     </Card>
-                    <Card className="p-4 text-center">
-                      <FileText className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-                      <p className="text-sm font-medium">Photos</p>
-                      <p className="text-xs text-muted-foreground">0 files</p>
+                    <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer group">
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <Eye className="h-6 w-6 text-white" />
+                      </div>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Photos</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">0 files</p>
                     </Card>
-                    <Card className="p-4 text-center">
-                      <FileText className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-                      <p className="text-sm font-medium">Other</p>
-                      <p className="text-xs text-muted-foreground">0 files</p>
+                    <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer group">
+                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <FileText className="h-6 w-6 text-white" />
+                      </div>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Other</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">0 files</p>
                     </Card>
                   </div>
                   
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground">
-                      Upload and organize documents related to this unit
-                    </p>
+                  <div className="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                    <div className="flex flex-col items-center space-y-3">
+                      <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                        <Upload className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">Upload and organize documents</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          Keep all unit-related documents in one place
+                        </p>
+                      </div>
+                      <Button className="mt-2">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Choose Files
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
