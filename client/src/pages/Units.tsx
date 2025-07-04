@@ -820,7 +820,7 @@ export default function Units() {
           {selectedUnit && (
             <div className="space-y-4">
               <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-5 bg-blue-50 dark:bg-blue-900/20 p-1 rounded-lg">
+                <TabsList className="grid w-full grid-cols-4 bg-blue-50 dark:bg-blue-900/20 p-1 rounded-lg">
                   <TabsTrigger 
                     value="details" 
                     className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
@@ -844,12 +844,6 @@ export default function Units() {
                     className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
                   >
                     Photos
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="tasks"
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
-                  >
-                    Tasks
                   </TabsTrigger>
                 </TabsList>
 
