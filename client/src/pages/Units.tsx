@@ -1352,22 +1352,7 @@ export default function Units() {
 
 
 
-                {/* Task Filters */}
-                <div className="flex justify-between items-center gap-4">
-                  <div className="flex items-center space-x-4">
-                    <Input
-                      placeholder="Search tasks..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="max-w-sm"
-                    />
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filter by status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Tasks</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
+
                         <SelectItem value="in_progress">In Progress</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
