@@ -1354,10 +1354,7 @@ export default function Units() {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Unit Dialog */}={() => {
-                          setSelectedTaskForDetails(task);
-                          setIsTaskDetailsDialogOpen(true);
-                        }}>
+      {/* Edit Unit Dialog */}
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
