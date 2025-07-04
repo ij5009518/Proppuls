@@ -1082,28 +1082,36 @@ export default function Units() {
                         <Wrench className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                       </div>
                       <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                        Maintenance Requests
+                        Maintenance & Tasks
                       </h4>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
-                      onClick={() => {
-                        // TODO: Add maintenance request creation
-                        toast({
-                          title: "Feature Coming Soon",
-                          description: "Maintenance request creation will be available soon.",
-                        });
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      New Request
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
+                        onClick={() => {
+                          toast({
+                            title: "Feature Coming Soon",
+                            description: "Maintenance request creation will be available soon.",
+                          });
+                        }}
+                      >
+                        <Wrench className="h-4 w-4 mr-1" />
+                        New Request
+                      </Button>
+                      <Button 
+                        onClick={() => setIsAddTaskDialogOpen(true)} 
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Plus className="mr-1 h-4 w-4" />
+                        Add Task
+                      </Button>
+                    </div>
                   </div>
                   
-                  {/* Maintenance overview cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Status overview cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Card className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
@@ -1137,30 +1145,118 @@ export default function Units() {
                         </div>
                       </div>
                     </Card>
+                    <Card className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+                          <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            {(() => {
+                              const unitTasks = tasks?.filter((task: any) => task.unitId === selectedUnit.id) || [];
+                              return unitTasks.length;
+                            })()}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Tasks</p>
+                        </div>
+                      </div>
+                    </Card>
                   </div>
-                  
-                  {/* Empty state */}
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <Wrench className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No maintenance requests</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      Maintenance requests and work orders will appear here
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        toast({
-                          title: "Feature Coming Soon",
-                          description: "Maintenance request creation will be available soon.",
-                        });
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Create First Request
-                    </Button>
+
+                  {/* Tasks List with Forum */}
+                  <div className="space-y-3">
+                    {(() => {
+                      const unitTasks = tasks?.filter((task: any) => task.unitId === selectedUnit.id) || [];
+                      return unitTasks.length > 0 ? (
+                        <div className="space-y-3">
+                          <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100">Recent Tasks & Maintenance</h5>
+                          {unitTasks.slice(0, 3).map((task: any) => (
+                            <Card key={task.id} className="p-3 hover:shadow-md transition-shadow cursor-pointer">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2">
+                                    <Badge className={`${getPriorityColor(task.priority)} text-xs px-2 py-1`}>
+                                      {task.priority}
+                                    </Badge>
+                                    <Badge className={`${getStatusColor(task.status)} text-xs px-2 py-1`}>
+                                      {task.status}
+                                    </Badge>
+                                  </div>
+                                  <h6 className="font-medium text-gray-900 dark:text-gray-100 mt-1">{task.title}</h6>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{task.description}</p>
+                                  {task.dueDate && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                      Due: {formatDate(task.dueDate)}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex space-x-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedTaskForDetails(task);
+                                      setIsTaskDetailsDialogOpen(true);
+                                    }}
+                                  >
+                                    <MessageSquare className="h-4 w-4 mr-1" />
+                                    Forum
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedTaskForDetails(task);
+                                      setIsTaskDetailsDialogOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </Card>
+                          ))}
+                          {unitTasks.length > 3 && (
+                            <Button variant="outline" size="sm" className="w-full">
+                              View All {unitTasks.length} Tasks
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <Wrench className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No maintenance or tasks</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                            Create maintenance requests and tasks to track unit work
+                          </p>
+                          <div className="flex justify-center space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                toast({
+                                  title: "Feature Coming Soon",
+                                  description: "Maintenance request creation will be available soon.",
+                                });
+                              }}
+                            >
+                              <Wrench className="h-4 w-4 mr-1" />
+                              New Request
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => setIsAddTaskDialogOpen(true)}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add Task
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </TabsContent>
