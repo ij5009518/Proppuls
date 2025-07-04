@@ -1355,7 +1355,7 @@ export default function Units() {
       </Dialog>
       
       {/* Edit Unit Dialog */}
-                          <CardContent className="p-4">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3">
