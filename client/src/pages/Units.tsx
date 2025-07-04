@@ -1354,20 +1354,7 @@ export default function Units() {
 
 
 
-                      variant={viewMode === "list" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setViewMode("list")}
-                    >
-                      <List className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
 
-                {(() => {
-                  const unitTasks = tasks?.filter(task => {
-                    const matchesUnit = task.unitId === selectedUnit.id;
-                    const matchesSearch = !searchTerm || 
-                      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       task.description.toLowerCase().includes(searchTerm.toLowerCase());
                     const matchesStatus = statusFilter === "all" || task.status === statusFilter;
                     return matchesUnit && matchesSearch && matchesStatus;
