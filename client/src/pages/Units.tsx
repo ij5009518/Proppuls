@@ -1367,7 +1367,7 @@ export default function Units() {
 
 
 
-                                <Paperclip className="h-4 w-4 text-muted-foreground" />
+
                                 <span className="text-sm text-muted-foreground">
                                   {task.attachments && task.attachments.length > 0 
                                     ? `${task.attachments.length} attachment${task.attachments.length > 1 ? 's' : ''}`
