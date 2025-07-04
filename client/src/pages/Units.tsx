@@ -1355,7 +1355,6 @@ export default function Units() {
       </Dialog>
       
       {/* Edit Unit Dialog */}
-                      {unitTasks.map((task: Task) => (
                         <Card key={task.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
                           setSelectedTaskForDetails(task);
                           setIsTaskDetailsDialogOpen(true);
