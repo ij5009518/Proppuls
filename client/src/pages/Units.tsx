@@ -1354,7 +1354,7 @@ export default function Units() {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Unit Dialog */}/50 transition-colors cursor-pointer" onClick={() => {
+      {/* Edit Unit Dialog */} transition-colors cursor-pointer" onClick={() => {
                           setSelectedTaskForDetails(task);
                           setIsTaskDetailsDialogOpen(true);
                         }}>
