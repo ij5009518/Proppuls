@@ -111,10 +111,12 @@ function AuthenticatedApp() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AuthenticatedApp />
-        <Toaster />
-      </AuthProvider>
+      <Router>
+        <AuthProvider>
+          <AuthenticatedApp />
+          <Toaster />
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }
