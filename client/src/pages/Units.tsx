@@ -1354,7 +1354,7 @@ export default function Units() {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Unit Dialog */}="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
+      {/* Edit Unit Dialog */}:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
                           setSelectedTaskForDetails(task);
                           setIsTaskDetailsDialogOpen(true);
                         }}>
