@@ -1350,19 +1350,7 @@ export default function Units() {
               </TabsContent>
 
 
-                {/* Enhanced Task Management Header */}
-                <div className="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center">
-                      <CheckSquare className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">Unit Tasks</h3>
-                  </div>
-                  <Button onClick={() => setIsAddTaskDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="mr-1 h-4 w-4" />
-                    Add Task
-                  </Button>
-                </div>
+
 
                 {/* Task Filters */}
                 <div className="flex justify-between items-center gap-4">
