@@ -63,12 +63,14 @@ function AuthenticatedApp() {
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/tenant" component={TenantPortal} />
         <Route path="/tenant-portal" component={TenantPortal} />
-        <Route component={() => {
-          React.useEffect(() => {
-            setLocation("/login");
-          }, []);
-          return null;
-        }} />
+        <Route>
+          {() => {
+            React.useEffect(() => {
+              setLocation("/login");
+            }, [setLocation]);
+            return null;
+          }}
+        </Route>
       </Switch>
     );
   }
