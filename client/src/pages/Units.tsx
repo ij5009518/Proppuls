@@ -1360,14 +1360,7 @@ export default function Units() {
 
 
 
-                          <CardContent className="pt-0">
-                            <p className="text-muted-foreground mb-3 text-sm line-clamp-2">{task.description}</p>
-                            <div className="flex items-center gap-2 mb-3">
-                              <Badge variant={
-                                task.priority === "urgent" ? "destructive" :
-                                task.priority === "high" ? "secondary" :
-                                "outline"
-                              }>
+
                                 {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                               </Badge>
                               <Badge variant={
