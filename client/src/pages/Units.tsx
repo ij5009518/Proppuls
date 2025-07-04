@@ -1355,18 +1355,7 @@ export default function Units() {
 
 
 
-                      task.description.toLowerCase().includes(searchTerm.toLowerCase());
-                    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
-                    return matchesUnit && matchesSearch && matchesStatus;
-                  }) || [];
 
-                  if (unitTasks.length === 0) {
-                    return (
-                      <div className="text-center py-12">
-                        <CheckSquare className="mx-auto h-12 w-12 text-muted-foreground" />
-                        <h3 className="mt-2 text-sm font-medium">No tasks found</h3>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new task for this unit."}
                         </p>
                       </div>
                     );
