@@ -1170,115 +1170,89 @@ export default function Units() {
                   <div className="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-2">
                       <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center">
-                        <FileText className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                        <Eye className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                       </div>
                       <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                        Unit Documents
+                        Apartment Photos
                       </h4>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
-                      onClick={() => {
-                        toast({
-                          title: "Feature Coming Soon",
-                          description: "Document upload will be available soon.",
-                        });
-                      }}
-                    >
-                      <Upload className="h-4 w-4 mr-1" />
-                      Upload Document
-                    </Button>
+                    <div className="flex space-x-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        id={`photo-upload-${selectedUnit.id}`}
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          if (files.length > 20) {
+                            toast({
+                              title: "Too many photos",
+                              description: "You can upload up to 20 photos at once.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          // TODO: Handle photo upload
+                          toast({
+                            title: "Photos Upload",
+                            description: `${files.length} photo(s) ready to upload. Upload functionality coming soon.`,
+                          });
+                        }}
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
+                        onClick={() => {
+                          document.getElementById(`photo-upload-${selectedUnit.id}`)?.click();
+                        }}
+                      >
+                        <Upload className="h-4 w-4 mr-1" />
+                        Upload Photos
+                      </Button>
+                    </div>
                   </div>
                   
-                  {/* Document categories */}
+                  {/* Photo grid - placeholder for now */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <Card 
-                      className="p-4 text-center hover:shadow-md transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      onClick={() => {
-                        toast({
-                          title: "Lease Documents",
-                          description: "Lease document management coming soon.",
-                        });
-                      }}
-                    >
-                      <div className="w-10 h-10 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-white" />
+                    {/* Placeholder photo slots */}
+                    {Array.from({ length: 8 }, (_, i) => (
+                      <div 
+                        key={i}
+                        className="aspect-square bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border-2 border-dashed border-blue-300 dark:border-blue-600 flex items-center justify-center cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                        onClick={() => {
+                          document.getElementById(`photo-upload-${selectedUnit.id}`)?.click();
+                        }}
+                      >
+                        <div className="text-center">
+                          <Eye className="h-6 w-6 text-blue-400 mx-auto mb-1" />
+                          <p className="text-xs text-blue-600 dark:text-blue-400">Add Photo</p>
+                        </div>
                       </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Lease Documents</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">0 files</p>
-                    </Card>
-                    <Card 
-                      className="p-4 text-center hover:shadow-md transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      onClick={() => {
-                        toast({
-                          title: "Inspection Reports",
-                          description: "Inspection report management coming soon.",
-                        });
-                      }}
-                    >
-                      <div className="w-10 h-10 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                        <CheckSquare className="h-5 w-5 text-white" />
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Inspection Reports</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">0 files</p>
-                    </Card>
-                    <Card 
-                      className="p-4 text-center hover:shadow-md transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      onClick={() => {
-                        toast({
-                          title: "Photos",
-                          description: "Photo management coming soon.",
-                        });
-                      }}
-                    >
-                      <div className="w-10 h-10 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                        <Eye className="h-5 w-5 text-white" />
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Photos</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">0 files</p>
-                    </Card>
-                    <Card 
-                      className="p-4 text-center hover:shadow-md transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      onClick={() => {
-                        toast({
-                          title: "Other Documents",
-                          description: "Document management coming soon.",
-                        });
-                      }}
-                    >
-                      <div className="w-10 h-10 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-white" />
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Other</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">0 files</p>
-                    </Card>
+                    ))}
                   </div>
                   
                   <div className="text-center py-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div className="flex flex-col items-center space-y-2">
                       <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
-                        <Upload className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        <Eye className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Upload and organize documents</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Upload apartment photos</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Keep all unit-related documents in one place
+                          Upload up to 20 photos to showcase this unit (JPG, PNG, WebP)
                         </p>
                       </div>
                       <Button 
                         size="sm" 
                         className="mt-2 bg-blue-600 hover:bg-blue-700"
                         onClick={() => {
-                          toast({
-                            title: "Feature Coming Soon",
-                            description: "Document upload will be available soon.",
-                          });
+                          document.getElementById(`photo-upload-${selectedUnit.id}`)?.click();
                         }}
                       >
                         <Upload className="h-4 w-4 mr-1" />
-                        Choose Files
+                        Choose Photos
                       </Button>
                     </div>
                   </div>
