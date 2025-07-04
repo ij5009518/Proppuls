@@ -774,130 +774,185 @@ export default function Units() {
       )}
       {/* View Unit Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <div className="flex justify-between items-center pl-[12px] pr-[12px]">
-              <DialogTitle>Unit Details</DialogTitle>
-              <DialogDescription className="sr-only">
-                View comprehensive information about this unit including specifications, tenant details, maintenance history, and documents.
-              </DialogDescription>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-6">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Unit Details
+                </DialogTitle>
+                <DialogDescription className="text-gray-600 dark:text-gray-400">
+                  Comprehensive information about this unit including specifications, tenant details, and management tools.
+                </DialogDescription>
+              </div>
               {selectedUnit && (
-                <div className="flex space-x-2">
+                <div className="flex space-x-3">
                   <Button
                     size="sm"
                     variant="outline"
+                    className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsViewDialogOpen(false);
                       handleEdit(selectedUnit);
                     }}
                   >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Unit
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsViewDialogOpen(false);
                       handleDelete(selectedUnit.id);
                     }}
                   >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Unit
                   </Button>
                 </div>
               )}
             </div>
           </DialogHeader>
           {selectedUnit && (
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="tenant">Tenant</TabsTrigger>
-                <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="tasks">Tasks</TabsTrigger>
-              </TabsList>
+            <div className="space-y-6">
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid w-full grid-cols-5 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                  <TabsTrigger 
+                    value="details" 
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+                  >
+                    Details
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="tenant"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+                  >
+                    Tenant
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="maintenance"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+                  >
+                    Maintenance
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="documents"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+                  >
+                    Documents
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="tasks"
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+                  >
+                    Tasks
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="details" className="space-y-4">
-                {/* Status Badge and Key Info */}
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
-                        <Home className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Unit {selectedUnit.unitNumber}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{getPropertyName(selectedUnit.propertyId)}</p>
-                    </div>
-                  </div>
-                  <Badge className={`${getStatusColor(selectedUnit.status)} text-sm px-3 py-1`}>
-                    {selectedUnit.status.charAt(0).toUpperCase() + selectedUnit.status.slice(1)}
-                  </Badge>
-                </div>
-
-                {/* Unit Specifications */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                      Unit Specifications
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                          <Bed className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUnit.bedrooms} Bedroom{selectedUnit.bedrooms !== 1 ? 's' : ''}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Sleeping spaces</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                          <Bath className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUnit.bathrooms} Bathroom{selectedUnit.bathrooms !== '1' ? 's' : ''}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Full bathrooms</p>
-                        </div>
-                      </div>
-                      {selectedUnit.squareFootage && (
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                            <Maximize className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedUnit.squareFootage} sq ft</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Living space</p>
+                <TabsContent value="details" className="space-y-6 mt-6">
+                  {/* Enhanced Status Banner */}
+                  <div className="relative overflow-hidden bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-6">
+                    <div className="relative z-10 flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0">
+                          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <Home className="h-7 w-7 text-white" />
                           </div>
                         </div>
-                      )}
+                        <div className="space-y-1">
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                            Unit {selectedUnit.unitNumber}
+                          </h3>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            {getPropertyName(selectedUnit.propertyId)}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge className={`${getStatusColor(selectedUnit.status)} text-sm px-4 py-2 font-semibold rounded-full shadow-sm`}>
+                        {selectedUnit.status.charAt(0).toUpperCase() + selectedUnit.status.slice(1)}
+                      </Badge>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                      Financial Information
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-                          <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  {/* Enhanced Unit Specifications Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div className="flex items-center space-x-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+                        <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/40 rounded-md flex items-center justify-center">
+                          <Home className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{formatCurrency(selectedUnit.rentAmount)}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Monthly rent</p>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          Unit Specifications
+                        </h4>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                          <div className="w-10 h-10 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center shadow-sm">
+                            <Bed className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900 dark:text-gray-100">
+                              {selectedUnit.bedrooms} Bedroom{selectedUnit.bedrooms !== 1 ? 's' : ''}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Sleeping spaces</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                          <div className="w-10 h-10 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center shadow-sm">
+                            <Bath className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900 dark:text-gray-100">
+                              {selectedUnit.bathrooms} Bathroom{selectedUnit.bathrooms !== '1' ? 's' : ''}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Full bathrooms</p>
+                          </div>
+                        </div>
+                        {selectedUnit.squareFootage && (
+                          <div className="flex items-center space-x-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <div className="w-10 h-10 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center shadow-sm">
+                              <Maximize className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900 dark:text-gray-100">
+                                {selectedUnit.squareFootage} sq ft
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">Living space</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-center space-x-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+                        <div className="w-6 h-6 bg-green-100 dark:bg-green-900/40 rounded-md flex items-center justify-center">
+                          <DollarSign className="h-3 w-3 text-green-600 dark:text-green-400" />
+                        </div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          Financial Information
+                        </h4>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
+                            <DollarSign className="h-6 w-6 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                              {formatCurrency(selectedUnit.rentAmount)}
+                            </p>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly rent</p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </TabsContent>
+                </TabsContent>
 
               <TabsContent value="tenant" className="space-y-4">
 
