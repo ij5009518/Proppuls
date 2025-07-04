@@ -954,105 +954,131 @@ export default function Units() {
                   </div>
                 </TabsContent>
 
-              <TabsContent value="tenant" className="space-y-4">
-
-              {/* Tenant Information Section */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide border-b pb-2">
-                  Tenant Information
-                </h4>
-                {(() => {
-                  const tenant = getTenantForUnit(selectedUnit.id);
-                  return tenant ? (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-start space-x-4">
-                        <div className="flex-shrink-0">
-                          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-                            <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <TabsContent value="tenant" className="space-y-6 mt-6">
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+                    <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/40 rounded-md flex items-center justify-center">
+                      <Users className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Tenant Information
+                    </h4>
+                  </div>
+                  
+                  {(() => {
+                    const tenant = getTenantForUnit(selectedUnit.id);
+                    return tenant ? (
+                      <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 p-6 rounded-xl border border-green-200 dark:border-green-800 shadow-sm">
+                        <div className="flex items-start space-x-6">
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                              <Users className="h-8 w-8 text-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                              {tenant.firstName} {tenant.lastName}
-                            </h5>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditTenantStatus(tenant)}
-                              className={`${getStatusColor(tenant.status)} hover:opacity-80 transition-opacity`}
-                            >
-                              <Edit className="h-3 w-3 mr-1" />
-                              {tenant.status}
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
+                          <div className="flex-1 space-y-4">
+                            <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Contact</p>
-                                <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.email}</p>
-                                <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.phone}</p>
+                                <h5 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                  {tenant.firstName} {tenant.lastName}
+                                </h5>
+                                <Badge className={`${getStatusColor(tenant.status)} mt-1 font-medium`}>
+                                  {tenant.status.charAt(0).toUpperCase() + tenant.status.slice(1)}
+                                </Badge>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditTenantStatus(tenant)}
+                                className="hover:bg-green-50 hover:border-green-200 hover:text-green-700 transition-colors"
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Status
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-3">
+                                <div className="bg-white dark:bg-gray-900/50 p-4 rounded-lg">
+                                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Contact Information</p>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                      <Mail className="h-4 w-4 text-gray-400" />
+                                      <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.email}</p>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Phone className="h-4 w-4 text-gray-400" />
+                                      <p className="text-sm text-gray-900 dark:text-gray-100">{tenant.phone}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-3">
+                                <div className="bg-white dark:bg-gray-900/50 p-4 rounded-lg">
+                                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Lease Details</p>
+                                  <div className="space-y-2">
+                                    {tenant.leaseStart && tenant.leaseEnd && (
+                                      <div className="flex items-center space-x-2">
+                                        <Calendar className="h-4 w-4 text-gray-400" />
+                                        <p className="text-sm text-gray-900 dark:text-gray-100">
+                                          {formatDate(tenant.leaseStart)} - {formatDate(tenant.leaseEnd)}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {tenant.monthlyRent && (
+                                      <div className="flex items-center space-x-2">
+                                        <DollarSign className="h-4 w-4 text-gray-400" />
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                          {formatCurrency(tenant.monthlyRent)} /month
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                            <div className="space-y-2">
-                              {tenant.leaseStart && tenant.leaseEnd && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Lease Period</p>
-                                  <p className="text-sm text-gray-900 dark:text-gray-100">
-                                    {formatDate(tenant.leaseStart)} - {formatDate(tenant.leaseEnd)}
-                                  </p>
-                                </div>
-                              )}
-                              {tenant.monthlyRent && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Monthly Rent</p>
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                    {formatCurrency(tenant.monthlyRent)}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800 dark:to-slate-800 p-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-center">
-                      <div className="flex flex-col items-center space-y-3">
-                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                          <Users className="h-6 w-6 text-gray-400" />
+                    ) : (
+                      <div className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800 dark:to-slate-800 p-8 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-center">
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                            <Users className="h-8 w-8 text-gray-400" />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">No Tenant Assigned</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
+                              This unit is currently vacant. Assign a tenant to start managing occupancy.
+                            </p>
+                          </div>
+                          <Button 
+                            size="default"
+                            className="mt-4"
+                            onClick={() => {
+                              setIsAssignTenantDialogOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Assign Tenant
+                          </Button>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">No Tenant Assigned</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This unit is currently vacant</p>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            setIsAssignTenantDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Assign Tenant
-                        </Button>
                       </div>
-                    </div>
-                  );
-                })()}
+                    );
+                  })()}
 
-                {/* Historical Tenant Information Button */}
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleViewTenantHistory(selectedUnit)}
-                    className="flex items-center space-x-2"
-                  >
-                    <History className="h-4 w-4" />
-                    <span>Historical Tenant Info</span>
-                  </Button>
-                </div>
+                  {/* Enhanced Historical Tenant Information */}
+                  <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewTenantHistory(selectedUnit)}
+                      className="flex items-center space-x-2 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
+                      <History className="h-4 w-4" />
+                      <span>View Tenant History</span>
+                    </Button>
+                  </div>
                 </div>
               </TabsContent>
 
