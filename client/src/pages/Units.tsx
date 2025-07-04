@@ -1082,71 +1082,91 @@ export default function Units() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="maintenance" className="space-y-6 mt-6">
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+              <TabsContent value="maintenance" className="space-y-4 mt-4">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-orange-100 dark:bg-orange-900/40 rounded-md flex items-center justify-center">
-                        <Wrench className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+                      <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center">
+                        <Wrench className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                         Maintenance Requests
                       </h4>
                     </div>
-                    <Button variant="outline" size="sm" className="hover:bg-orange-50 hover:border-orange-200 hover:text-orange-700 transition-colors">
-                      <Plus className="h-4 w-4 mr-2" />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
+                      onClick={() => {
+                        // TODO: Add maintenance request creation
+                        toast({
+                          title: "Feature Coming Soon",
+                          description: "Maintenance request creation will be available soon.",
+                        });
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
                       New Request
                     </Button>
                   </div>
                   
-                  {/* Enhanced maintenance overview cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-200 dark:border-red-800">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-lg flex items-center justify-center">
-                          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  {/* Maintenance overview cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <Card className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+                          <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">0</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Urgent</p>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">0</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Urgent</p>
                         </div>
                       </div>
                     </Card>
-                    <Card className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg flex items-center justify-center">
-                          <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                    <Card className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+                          <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">0</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">In Progress</p>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">0</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">In Progress</p>
                         </div>
                       </div>
                     </Card>
-                    <Card className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center">
-                          <CheckSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <Card className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+                          <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">0</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">0</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Completed</p>
                         </div>
                       </div>
                     </Card>
                   </div>
                   
-                  {/* Sample maintenance requests would go here */}
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center mx-auto mb-4">
-                      <Wrench className="h-8 w-8 text-gray-400" />
+                  {/* Empty state */}
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <Wrench className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No maintenance requests</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      Maintenance requests and work orders for this unit will appear here
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No maintenance requests</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                      Maintenance requests and work orders will appear here
                     </p>
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        toast({
+                          title: "Feature Coming Soon",
+                          description: "Maintenance request creation will be available soon.",
+                        });
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
                       Create First Request
                     </Button>
                   </div>
