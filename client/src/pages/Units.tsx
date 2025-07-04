@@ -1458,6 +1458,7 @@ export default function Units() {
                 })()}
               </TabsContent>
             </Tabs>
+            </div>
           )}
         </DialogContent>
       </Dialog>
