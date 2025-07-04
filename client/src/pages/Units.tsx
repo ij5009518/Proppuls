@@ -1173,68 +1173,119 @@ export default function Units() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="documents" className="space-y-6 mt-6">
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
+              <TabsContent value="documents" className="space-y-4 mt-4">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center pb-2 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/40 rounded-md flex items-center justify-center">
-                        <FileText className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                      <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/40 rounded flex items-center justify-center">
+                        <FileText className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                         Unit Documents
                       </h4>
                     </div>
-                    <Button variant="outline" size="sm" className="hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700 transition-colors">
-                      <Upload className="h-4 w-4 mr-2" />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
+                      onClick={() => {
+                        toast({
+                          title: "Feature Coming Soon",
+                          description: "Document upload will be available soon.",
+                        });
+                      }}
+                    >
+                      <Upload className="h-4 w-4 mr-1" />
                       Upload Document
                     </Button>
                   </div>
                   
-                  {/* Enhanced document categories */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer group">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <FileText className="h-6 w-6 text-white" />
+                  {/* Document categories */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Card 
+                      className="p-4 text-center hover:shadow-md transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      onClick={() => {
+                        toast({
+                          title: "Lease Documents",
+                          description: "Lease document management coming soon.",
+                        });
+                      }}
+                    >
+                      <div className="w-10 h-10 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-white" />
                       </div>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Lease Documents</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">0 files</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Lease Documents</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">0 files</p>
                     </Card>
-                    <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer group">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <CheckSquare className="h-6 w-6 text-white" />
+                    <Card 
+                      className="p-4 text-center hover:shadow-md transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      onClick={() => {
+                        toast({
+                          title: "Inspection Reports",
+                          description: "Inspection report management coming soon.",
+                        });
+                      }}
+                    >
+                      <div className="w-10 h-10 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <CheckSquare className="h-5 w-5 text-white" />
                       </div>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Inspection Reports</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">0 files</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Inspection Reports</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">0 files</p>
                     </Card>
-                    <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer group">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <Eye className="h-6 w-6 text-white" />
+                    <Card 
+                      className="p-4 text-center hover:shadow-md transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      onClick={() => {
+                        toast({
+                          title: "Photos",
+                          description: "Photo management coming soon.",
+                        });
+                      }}
+                    >
+                      <div className="w-10 h-10 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <Eye className="h-5 w-5 text-white" />
                       </div>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Photos</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">0 files</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Photos</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">0 files</p>
                     </Card>
-                    <Card className="p-6 text-center hover:shadow-md transition-shadow cursor-pointer group">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <FileText className="h-6 w-6 text-white" />
+                    <Card 
+                      className="p-4 text-center hover:shadow-md transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      onClick={() => {
+                        toast({
+                          title: "Other Documents",
+                          description: "Document management coming soon.",
+                        });
+                      }}
+                    >
+                      <div className="w-10 h-10 bg-blue-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-white" />
                       </div>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Other</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">0 files</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Other</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">0 files</p>
                     </Card>
                   </div>
                   
-                  <div className="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                    <div className="flex flex-col items-center space-y-3">
-                      <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center">
-                        <Upload className="h-8 w-8 text-gray-400" />
+                  <div className="text-center py-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
+                        <Upload className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">Upload and organize documents</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Upload and organize documents</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           Keep all unit-related documents in one place
                         </p>
                       </div>
-                      <Button className="mt-2">
-                        <Upload className="h-4 w-4 mr-2" />
+                      <Button 
+                        size="sm" 
+                        className="mt-2 bg-blue-600 hover:bg-blue-700"
+                        onClick={() => {
+                          toast({
+                            title: "Feature Coming Soon",
+                            description: "Document upload will be available soon.",
+                          });
+                        }}
+                      >
+                        <Upload className="h-4 w-4 mr-1" />
                         Choose Files
                       </Button>
                     </div>
