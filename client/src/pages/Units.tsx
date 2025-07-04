@@ -1366,8 +1366,7 @@ export default function Units() {
 
 
 
-                            {((task.attachments && task.attachments.length > 0) || task.attachmentUrl) && (
-                              <div className="mt-2 flex items-center gap-2">
+
                                 <Paperclip className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-sm text-muted-foreground">
                                   {task.attachments && task.attachments.length > 0 
