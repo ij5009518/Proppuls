@@ -662,9 +662,48 @@ export const invoices = pgTable('invoices', {
 
 const sql = neon(process.env.DATABASE_URL, {
   fetchOptions: {
-    timeout: 15000, // 15 second timeout
+    timeout: 30000, // 30 second timeout for better reliability
   },
 });
+
+// Add connection retry wrapper for database operations
+export async function withDatabaseRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delayMs: number = 1000
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if it's a retryable error
+      const isRetryable = 
+        error.message?.includes('Failed to fetch') ||
+        error.message?.includes('Control plane') ||
+        error.message?.includes('timeout') ||
+        error.message?.includes('connection') ||
+        error.code === 'ECONNRESET' ||
+        error.code === 'ENOTFOUND';
+      
+      if (!isRetryable || attempt === maxRetries) {
+        console.error(`Database operation failed after ${attempt} attempts:`, error);
+        throw error;
+      }
+      
+      console.log(`Database operation failed, retrying in ${delayMs}ms (attempt ${attempt}/${maxRetries})`);
+      
+      // Exponential backoff with jitter
+      const delay = delayMs * Math.pow(2, attempt - 1) + Math.random() * 1000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError!;
+}
 
 const schema = {
   organizations,
@@ -706,4 +745,19 @@ const schema = {
   invoices,
 };
 
-export const db = drizzle(sql, { schema });
+const baseDb = drizzle(sql, { schema });
+
+// Wrap database operations with retry logic
+export const db = {
+  ...baseDb,
+  execute: async (query: any) => {
+    return await withDatabaseRetry(() => baseDb.execute(query));
+  },
+  query: baseDb.query,
+  select: (table: any) => ({
+    ...baseDb.select(table),
+    execute: async () => {
+      return await withDatabaseRetry(() => baseDb.select(table));
+    }
+  })
+};
