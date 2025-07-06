@@ -8,7 +8,7 @@ import uuid
 import os
 
 # Use the backend URL directly
-BASE_URL = "http://localhost:8001/api"
+BASE_URL = "http://localhost:5000/api"
 
 # Test data
 test_tenant_id = str(uuid.uuid4())
