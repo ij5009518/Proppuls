@@ -159,14 +159,14 @@ class RouterErrorBoundary extends React.Component {
 function App() {
   return (
     <RouterErrorBoundary>
-      <Router>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Router base="/app">
             <AuthenticatedApp />
             <Toaster />
-          </AuthProvider>
-        </QueryClientProvider>
-      </Router>
+          </Router>
+        </AuthProvider>
+      </QueryClientProvider>
     </RouterErrorBoundary>
   );
 }
