@@ -2244,41 +2244,46 @@ export default function Tenants() {
               </TabsContent>
 
               <TabsContent value="lease" className="space-y-4">
-                <div className="space-y-6">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Lease Details</h3>
+                    <div className="flex items-center mb-6">
+                      <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                        <FileText className="h-5 w-5 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Lease Details</h3>
+                    </div>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-3">
-                        <div>
-                          <span className="text-sm font-medium text-muted-foreground">Lease Status:</span>
-                          <p className="text-sm">
+                        <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Lease Status:</span>
+                          <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
                             {selectedTenant.leaseStart ? 'Active' : 'No Active Lease'}
                           </p>
                         </div>
                         {selectedTenant.leaseStart && (
-                          <div>
-                            <span className="text-sm font-medium text-muted-foreground">Start Date:</span>
-                            <p className="text-sm">{formatDate(selectedTenant.leaseStart)}</p>
+                          <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Start Date:</span>
+                            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{formatDate(selectedTenant.leaseStart)}</p>
                           </div>
                         )}
                       </div>
                       <div className="space-y-3">
                         {selectedTenant.leaseEnd && (
-                          <div>
-                            <span className="text-sm font-medium text-muted-foreground">End Date:</span>
-                            <p className="text-sm">{formatDate(selectedTenant.leaseEnd)}</p>
+                          <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">End Date:</span>
+                            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{formatDate(selectedTenant.leaseEnd)}</p>
                           </div>
                         )}
                         {selectedTenant.monthlyRent && (
-                          <div>
-                            <span className="text-sm font-medium text-muted-foreground">Monthly Rent:</span>
-                            <p className="text-sm">{formatCurrency(selectedTenant.monthlyRent)}</p>
+                          <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Monthly Rent:</span>
+                            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{formatCurrency(selectedTenant.monthlyRent)}</p>
                           </div>
                         )}
                         {selectedTenant.deposit && (
-                          <div>
-                            <span className="text-sm font-medium text-muted-foreground">Security Deposit:</span>
-                            <p className="text-sm">{formatCurrency(selectedTenant.deposit)}</p>
+                          <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Security Deposit:</span>
+                            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{formatCurrency(selectedTenant.deposit)}</p>
                           </div>
                         )}
                       </div>
