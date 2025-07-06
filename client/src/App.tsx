@@ -65,9 +65,7 @@ function AuthenticatedApp() {
         <Route path="/tenant-portal" component={TenantPortal} />
         <Route>
           {() => {
-            React.useEffect(() => {
-              setLocation("/login");
-            }, [setLocation]);
+            window.location.href = "/login";
             return null;
           }}
         </Route>
