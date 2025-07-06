@@ -1509,7 +1509,7 @@ export default function Tenants() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-4">
                         <Avatar className="h-12 w-12">
-                          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white font-semibold">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-semibold">
                             {tenant.firstName[0]}{tenant.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
