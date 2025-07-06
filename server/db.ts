@@ -747,17 +747,8 @@ const schema = {
 
 const baseDb = drizzle(sql, { schema });
 
-// Wrap database operations with retry logic
-export const db = {
-  ...baseDb,
-  execute: async (query: any) => {
-    return await withDatabaseRetry(() => baseDb.execute(query));
-  },
-  query: baseDb.query,
-  select: (table: any) => ({
-    ...baseDb.select(table),
-    execute: async () => {
-      return await withDatabaseRetry(() => baseDb.select(table));
-    }
-  })
-};
+// Export the database instance directly with proper methods
+export const db = baseDb;
+
+// Keep the retry wrapper function for critical operations
+export { withDatabaseRetry };

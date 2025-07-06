@@ -142,34 +142,38 @@ class Storage {
   }
 
   async createSession(token: string, user: User): Promise<void> {
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
+    return await withRetry(async () => {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
 
-    await db.insert(sessions).values({
-      token,
-      userId: user.id,
-      userData: user,
-      createdAt: new Date(),
-      expiresAt,
+      await db.insert(sessions).values({
+        token,
+        userId: user.id,
+        userData: user,
+        createdAt: new Date(),
+        expiresAt,
+      });
     });
   }
 
   async getSession(token: string): Promise<Session | null> {
-    const result = await db.select().from(sessions).where(eq(sessions.token, token)).limit(1);
-    if (!result[0]) return null;
+    return await withRetry(async () => {
+      const result = await db.select().from(sessions).where(eq(sessions.token, token)).limit(1);
+      if (!result[0]) return null;
 
-    const session = result[0];
-    // Check if session is expired
-    if (new Date() > session.expiresAt) {
-      await this.deleteSession(token);
-      return null;
-    }
+      const session = result[0];
+      // Check if session is expired
+      if (new Date() > session.expiresAt) {
+        await this.deleteSession(token);
+        return null;
+      }
 
-    return {
-      token: session.token,
-      user: session.userData as User,
-      createdAt: session.createdAt,
-    };
+      return {
+        token: session.token,
+        user: session.userData as User,
+        createdAt: session.createdAt,
+      };
+    });
   }
 
   async getSessionById(token: string): Promise<Session | null> {
@@ -177,7 +181,9 @@ class Storage {
   }
 
   async deleteSession(sessionId: string): Promise<void> {
-    await db.delete(sessions).where(eq(sessions.token, sessionId));
+    return await withRetry(async () => {
+      await db.delete(sessions).where(eq(sessions.token, sessionId));
+    });
   }
 
   // Password Reset methods
