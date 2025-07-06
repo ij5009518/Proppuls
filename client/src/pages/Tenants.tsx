@@ -1869,9 +1869,8 @@ export default function Tenants() {
                   </FormItem>
                 )}
               />
-              
-              {/* 3-column grid for Category, Priority, Status */}
-              <div className="grid grid-cols-3 gap-4">
+              {/* Task form with same layout as Tasks page - 4-column grid */}
+              <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="category"
@@ -1885,9 +1884,14 @@ export default function Tenants() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="general">General</SelectItem>
                           <SelectItem value="maintenance">Maintenance</SelectItem>
                           <SelectItem value="inspection">Inspection</SelectItem>
-                          <SelectItem value="communication">Communication</SelectItem>
+                          <SelectItem value="repair">Repair</SelectItem>
+                          <SelectItem value="cleaning">Cleaning</SelectItem>
+                          <SelectItem value="landscaping">Landscaping</SelectItem>
+                          <SelectItem value="legal">Legal</SelectItem>
+                          <SelectItem value="financial">Financial</SelectItem>
                           <SelectItem value="administrative">Administrative</SelectItem>
                         </SelectContent>
                       </Select>
@@ -1941,10 +1945,6 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
-              </div>
-
-              {/* 2-column grid for Due Date and Assigned To */}
-              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="dueDate"
@@ -1963,6 +1963,10 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* Second line: Assigned To, Property, Unit, Tenant */}
+              <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="assignedTo"
@@ -1970,16 +1974,12 @@ export default function Tenants() {
                     <FormItem>
                       <FormLabel>Assigned To</FormLabel>
                       <FormControl>
-                        <Input placeholder="Person responsible" {...field} />
+                        <Input placeholder="Enter assignee name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
-
-              {/* Property, Unit, and Tenant Selection */}
-              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="propertyId"
