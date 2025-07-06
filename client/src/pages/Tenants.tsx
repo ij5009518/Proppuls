@@ -1455,16 +1455,16 @@ export default function Tenants() {
                         .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
 
                       return (
-                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                          <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="pt-2 border-t border-blue-200 dark:border-blue-700">
+                          <div className="grid grid-cols-2 gap-2 text-xs p-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 rounded">
                             <div className="flex items-center justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Total Paid:</span>
+                              <span className="text-blue-600 dark:text-blue-400">Total Paid:</span>
                               <span className="font-medium text-green-600 dark:text-green-400">
                                 {formatCurrency(totalPaid.toString())}
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Outstanding:</span>
+                              <span className="text-blue-600 dark:text-blue-400">Outstanding:</span>
                               <span className={`font-medium ${apiOutstanding > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
                                 {formatCurrency(apiOutstanding.toString())}
                               </span>
