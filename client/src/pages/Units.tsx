@@ -2200,6 +2200,95 @@ export default function Units() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Tenant Status Dialog */}
+      <Dialog open={isTenantStatusDialogOpen} onOpenChange={setIsTenantStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Tenant Status</DialogTitle>
+            <DialogDescription>
+              Update the status of this tenant
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...tenantStatusForm}>
+            <form onSubmit={tenantStatusForm.handleSubmit((data) => {
+              // Handle tenant status update here
+              console.log('Updating tenant status:', data);
+              toast({
+                title: "Status Updated",
+                description: "Tenant status has been updated successfully.",
+              });
+              setIsTenantStatusDialogOpen(false);
+              tenantStatusForm.reset();
+            })} className="space-y-4">
+              <FormField
+                control={tenantStatusForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select new status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="terminated">Terminated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={tenantStatusForm.control}
+                name="moveOutDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Move Out Date (if applicable)</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={tenantStatusForm.control}
+                name="moveOutReason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reason (if applicable)</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter reason for status change..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsTenantStatusDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                  Update Status
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
