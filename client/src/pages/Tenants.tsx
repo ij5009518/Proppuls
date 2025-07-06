@@ -2216,26 +2216,25 @@ export default function Tenants() {
                       </div>
                     </div>
                     <div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Last Name</p>
-                        <p className="text-sm text-gray-900">{selectedTenant.lastName}</p>
+                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Last Name</p>
+                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{selectedTenant.lastName}</p>
                       </div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Phone</p>
-                        <p className="text-sm text-gray-900">{selectedTenant.phone}</p>
+                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Phone</p>
+                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{selectedTenant.phone}</p>
                       </div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Status</p>
-                        <Badge 
-                          className={`cursor-pointer ${getStatusColor(selectedTenant.status)}`}
-                          onClick={() => handleEditTenantStatus(selectedTenant)}
-                        >
-                          {selectedTenant.status}
-                        </Badge>
+                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Status</p>
+                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
+                          <Badge className={getStatusColor(selectedTenant.status)}>
+                            {selectedTenant.status}
+                          </Badge>
+                        </p>
                       </div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Emergency Contact Phone</p>
-                        <p className="text-sm text-gray-900">
+                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Emergency Contact Phone</p>
+                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
                           {selectedTenant.emergencyContactPhone || "Not provided"}
                         </p>
                       </div>
