@@ -1392,7 +1392,7 @@ export default function Tenants() {
             return (
               <Card 
                 key={tenant.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer"
+                className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors border-l-4 border-l-blue-600"
                 onClick={() => {
                   setSelectedTenant(tenant);
                   setIsViewDialogOpen(true);
