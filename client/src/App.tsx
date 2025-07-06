@@ -161,7 +161,7 @@ function App() {
     <RouterErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Router base="/app">
+          <Router>
             <AuthenticatedApp />
             <Toaster />
           </Router>
