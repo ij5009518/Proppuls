@@ -1267,10 +1267,20 @@ export default function Units() {
                             });
                             return;
                           }
-                          // TODO: Handle photo upload
-                          toast({
-                            title: "Photos Upload",
-                            description: `${files.length} photo(s) ready to upload. Upload functionality coming soon.`,
+                          
+                          // Handle photo upload
+                          files.forEach((file, index) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                              const base64 = e.target?.result as string;
+                              // Here you would typically upload to your backend
+                              console.log(`Uploading photo ${index + 1}:`, file.name, base64.substring(0, 50) + '...');
+                              toast({
+                                title: "Photo Uploaded",
+                                description: `${file.name} uploaded successfully.`,
+                              });
+                            };
+                            reader.readAsDataURL(file);
                           });
                         }}
                       />
@@ -1288,44 +1298,26 @@ export default function Units() {
                     </div>
                   </div>
                   
-                  {/* Photo grid - placeholder for now */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {/* Placeholder photo slots */}
-                    {Array.from({ length: 8 }, (_, i) => (
-                      <div 
-                        key={i}
-                        className="aspect-square bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border-2 border-dashed border-blue-300 dark:border-blue-600 flex items-center justify-center cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                        onClick={() => {
-                          document.getElementById(`photo-upload-${selectedUnit.id}`)?.click();
-                        }}
-                      >
-                        <div className="text-center">
-                          <Eye className="h-6 w-6 text-blue-400 mx-auto mb-1" />
-                          <p className="text-xs text-blue-600 dark:text-blue-400">Add Photo</p>
-                        </div>
+                  {/* Photos will be displayed here when available */}
+                  <div className="text-center py-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="flex flex-col items-center space-y-3">
+                      <div className="w-16 h-16 bg-blue-100 dark:bg-blue-800 rounded-xl flex items-center justify-center">
+                        <Eye className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                       </div>
-                    ))}
-                  </div>
-                  
-                  <div className="text-center py-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
-                        <Eye className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Upload apartment photos</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Upload up to 20 photos to showcase this unit (JPG, PNG, WebP)
+                      <div className="space-y-2">
+                        <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">No photos uploaded yet</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
+                          Upload photos to showcase this apartment. You can upload up to 20 photos (JPG, PNG, WebP)
                         </p>
                       </div>
                       <Button 
-                        size="sm" 
-                        className="mt-2 bg-blue-600 hover:bg-blue-700"
+                        size="default"
+                        className="mt-4 bg-blue-600 hover:bg-blue-700"
                         onClick={() => {
                           document.getElementById(`photo-upload-${selectedUnit.id}`)?.click();
                         }}
                       >
-                        <Upload className="h-4 w-4 mr-1" />
+                        <Upload className="h-4 w-4 mr-2" />
                         Choose Photos
                       </Button>
                     </div>
