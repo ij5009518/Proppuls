@@ -938,7 +938,7 @@ export default function Tenants() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Tenants</h1>
+        <h1 className="text-3xl font-bold text-blue-900 dark:text-blue-100">Tenants</h1>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => {
