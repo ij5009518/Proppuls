@@ -664,8 +664,6 @@ const sql = neon(process.env.DATABASE_URL, {
   fetchOptions: {
     timeout: 60000, // 60 second timeout for Neon's cold starts
   },
-  // Enable connection pooling for better reliability
-  pooled: true,
 });
 
 // Add connection retry wrapper for database operations
