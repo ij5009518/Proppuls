@@ -1428,9 +1428,9 @@ export default function Tenants() {
                     </div>
 
                     {/* Contact Information */}
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.email}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.phone}</p>
+                    <div className="space-y-1 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                      <p className="text-sm text-blue-600 dark:text-blue-400">{tenant.email}</p>
+                      <p className="text-sm text-blue-600 dark:text-blue-400">{tenant.phone}</p>
                     </div>
 
 
