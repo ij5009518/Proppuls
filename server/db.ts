@@ -749,6 +749,3 @@ const baseDb = drizzle(sql, { schema });
 
 // Export the database instance directly with proper methods
 export const db = baseDb;
-
-// Keep the retry wrapper function for critical operations
-export { withDatabaseRetry };
