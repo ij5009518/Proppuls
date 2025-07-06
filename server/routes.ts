@@ -15,12 +15,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export function registerRoutes(app: Express) {
-
+  
   // User authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { email, password } = req.body;
-
+      
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
@@ -30,7 +30,7 @@ export function registerRoutes(app: Express) {
       if (user && user.password && await bcrypt.compare(password, user.password)) {
         const token = crypto.randomBytes(32).toString('hex');
         await storage.createSession(token, user);
-
+        
         res.json({
           success: true,
           token,
@@ -63,9 +63,9 @@ export function registerRoutes(app: Express) {
 
         const token = crypto.randomBytes(32).toString('hex');
         await storage.createSession(token, defaultUser);
-
+        
         console.log("Demo login successful for organization:", defaultUser.organizationId);
-
+        
         res.json({
           success: true,
           token,
@@ -110,7 +110,7 @@ export function registerRoutes(app: Express) {
 
       // Create password reset token
       const resetToken = await storage.createPasswordResetToken(email);
-
+      
       // Send reset email
       console.log("Attempting to send password reset email to:", email);
       const emailSent = await emailService.sendPasswordResetEmail(
@@ -222,7 +222,7 @@ export function registerRoutes(app: Express) {
 
     try {
       const { email, password, firstName, lastName, role, phone } = req.body;
-
+      
       if (!email || !password || !firstName || !lastName) {
         clearTimeout(timeoutId);
         return res.status(400).json({ message: "Required fields missing" });
@@ -235,7 +235,7 @@ export function registerRoutes(app: Express) {
           setTimeout(() => reject(new Error('Database timeout')), 10000)
         )
       ]);
-
+      
       if (existingUser) {
         clearTimeout(timeoutId);
         return res.status(400).json({ message: "User already exists" });
@@ -306,12 +306,12 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       clearTimeout(timeoutId);
       console.error("Registration error:", error);
-
+      
       if (!res.headersSent) {
         const message = error.message?.includes('timeout') || error.message?.includes('Control plane') 
           ? "Registration timeout - please try again in a few moments" 
           : "Registration failed";
-
+        
         res.status(500).json({ 
           message, 
           error: error.message 
@@ -350,7 +350,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/emails/send-rent-reminder", async (req, res) => {
     try {
       const { tenantId } = req.body;
-
+      
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
@@ -379,7 +379,7 @@ export function registerRoutes(app: Express) {
       };
 
       const success = await emailService.sendRentReminder(tenant.email, emailData);
-
+      
       if (success) {
         res.json({ message: "Rent reminder sent successfully" });
       } else {
@@ -394,7 +394,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/emails/send-welcome", async (req, res) => {
     try {
       const { tenantId } = req.body;
-
+      
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
@@ -420,7 +420,7 @@ export function registerRoutes(app: Express) {
         property.name,
         unit.name
       );
-
+      
       if (success) {
         res.json({ message: "Welcome email sent successfully" });
       } else {
@@ -435,7 +435,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/emails/send-maintenance-notification", async (req, res) => {
     try {
       const { tenantId, description, status } = req.body;
-
+      
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
@@ -460,7 +460,7 @@ export function registerRoutes(app: Express) {
       };
 
       const success = await emailService.sendMaintenanceNotification(tenant.email, emailData);
-
+      
       if (success) {
         res.json({ message: "Maintenance notification sent successfully" });
       } else {
@@ -475,14 +475,14 @@ export function registerRoutes(app: Express) {
   app.post("/api/emails/test", async (req, res) => {
     try {
       const { to, subject, message } = req.body;
-
+      
       const success = await emailService.sendEmail({
         to,
         subject,
         html: `<p>${message}</p>`,
         text: message
       });
-
+      
       if (success) {
         res.json({ message: "Test email sent successfully" });
       } else {
@@ -503,7 +503,7 @@ export function registerRoutes(app: Express) {
 
       const file = req.file;
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-
+      
       if (!allowedTypes.includes(file.mimetype)) {
         return res.status(400).json({ message: "Only JPEG, PNG, and PDF files are allowed" });
       }
@@ -511,7 +511,7 @@ export function registerRoutes(app: Express) {
       // Generate unique filename
       const fileExtension = file.originalname.split('.').pop();
       const fileName = `id-document-${Date.now()}-${crypto.randomUUID()}.${fileExtension}`;
-
+      
       // Convert file to base64 for storage (in a real app, you'd store this in a file system or cloud storage)
       const base64Data = file.buffer.toString('base64');
       const dataUrl = `data:${file.mimetype};base64,${base64Data}`;
@@ -533,7 +533,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/tenant/login", async (req, res) => {
     try {
       const { email, password } = req.body;
-
+      
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
@@ -544,7 +544,7 @@ export function registerRoutes(app: Express) {
       }
 
       const token = await storage.createTenantSession(tenant.id);
-
+      
       res.json({
         success: true,
         tenant: {
@@ -674,7 +674,7 @@ export function registerRoutes(app: Express) {
       });
     } catch (error: any) {
       console.error("Error creating payment intent:", error);
-
+      
       // Provide specific guidance for Stripe configuration issues
       if (error.code === 'parameter_invalid_empty' || error.message?.includes('payment method types')) {
         res.status(400).json({ 
@@ -694,7 +694,7 @@ export function registerRoutes(app: Express) {
 
       // Verify the payment intent was successful
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
+      
       if (paymentIntent.status === "succeeded") {
         // Create a rent payment record
         const rentPayment = await storage.createRentPayment({
@@ -1037,7 +1037,7 @@ export function registerRoutes(app: Express) {
       if (!req.user?.organizationId) {
         return res.status(400).json({ message: "Organization ID required" });
       }
-
+      
       // Validate required fields
       const { firstName, lastName, email, phone } = req.body;
       if (!firstName || !lastName || !email || !phone) {
@@ -1065,7 +1065,7 @@ export function registerRoutes(app: Express) {
       console.log("=== API MIDDLEWARE HIT FOR", req.url, "===");
       console.log("Method:", req.method);
       console.log("Body:", JSON.stringify(req.body, null, 2));
-
+      
       // Convert date strings to Date objects if they exist
       const data = { ...req.body };
       if (data.leaseStart && typeof data.leaseStart === 'string') {
@@ -1074,7 +1074,7 @@ export function registerRoutes(app: Express) {
       if (data.leaseEnd && typeof data.leaseEnd === 'string') {
         data.leaseEnd = new Date(data.leaseEnd);
       }
-
+      
       const tenant = await storage.updateTenant(id, data);
       res.json(tenant);
     } catch (error) {
@@ -1089,7 +1089,7 @@ export function registerRoutes(app: Express) {
       console.log("=== API MIDDLEWARE HIT FOR", req.url, "===");
       console.log("Method:", req.method);
       console.log("Body:", JSON.stringify(req.body, null, 2));
-
+      
       // Convert date strings to Date objects if they exist
       const data = { ...req.body };
       if (data.leaseStart && typeof data.leaseStart === 'string') {
@@ -1098,7 +1098,7 @@ export function registerRoutes(app: Express) {
       if (data.leaseEnd && typeof data.leaseEnd === 'string') {
         data.leaseEnd = new Date(data.leaseEnd);
       }
-
+      
       const tenant = await storage.updateTenant(id, data);
       res.json(tenant);
     } catch (error) {
@@ -1123,7 +1123,7 @@ export function registerRoutes(app: Express) {
     try {
       const unitId = req.params.unitId;
       console.log("Route: Fetching tenant history for unit:", unitId);
-
+      
       // Return sample data directly in the route for now
       const sampleHistory = [
         {
@@ -1166,7 +1166,7 @@ export function registerRoutes(app: Express) {
           updatedAt: new Date()
         }
       ];
-
+      
       console.log("Route: Returning sample history with", sampleHistory.length, "records");
       res.json(sampleHistory);
     } catch (error) {
@@ -1349,12 +1349,12 @@ export function registerRoutes(app: Express) {
 
       const currentRevenue = paymentSummaries.totalRevenue || 0;
       const currentExpenses = paymentSummaries.currentMonthExpenses || 0;
-
+      
       // Calculate actual revenue change based on data
       const lastMonthRevenue = paymentSummaries.lastMonthRevenue || 0;
       const revenueChange = lastMonthRevenue > 0 ? 
         (((currentRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1) : "0";
-
+      
       // Count properties created this month
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
@@ -1414,7 +1414,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-
+  
 
   // Properties with stats route
   app.get("/api/properties/with-stats", authenticateToken, async (req: AuthenticatedRequest, res) => {
@@ -1478,7 +1478,7 @@ export function registerRoutes(app: Express) {
       if (!req.user?.organizationId) {
         return res.status(400).json({ message: "Organization ID required" });
       }
-
+      
       // Convert date string to Date object if present
       const taskData = { 
         ...req.body,
@@ -1487,29 +1487,29 @@ export function registerRoutes(app: Express) {
       if (taskData.dueDate) {
         taskData.dueDate = new Date(taskData.dueDate);
       }
-
+      
       // Handle multiple file attachments if present
       const attachments = [];
       if (req.files && Array.isArray(req.files) && req.files.length > 0) {
         const { mkdirSync, existsSync } = await import('node:fs');
         const { join, extname } = await import('node:path');
         const { writeFile } = await import('node:fs/promises');
-
+        
         // Create uploads directory if it doesn't exist
         const uploadsDir = join(process.cwd(), 'uploads');
         if (!existsSync(uploadsDir)) {
           mkdirSync(uploadsDir, { recursive: true });
         }
-
+        
         // Process each uploaded file
         for (const file of req.files) {
           const fileExtension = extname(file.originalname);
           const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
           const filePath = join(uploadsDir, uniqueFilename);
-
+          
           // Save file to disk
           await writeFile(filePath, file.buffer);
-
+          
           // Add to attachments array
           attachments.push({
             url: `/uploads/${uniqueFilename}`,
@@ -1518,17 +1518,17 @@ export function registerRoutes(app: Express) {
             uploadedAt: new Date()
           });
         }
-
+        
         // Set attachments data
         taskData.attachments = attachments;
-
+        
         // For backward compatibility, set first attachment as legacy fields
         if (attachments.length > 0) {
           taskData.attachmentUrl = attachments[0].url;
           taskData.attachmentName = attachments[0].name;
         }
       }
-
+      
       const task = await storage.createTask(taskData);
       res.json(task);
     } catch (error) {
@@ -1542,15 +1542,15 @@ export function registerRoutes(app: Express) {
     try {
       const { join } = await import('node:path');
       const { existsSync } = await import('node:fs');
-
+      
       const filename = req.params.filename;
       const filePath = join(process.cwd(), 'uploads', filename);
-
+      
       // Check if file exists
       if (!existsSync(filePath)) {
         return res.status(404).json({ message: "File not found" });
       }
-
+      
       // Send the file
       res.sendFile(filePath);
     } catch (error) {
@@ -1565,12 +1565,12 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ message: "Organization ID required" });
       }
       const id = req.params.id;
-
+      
       // Get the original task to track changes
       const originalTask = await storage.getTaskById(id);
-
+      
       const task = await storage.updateTask(id, req.body);
-
+      
       // Create history entry for significant changes
       if (originalTask) {
         const changes = [];
@@ -1586,7 +1586,7 @@ export function registerRoutes(app: Express) {
         if (req.body.assignedTo && req.body.assignedTo !== originalTask.assignedTo) {
           changes.push(`Assigned to changed`);
         }
-
+        
         if (changes.length > 0) {
           await storage.createTaskHistory({
             taskId: id,
@@ -1595,7 +1595,7 @@ export function registerRoutes(app: Express) {
           });
         }
       }
-
+      
       res.json(task);
     } catch (error) {
       console.error("Error updating task:", error);
@@ -1609,12 +1609,12 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ message: "Organization ID required" });
       }
       const id = req.params.id;
-
+      
       // Get the original task to track changes
       const originalTask = await storage.getTaskById(id);
-
+      
       const task = await storage.updateTask(id, req.body);
-
+      
       // Create history entry for significant changes
       if (originalTask) {
         const changes = [];
@@ -1630,7 +1630,7 @@ export function registerRoutes(app: Express) {
         if (req.body.assignedTo && req.body.assignedTo !== originalTask.assignedTo) {
           changes.push(`Assigned to changed`);
         }
-
+        
         if (changes.length > 0) {
           await storage.createTaskHistory({
             taskId: id,
@@ -1639,7 +1639,7 @@ export function registerRoutes(app: Express) {
           });
         }
       }
-
+      
       res.json(task);
     } catch (error) {
       console.error("Error updating task:", error);
@@ -1674,7 +1674,7 @@ export function registerRoutes(app: Express) {
     try {
       const taskId = req.params.taskId;
       const { method, subject, message, recipient } = req.body;
-
+      
       // Create communication record
       const communicationData = { 
         taskId, 
@@ -1684,9 +1684,9 @@ export function registerRoutes(app: Express) {
         recipient,
         status: 'pending'
       };
-
+      
       const communication = await storage.createTaskCommunication(communicationData);
-
+      
       // Send the communication
       if (method === 'email') {
         try {
@@ -1697,7 +1697,7 @@ export function registerRoutes(app: Express) {
             html: message,
             text: message
           });
-
+          
           // Update status to delivered
           await storage.updateTaskCommunication(communication.id, { status: 'delivered' });
           communication.status = 'delivered';
@@ -1712,7 +1712,7 @@ export function registerRoutes(app: Express) {
           communication.errorMessage = emailError instanceof Error ? emailError.message : 'Email sending failed';
         }
       }
-
+      
       res.json(communication);
     } catch (error) {
       console.error("Error creating task communication:", error);
@@ -1741,7 +1741,7 @@ export function registerRoutes(app: Express) {
 
       const taskId = req.params.taskId;
       const task = await storage.getTaskById(taskId);
-
+      
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -1750,32 +1750,32 @@ export function registerRoutes(app: Express) {
       if (task.organizationId !== req.user.organizationId) {
         return res.status(403).json({ message: "Access denied: Task does not belong to your organization" });
       }
-
+      
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
-
+      
       // Handle file upload
       const { mkdirSync, existsSync } = await import('node:fs');
       const { join, extname } = await import('node:path');
       const { writeFile } = await import('node:fs/promises');
-
+      
       // Create uploads directory if it doesn't exist
       const uploadsDir = join(process.cwd(), 'uploads');
       if (!existsSync(uploadsDir)) {
         mkdirSync(uploadsDir, { recursive: true });
       }
-
+      
       const fileExtension = extname(req.file.originalname);
       const uniqueFilename = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`;
       const filePath = join(uploadsDir, uniqueFilename);
-
+      
       // Save file to disk
       await writeFile(filePath, req.file.buffer);
-
+      
       // Get current attachments array or initialize empty array
       const currentAttachments = task.attachments || [];
-
+      
       // Create new attachment object
       const newAttachment = {
         id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
@@ -1785,10 +1785,10 @@ export function registerRoutes(app: Express) {
         size: req.file.size,
         mimetype: req.file.mimetype
       };
-
+      
       // Add new attachment to the array
       const updatedAttachments = [...currentAttachments, newAttachment];
-
+      
       // Update task with new attachments array and maintain legacy fields for the latest attachment
       const updatedTaskData = {
         attachments: updatedAttachments,
@@ -1796,9 +1796,9 @@ export function registerRoutes(app: Express) {
         attachmentName: req.file.originalname, // Keep for backward compatibility
         updatedAt: new Date()
       };
-
+      
       const updatedTask = await storage.updateTask(taskId, updatedTaskData);
-
+      
       // Create task history entry
       await storage.createTaskHistory({
         taskId,
@@ -1808,7 +1808,7 @@ export function registerRoutes(app: Express) {
         notes: `Attachment uploaded: ${req.file.originalname}`,
         userId: req.user?.id
       });
-
+      
       res.json(updatedTask);
     } catch (error) {
       console.error("Error uploading attachment:", error);
@@ -1825,7 +1825,7 @@ export function registerRoutes(app: Express) {
 
       const { taskId, attachmentId } = req.params;
       const task = await storage.getTaskById(taskId);
-
+      
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -1867,7 +1867,7 @@ export function registerRoutes(app: Express) {
       const taskId = req.params.taskId;
       const { subject, message } = req.body;
       const task = await storage.getTaskById(taskId);
-
+      
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -1979,17 +1979,17 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/rent-reminder", async (req, res) => {
     try {
       const { tenantId } = req.body;
-
+      
       // Get tenant details
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
       }
-
+      
       // Get unit and property details
       const unit = await storage.getUnitById(tenant.unitId);
       const property = await storage.getPropertyById(unit.propertyId);
-
+      
       const success = await emailService.sendRentReminder(tenant.email, {
         tenantName: `${tenant.firstName} ${tenant.lastName}`,
         unitNumber: unit.unitNumber,
@@ -1997,7 +1997,7 @@ export function registerRoutes(app: Express) {
         amount: tenant.monthlyRent,
         dueDate: new Date().toLocaleDateString(),
       });
-
+      
       if (success) {
         res.json({ message: "Rent reminder sent successfully" });
       } else {
@@ -2012,15 +2012,15 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/maintenance-notification", async (req, res) => {
     try {
       const { tenantId, description, status } = req.body;
-
+      
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
       }
-
+      
       const unit = await storage.getUnitById(tenant.unitId);
       const property = await storage.getPropertyById(unit.propertyId);
-
+      
       const success = await emailService.sendMaintenanceNotification(tenant.email, {
         tenantName: `${tenant.firstName} ${tenant.lastName}`,
         unitNumber: unit.unitNumber,
@@ -2028,7 +2028,7 @@ export function registerRoutes(app: Express) {
         description,
         status,
       });
-
+      
       if (success) {
         res.json({ message: "Maintenance notification sent successfully" });
       } else {
@@ -2043,22 +2043,22 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/welcome", async (req, res) => {
     try {
       const { tenantId } = req.body;
-
+      
       const tenant = await storage.getTenantById(tenantId);
       if (!tenant) {
         return res.status(404).json({ message: "Tenant not found" });
       }
-
+      
       const unit = await storage.getUnitById(tenant.unitId);
       const property = await storage.getPropertyById(unit.propertyId);
-
+      
       const success = await emailService.sendWelcomeEmail(
         tenant.email,
         `${tenant.firstName} ${tenant.lastName}`,
         property.name,
         unit.unitNumber
       );
-
+      
       if (success) {
         res.json({ message: "Welcome email sent successfully" });
       } else {
@@ -2073,7 +2073,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/email/bulk-rent-reminders", async (req, res) => {
     try {
       const { propertyId } = req.body;
-
+      
       let tenants;
       if (propertyId) {
         // Get tenants for specific property
@@ -2087,18 +2087,18 @@ export function registerRoutes(app: Express) {
         // Get all tenants
         tenants = await storage.getAllTenants();
       }
-
+      
       const results = {
         sent: 0,
         failed: 0,
         errors: []
       };
-
+      
       for (const tenant of tenants) {
         try {
           const unit = await storage.getUnitById(tenant.unitId);
           const property = await storage.getPropertyById(unit.propertyId);
-
+          
           const success = await emailService.sendRentReminder(tenant.email, {
             tenantName: `${tenant.firstName} ${tenant.lastName}`,
             unitNumber: unit.unitNumber,
@@ -2106,7 +2106,7 @@ export function registerRoutes(app: Express) {
             amount: tenant.monthlyRent,
             dueDate: new Date().toLocaleDateString(),
           });
-
+          
           if (success) {
             results.sent++;
           } else {
@@ -2118,7 +2118,7 @@ export function registerRoutes(app: Express) {
           results.errors.push(`Error processing ${tenant.email}: ${error.message}`);
         }
       }
-
+      
       res.json(results);
     } catch (error) {
       console.error("Error sending bulk rent reminders:", error);
@@ -2134,7 +2134,7 @@ export function registerRoutes(app: Express) {
       }
 
       const csvContent = req.file.buffer.toString('utf8');
-
+      
       // Parse CSV
       const records = parse(csvContent, {
         columns: true,
@@ -2180,7 +2180,7 @@ export function registerRoutes(app: Express) {
               if (!property) {
                 throw new Error(`Property "${record.propertyName}" not found`);
               }
-
+              
               await storage.createUnit({
                 propertyId: property.id,
                 unitNumber: record.unitNumber,
@@ -2200,7 +2200,7 @@ export function registerRoutes(app: Express) {
               if (!tenantProperty) {
                 throw new Error(`Property "${record.propertyName}" not found`);
               }
-
+              
               const units = await storage.getAllUnits();
               const unit = units.find(u => u.propertyId === tenantProperty.id && u.unitNumber === record.unitNumber);
               if (!unit) {
@@ -2283,7 +2283,7 @@ export function registerRoutes(app: Express) {
             default:
               throw new Error(`Unknown record type: ${record.type}`);
           }
-
+          
           results.successCount++;
         } catch (error) {
           results.errorCount++;
@@ -2305,7 +2305,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/auth/forgot-password", async (req, res) => {
     try {
       const { email } = req.body;
-
+      
       if (!email) {
         return res.status(400).json({ message: "Email is required" });
       }
@@ -2351,7 +2351,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/auth/reset-password", async (req, res) => {
     try {
       const { token, newPassword } = req.body;
-
+      
       if (!token || !newPassword) {
         return res.status(400).json({ message: "Token and new password are required" });
       }
@@ -2382,31 +2382,6 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Reset password error:", error);
       res.status(500).json({ message: "Failed to reset password" });
-    }
-  });
-
-  // Routes
-  app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-
-  // Database health check endpoint
-  app.get('/health/db', async (req, res) => {
-    try {
-      const result = await storage.execute(sql`SELECT 1 as health_check`);
-      res.json({ 
-        status: 'healthy', 
-        timestamp: new Date().toISOString(),
-        database: 'connected'
-      });
-    } catch (error: any) {
-      console.error('Database health check failed:', error);
-      res.status(500).json({ 
-        status: 'unhealthy', 
-        timestamp: new Date().toISOString(),
-        database: 'disconnected',
-        error: error.message 
-      });
     }
   });
 
