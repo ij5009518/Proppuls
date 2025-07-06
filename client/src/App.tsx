@@ -41,7 +41,7 @@ import Profile from "@/pages/Profile";
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
