@@ -2161,11 +2161,31 @@ export default function Tenants() {
           </DialogHeader>
           {selectedTenant && (
             <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="details">Basic</TabsTrigger>
-                <TabsTrigger value="lease">Lease & Screening</TabsTrigger>
-                <TabsTrigger value="payments">Payments</TabsTrigger>
-                <TabsTrigger value="tasks">Tasks </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-4 bg-blue-50 dark:bg-blue-900/20 p-1 rounded-lg">
+                <TabsTrigger 
+                  value="details"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
+                >
+                  Basic
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="lease"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
+                >
+                  Lease & Screening
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="payments"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
+                >
+                  Payments
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="tasks"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
+                >
+                  Tasks
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="details" className="space-y-4">
