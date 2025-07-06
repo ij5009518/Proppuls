@@ -2189,28 +2189,28 @@ export default function Tenants() {
               </TabsList>
 
               <TabsContent value="details" className="space-y-4">
-                <div className="p-8">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
                   <div className="grid grid-cols-2 gap-8">
                     <div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">First Name</p>
-                        <p className="text-sm text-gray-900">{selectedTenant.firstName}</p>
+                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">First Name</p>
+                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{selectedTenant.firstName}</p>
                       </div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Email</p>
-                        <p className="text-sm text-gray-900">{selectedTenant.email}</p>
+                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Email</p>
+                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{selectedTenant.email}</p>
                       </div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Date of Birth</p>
-                        <p className="text-sm text-gray-900">
+                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Date of Birth</p>
+                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
                           {selectedTenant.dateOfBirth 
                             ? new Date(selectedTenant.dateOfBirth).toLocaleDateString() 
                             : "Not provided"}
                         </p>
                       </div>
-                      <div className="mb-6">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</p>
-                        <p className="text-sm text-gray-900">
+                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Emergency Contact Name</p>
+                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
                           {selectedTenant.emergencyContactName || "Not provided"}
                         </p>
                       </div>
