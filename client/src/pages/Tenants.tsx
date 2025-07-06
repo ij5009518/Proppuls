@@ -1471,7 +1471,7 @@ export default function Tenants() {
                             </div>
                             {overdueAmount > 0 && (
                               <div className="flex items-center justify-between col-span-2">
-                                <span className="text-gray-600 dark:text-gray-400 flex items-center">
+                                <span className="text-blue-600 dark:text-blue-400 flex items-center">
                                   <AlertTriangle className="h-3 w-3 text-red-500 mr-1" />
                                   Overdue:
                                 </span>
