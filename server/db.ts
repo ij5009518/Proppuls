@@ -662,15 +662,17 @@ export const invoices = pgTable('invoices', {
 
 const sql = neon(process.env.DATABASE_URL, {
   fetchOptions: {
-    timeout: 30000, // 30 second timeout for better reliability
+    timeout: 60000, // 60 second timeout for Neon's cold starts
   },
+  // Enable connection pooling for better reliability
+  pooled: true,
 });
 
 // Add connection retry wrapper for database operations
 export async function withDatabaseRetry<T>(
   operation: () => Promise<T>,
-  maxRetries: number = 3,
-  delayMs: number = 1000
+  maxRetries: number = 5,
+  delayMs: number = 2000
 ): Promise<T> {
   let lastError: Error;
   
@@ -680,25 +682,35 @@ export async function withDatabaseRetry<T>(
     } catch (error: any) {
       lastError = error;
       
-      // Check if it's a retryable error
+      // Check if it's a retryable error (Neon-specific patterns)
       const isRetryable = 
         error.message?.includes('Failed to fetch') ||
         error.message?.includes('Control plane') ||
         error.message?.includes('timeout') ||
         error.message?.includes('connection') ||
+        error.message?.includes('network') ||
+        error.message?.includes('NeonDbError') ||
+        error.name?.includes('NeonDbError') ||
         error.code === 'ECONNRESET' ||
-        error.code === 'ENOTFOUND';
+        error.code === 'ENOTFOUND' ||
+        error.code === 'ETIMEDOUT';
       
       if (!isRetryable || attempt === maxRetries) {
-        console.error(`Database operation failed after ${attempt} attempts:`, error);
+        console.error(`Database operation failed permanently after ${attempt} attempts:`, {
+          message: error.message,
+          name: error.name,
+          code: error.code,
+          stack: error.stack?.split('\n')[0]
+        });
         throw error;
       }
       
-      console.log(`Database operation failed, retrying in ${delayMs}ms (attempt ${attempt}/${maxRetries})`);
+      console.log(`Database operation failed, retrying in ${delayMs}ms (attempt ${attempt}/${maxRetries}):`, error.message);
       
-      // Exponential backoff with jitter
-      const delay = delayMs * Math.pow(2, attempt - 1) + Math.random() * 1000;
-      await new Promise(resolve => setTimeout(resolve, delay));
+      // Exponential backoff with jitter for Neon's cold start issues
+      const jitter = Math.random() * 1000;
+      const delay = delayMs * Math.pow(1.5, attempt - 1) + jitter;
+      await new Promise(resolve => setTimeout(resolve, Math.min(delay, 10000))); // Cap at 10 seconds
     }
   }
   
@@ -749,3 +761,5 @@ const baseDb = drizzle(sql, { schema });
 
 // Export the database instance directly with proper methods
 export const db = baseDb;
+
+// withDatabaseRetry is already exported above
