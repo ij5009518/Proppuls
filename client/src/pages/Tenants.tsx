@@ -1370,6 +1370,7 @@ export default function Tenants() {
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
             size="sm"
+            className={viewMode === "grid" ? "bg-blue-600 hover:bg-blue-700" : "border-blue-300 text-blue-600 hover:bg-blue-50"}
             onClick={() => setViewMode("grid")}
           >
             <Grid className="h-4 w-4" />
@@ -1377,6 +1378,7 @@ export default function Tenants() {
           <Button
             variant={viewMode === "list" ? "default" : "outline"}
             size="sm"
+            className={viewMode === "list" ? "bg-blue-600 hover:bg-blue-700" : "border-blue-300 text-blue-600 hover:bg-blue-50"}
             onClick={() => setViewMode("list")}
           >
             <List className="h-4 w-4" />
