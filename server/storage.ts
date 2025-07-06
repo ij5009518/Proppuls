@@ -1,8 +1,12 @@
 import { User, TenantSession, TenantLogin, CreateTenantMaintenanceRequest, Organization } from '../shared/schema';
-import { db, organizations, users, properties, units, tenants, tenantSessions, tenantHistory, expenses, maintenanceRequests, vendors, rentPayments, billingRecords, mortgages, tasks, taskCommunications, taskHistory, sessions, passwordResets, withDatabaseRetry } from "./db";
-import { eq, and, desc, asc, sql, gte, lte, count, ne, isNull, isNotNull, or } from "drizzle-orm";
-import bcrypt from "bcryptjs";
-import { withRetry } from "./db-retry";
+import { db, organizations, users, properties, expenses, units, tenants, tenantSessions, tenantHistory, maintenanceRequests, vendors, rentPayments, billingRecords, mortgages, tasks, taskCommunications, taskHistory, sessions, passwordResets } from './db';
+import { eq, sql, and, gt, desc, or, isNotNull } from 'drizzle-orm';
+import * as crypto from "crypto";
+import * as bcrypt from 'bcrypt';
+import { Property, Expense, Unit, Tenant, TenantHistory, MaintenanceRequest, Vendor, RentPayment, Mortgage, Task, TaskCommunication, TaskHistory } from '../shared/schema';
+import * as nodemailer from 'nodemailer';
+import { withRetry, isRetryableError } from './db-retry';
+
 interface Session {
   token: string;
   user: User;
@@ -212,7 +216,7 @@ class Storage {
       }
 
       const reset = resetResult[0];
-
+      
       // Check if token is expired
       if (new Date(reset.expiresAt) < new Date()) {
         return null;
@@ -246,7 +250,7 @@ class Storage {
           updatedAt: new Date()
         })
         .where(eq(users.email, email));
-
+      
       return result.rowCount > 0;
     });
   }
@@ -648,7 +652,7 @@ class Storage {
       const dayOfMonth = today.getDate();
       let dueYear = today.getFullYear();
       let dueMonth = today.getMonth();
-
+      
       if (dayOfMonth > 15) {
         // If we're past mid-month, set due date for next month
         dueMonth = today.getMonth() + 1;
@@ -657,7 +661,7 @@ class Storage {
           dueYear = today.getFullYear() + 1;
         }
       }
-
+      
       const currentMonthDueDate = new Date(dueYear, dueMonth, 1);
 
       // Check if payment already exists for current month
@@ -873,12 +877,12 @@ class Storage {
       console.log("Formatted rent payment data:", insertData);
 
       const [payment] = await db.insert(rentPayments).values(insertData).returning();
-
+      
       // If payment is marked as paid, update corresponding billing records
       if (insertData.paidDate && insertData.status === 'paid') {
         await this.updateBillingRecordsForPayment(insertData.tenantId, parseFloat(insertData.amount));
       }
-
+      
       return payment;
     } catch (error) {
       console.error("Error creating rent payment:", error);
@@ -889,7 +893,7 @@ class Storage {
   async updateBillingRecordsForPayment(tenantId: string, paymentAmount: number): Promise<void> {
     try {
       console.log(`Updating billing records for tenant ${tenantId} with payment amount ${paymentAmount}`);
-
+      
       // Get unpaid billing records for this tenant, ordered by due date
       const unpaidBillings = await db.select()
         .from(billingRecords)
@@ -900,12 +904,12 @@ class Storage {
         .orderBy(billingRecords.dueDate);
 
       let remainingPayment = paymentAmount;
-
+      
       for (const billing of unpaidBillings) {
         if (remainingPayment <= 0) break;
-
+        
         const billingAmount = parseFloat(billing.amount || '0');
-
+        
         if (remainingPayment >= billingAmount) {
           // Payment covers this billing record completely
           await db.update(billingRecords)
@@ -915,13 +919,13 @@ class Storage {
               updatedAt: new Date()
             })
             .where(eq(billingRecords.id, billing.id));
-
+          
           remainingPayment -= billingAmount;
           console.log(`Marked billing record ${billing.id} as paid (${billingAmount})`);
         } else {
           // Partial payment - create a new billing record for remaining amount
           const remainingAmount = billingAmount - remainingPayment;
-
+          
           // Mark original as paid with the payment amount
           await db.update(billingRecords)
             .set({ 
@@ -931,7 +935,7 @@ class Storage {
               updatedAt: new Date()
             })
             .where(eq(billingRecords.id, billing.id));
-
+          
           // Create new billing record for remaining amount
           await db.insert(billingRecords).values({
             id: crypto.randomUUID(),
@@ -943,12 +947,12 @@ class Storage {
             createdAt: new Date(),
             updatedAt: new Date()
           });
-
+          
           remainingPayment = 0;
           console.log(`Split billing record ${billing.id}: paid ${remainingPayment}, remaining ${remainingAmount}`);
         }
       }
-
+      
       console.log(`Payment processing complete. Remaining payment amount: ${remainingPayment}`);
     } catch (error) {
       console.error("Error updating billing records for payment:", error);
@@ -983,7 +987,7 @@ class Storage {
         if (originalPayment.length === 0) {
           throw new Error("Payment not found");
         }
-
+        
         const original = originalPayment[0];
         const originalAmount = parseFloat(original.amount || '0');
         const newAmount = parseFloat(paymentData.amount || '0');
@@ -1012,7 +1016,7 @@ class Storage {
         // If the amount changed and this is a paid payment, recalculate billing records
         if (originalAmount !== newAmount && payment.status === 'paid' && payment.paidDate) {
           console.log(`Payment amount changed from ${originalAmount} to ${newAmount}, recalculating billing records`);
-
+          
           // Reset all paid billing records for this tenant back to pending
           await db.update(billingRecords)
             .set({ 
@@ -1037,7 +1041,7 @@ class Storage {
             .orderBy(rentPayments.paidDate);
 
           console.log(`Found ${allTenantPayments.length} paid payments to reapply`);
-
+          
           for (const tenantPayment of allTenantPayments) {
             console.log(`Reapplying payment of ${tenantPayment.amount} for tenant ${tenantPayment.tenantId}`);
             await this.updateBillingRecordsForPayment(tenantPayment.tenantId, parseFloat(tenantPayment.amount || '0'));
@@ -1060,13 +1064,13 @@ class Storage {
     return await withRetry(async () => {
       // First, get the payment details to find related billing records
       const payment = await db.select().from(rentPayments).where(eq(rentPayments.id, id)).limit(1);
-
+      
       if (payment.length === 0) {
         return false;
       }
-
+      
       const paymentRecord = payment[0];
-
+      
       // Find related billing records that were marked as paid due to this payment
       // Look for billing records for the same tenant, unit, and amount
       const relatedBillingRecords = await db.select()
@@ -1076,7 +1080,7 @@ class Storage {
           eq(billingRecords.status, 'paid'),
           eq(billingRecords.amount, paymentRecord.amount)
         ));
-
+      
       // Revert billing records back to pending status
       for (const billingRecord of relatedBillingRecords) {
         await db.update(billingRecords)
@@ -1088,12 +1092,12 @@ class Storage {
           })
           .where(eq(billingRecords.id, billingRecord.id));
       }
-
+      
       // Delete the payment record
       const result = await db.delete(rentPayments).where(eq(rentPayments.id, id));
-
+      
       console.log(`Deleted payment ${id} and reverted ${relatedBillingRecords.length} billing records to pending status`);
-
+      
       return result.rowCount > 0;
     });
   }
@@ -1174,26 +1178,26 @@ class Storage {
   async getAllTasks(organizationId?: string): Promise<Task[]> {
     return await withRetry(async () => {
       console.log('Fetching tasks for organization:', organizationId);
-
+      
       // Use raw SQL query since the Drizzle schema is incomplete
       let query = 'SELECT * FROM tasks';
       const params: any[] = [];
-
+      
       if (organizationId) {
         query += ' WHERE organization_id = $1';
         params.push(organizationId);
       }
-
+      
       query += ' ORDER BY created_at DESC';
-
+      
       try {
         const result = organizationId 
           ? await db.execute(sql`SELECT * FROM tasks WHERE organization_id = ${organizationId} ORDER BY created_at DESC`)
           : await db.execute(sql`SELECT * FROM tasks ORDER BY created_at DESC`);
-
+        
         console.log('Task query result type:', typeof result);
         console.log('Task query result keys:', Object.keys(result || {}));
-
+        
         // Handle Neon database result format
         let rows: any[] = [];
         if (result && result.rows && Array.isArray(result.rows)) {
@@ -1204,9 +1208,9 @@ class Storage {
           console.log('No tasks found or unexpected result format');
           return [];
         }
-
+        
         console.log('Found', rows.length, 'tasks');
-
+        
         return rows.map((task: any) => ({
           id: task.id,
           title: task.title || '',
@@ -1252,11 +1256,11 @@ class Storage {
         .from(tasks)
         .where(eq(tasks.id, id))
         .limit(1);
-
+      
       if (result.length === 0) {
         return null;
       }
-
+      
       const task = result[0];
       return {
         id: task.id,
@@ -1298,7 +1302,7 @@ class Storage {
     if (updateData.dueDate && typeof updateData.dueDate === 'string') {
       updateData.dueDate = new Date(updateData.dueDate);
     }
-
+    
     const [task] = await db.update(tasks)
       .set(updateData)
       .where(eq(tasks.id, id))
@@ -1384,23 +1388,23 @@ class Storage {
     try {
       const rentPayments = await this.getAllRentPayments(organizationId);
       const expenses = await this.getAllExpenses(organizationId);
-
+      
       const totalRevenue = rentPayments
         .filter(p => p.status === 'paid')
         .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
-
+      
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
       const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
       const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-
+      
       const currentMonthExpenses = expenses
         .filter(e => {
           const expenseDate = new Date(e.date);
           return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
         })
         .reduce((sum, e) => sum + parseFloat(e.amount || '0'), 0);
-
+      
       const lastMonthRevenue = rentPayments
         .filter(p => {
           if (p.status !== 'paid' || !p.paidDate) return false;
@@ -1438,7 +1442,7 @@ class Storage {
           return dueDate > new Date() && dueDate <= futureDate;
         })
         .reduce((sum, p) => sum + parseFloat(p.amount || '0'), 0);
-
+      
       return {
         totalRevenue,
         currentMonthRevenue,
@@ -1485,7 +1489,7 @@ class Storage {
     };
 
     await db.insert(taskCommunications).values(communication);
-
+    
     // If it's an email, send it using the email service
     if (communicationData.method === "email") {
       try {
@@ -1496,7 +1500,7 @@ class Storage {
           text: communicationData.message,
           html: `<p>${communicationData.message.replace(/\n/g, '<br>')}</p>`
         });
-
+        
         // Update status to delivered (note: deliveredAt column may not exist in current schema)
         await db.update(taskCommunications)
           .set({ status: "delivered" })
@@ -1509,7 +1513,7 @@ class Storage {
           .where(eq(taskCommunications.id, communication.id));
       }
     }
-
+    
     return communication;
   }
 
@@ -1761,7 +1765,7 @@ class Storage {
         const dayOfMonth = today.getDate();
         let dueYear = currentYear;
         let dueMonth = currentMonth;
-
+        
         if (dayOfMonth > 15) {
           // If we're past mid-month, bill for next month
           dueMonth = currentMonth + 1;
@@ -1770,7 +1774,7 @@ class Storage {
             dueYear = currentYear + 1;
           }
         }
-
+        
         // Set due date 30 days from today by default
         const dueDate = new Date(today);
         dueDate.setDate(dueDate.getDate() + 30);
@@ -1798,7 +1802,6 @@ class Storage {
   // Tenant History methods
   async createTenantHistory(historyData: any): Promise<any> {
     return await withRetry(async () => {
-      ```text
       const [history] = await db.insert(tenantHistory).values({
         id: crypto.randomUUID(),
         ...historyData,
@@ -1882,21 +1885,21 @@ class EmailService {
     return await withRetry(async () => {
       try {
         console.log("Calculating outstanding balance for tenant:", tenantId);
-
+        
         const billings = await db.select()
           .from(billingRecords)
           .where(eq(billingRecords.tenantId, tenantId));
-
+        
         let totalBilled = 0;
         for (const billing of billings) {
           const amount = parseFloat(billing.amount || '0');
           totalBilled += amount;
         }
-
+        
         const payments = await db.select()
           .from(rentPayments)
           .where(eq(rentPayments.tenantId, tenantId));
-
+        
         let totalPaid = 0;
         for (const payment of payments) {
           if (payment.status === 'paid' || payment.paidDate) {
@@ -1904,7 +1907,7 @@ class EmailService {
             totalPaid += amount;
           }
         }
-
+        
         const outstandingBalance = totalBilled - totalPaid;
         return Math.max(0, outstandingBalance);
       } catch (error) {
@@ -1922,28 +1925,28 @@ class EmailService {
         const activeTenantsResult = await db.select()
           .from(tenants)
           .where(eq(tenants.status, 'active'));
-
+        
         const generatedBillings = [];
-
+        
         for (const tenant of activeTenantsResult) {
           if (!tenant.leaseStart || !tenant.monthlyRent) continue;
-
+          
           const leaseStart = new Date(tenant.leaseStart);
           if (leaseStart > today) continue;
-
+          
           // Generate billing for current month and any missing previous months since lease start
           const currentMonth = today.getMonth();
           const currentYear = today.getFullYear();
-
+          
           // Calculate months since lease started
           const leaseStartMonth = leaseStart.getMonth();
           const leaseStartYear = leaseStart.getFullYear();
-
+          
           let monthsToGenerate = [];
           let workingDate = new Date(leaseStartYear, leaseStartMonth, 1);
-
+          
           while (workingDate <= new Date(currentYear, currentMonth, 1)) {
-            const billingPeriod = workingDate.getFullYear() + '-' + String(workingDate.getMonth() + 1).padStart(2, '0');
+            const billingPeriod = `${workingDate.getFullYear()}-${String(workingDate.getMonth() + 1).padStart(2, '0')}`;
             monthsToGenerate.push({
               year: workingDate.getFullYear(),
               month: workingDate.getMonth(),
@@ -1951,7 +1954,7 @@ class EmailService {
             });
             workingDate.setMonth(workingDate.getMonth() + 1);
           }
-
+          
           for (const monthData of monthsToGenerate) {
             const existingBilling = await db.select()
               .from(billingRecords)
@@ -1961,9 +1964,9 @@ class EmailService {
                   eq(billingRecords.billingPeriod, monthData.period)
                 )
               );
-
+            
             if (existingBilling.length > 0) continue;
-
+            
             // Set due date based on lease start day of month
             const dueDate = new Date(monthData.year, monthData.month, leaseStart.getDate());
             if (dueDate.getDate() !== leaseStart.getDate()) {
@@ -1971,7 +1974,7 @@ class EmailService {
               dueDate.setDate(0); // Last day of previous month, then add 1
               dueDate.setDate(dueDate.getDate() + 1);
             }
-
+            
             const billingData = {
               tenantId: tenant.id,
               unitId: tenant.unitId,
@@ -1982,12 +1985,12 @@ class EmailService {
               type: 'rent',
               organizationId: tenant.organizationId
             };
-
+            
             const newBilling = await this.createBillingRecord(billingData);
             generatedBillings.push(newBilling);
           }
         }
-
+        
         return generatedBillings;
       } catch (error) {
         console.error("Error generating monthly billing:", error);
@@ -2002,17 +2005,17 @@ class EmailService {
         console.log("Updating overdue statuses for billing records");
         const today = new Date();
         const gracePeriodDays = 5; // 5 days grace period before marking as overdue
-
+        
         const pendingBillings = await db.select()
           .from(billingRecords)
           .where(eq(billingRecords.status, 'pending'));
-
+        
         const updatedRecords = [];
-
+        
         for (const billing of pendingBillings) {
           const dueDate = new Date(billing.dueDate);
           const daysPastDue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-
+          
           if (daysPastDue > gracePeriodDays) {
             const updatedBilling = await this.updateBillingRecord(billing.id, {
               status: 'overdue',
@@ -2021,7 +2024,7 @@ class EmailService {
             updatedRecords.push(updatedBilling);
           }
         }
-
+        
         return updatedRecords;
       } catch (error) {
         console.error("Error updating overdue statuses:", error);
@@ -2034,13 +2037,13 @@ class EmailService {
     return await withRetry(async () => {
       try {
         console.log("Running automatic billing generation and overdue updates");
-
+        
         // Generate new monthly billing records
         const generatedBillings = await this.generateMonthlyBilling();
-
+        
         // Update overdue statuses
         const updatedOverdue = await this.updateOverdueStatuses();
-
+        
         return {
           generated: generatedBillings,
           updated: updatedOverdue
@@ -2075,13 +2078,13 @@ class EmailService {
     return await withRetry(async () => {
       try {
         console.log("Running automatic billing process");
-
+        
         // Generate new billing records
         const generated = await this.generateMonthlyBilling();
-
+        
         // Update overdue statuses
         const updated = await this.updateOverdueStatuses();
-
+        
         return { generated, updated };
       } catch (error) {
         console.error("Error in automatic billing process:", error);
@@ -2096,7 +2099,7 @@ class EmailService {
         console.log("Updating overdue statuses for billing records");
         const today = new Date();
         const gracePeriod = 5; // 5 day grace period
-
+        
         // Find pending billing records that are past due date + grace period
         const overdueRecords = await db.select()
           .from(billingRecords)
@@ -2106,13 +2109,13 @@ class EmailService {
               lt(billingRecords.dueDate, new Date(today.getTime() - gracePeriod * 24 * 60 * 60 * 1000))
             )
           );
-
+        
         const updatedRecords = [];
-
+        
         for (const record of overdueRecords) {
           const dueDate = new Date(record.dueDate);
           const daysPastDue = Math.floor((today.getTime() - dueDate.getTime()) / (24 * 60 * 60 * 1000));
-
+          
           if (daysPastDue > gracePeriod) {
             const [updatedRecord] = await db.update(billingRecords)
               .set({ 
@@ -2122,11 +2125,11 @@ class EmailService {
               })
               .where(eq(billingRecords.id, record.id))
               .returning();
-
+            
             updatedRecords.push(updatedRecord);
           }
         }
-
+        
         console.log(`Updated ${updatedRecords.length} records to overdue status`);
         return updatedRecords;
       } catch (error) {
