@@ -2191,19 +2191,49 @@ export default function Units() {
           <DialogHeader>
             <DialogTitle>Update Tenant Status</DialogTitle>
             <DialogDescription>
-              Update the status of this tenant
+              Update the status of {editingTenant?.firstName} {editingTenant?.lastName}
             </DialogDescription>
           </DialogHeader>
           <Form {...tenantStatusForm}>
             <form onSubmit={tenantStatusForm.handleSubmit((data) => {
-              // Handle tenant status update here
-              console.log('Updating tenant status:', data);
-              toast({
-                title: "Status Updated",
-                description: "Tenant status has been updated successfully.",
-              });
-              setIsTenantStatusDialogOpen(false);
-              tenantStatusForm.reset();
+              if (editingTenant) {
+                // Use the existing updateTenantMutation if available, or create API call
+                const updateData = {
+                  ...editingTenant,
+                  status: data.status,
+                  moveOutDate: data.moveOutDate,
+                  moveOutReason: data.moveOutReason,
+                };
+                
+                // Make API call to update tenant
+                fetch(`/api/tenants/${editingTenant.id}`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                  },
+                  body: JSON.stringify(updateData),
+                })
+                .then(response => response.json())
+                .then(() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/tenants"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/units"] });
+                  toast({
+                    title: "Status Updated",
+                    description: "Tenant status has been updated successfully.",
+                  });
+                  setIsTenantStatusDialogOpen(false);
+                  setEditingTenant(null);
+                  tenantStatusForm.reset();
+                })
+                .catch((error) => {
+                  toast({
+                    title: "Error",
+                    description: "Failed to update tenant status.",
+                    variant: "destructive",
+                  });
+                });
+              }
             })} className="space-y-4">
               <FormField
                 control={tenantStatusForm.control}
@@ -2261,7 +2291,11 @@ export default function Units() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsTenantStatusDialogOpen(false)}
+                  onClick={() => {
+                    setIsTenantStatusDialogOpen(false);
+                    setEditingTenant(null);
+                    tenantStatusForm.reset();
+                  }}
                 >
                   Cancel
                 </Button>
