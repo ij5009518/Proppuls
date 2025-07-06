@@ -1,0 +1,33 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+Billing automation cron jobs setup complete
+10:15:24 PM [express] serving on port 5000
+SMTP connection failed: Error: Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to
+535 5.7.8  https://support.google.com/mail/?p=BadCredentials 8926c6da1cb9f-503b5c3a62csm145484173.129 - gsmtp
+    at SMTPConnection._formatError (/app/node_modules/nodemailer/lib/smtp-connection/index.js:809:19)
+    at SMTPConnection._actionAUTHComplete (/app/node_modules/nodemailer/lib/smtp-connection/index.js:1588:34)
+    at SMTPConnection.<anonymous> (/app/node_modules/nodemailer/lib/smtp-connection/index.js:556:26)
+    at SMTPConnection._processResponse (/app/node_modules/nodemailer/lib/smtp-connection/index.js:993:20)
+    at SMTPConnection._onData (/app/node_modules/nodemailer/lib/smtp-connection/index.js:774:14)
+    at SMTPConnection._onSocketData (/app/node_modules/nodemailer/lib/smtp-connection/index.js:195:44)
+    at TLSSocket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5) {
+  code: 'EAUTH',
+  response: '535-5.7.8 Username and Password not accepted. For more information, go to\n' +
+    '535 5.7.8  https://support.google.com/mail/?p=BadCredentials 8926c6da1cb9f-503b5c3a62csm145484173.129 - gsmtp',
+  responseCode: 535,
+  command: 'AUTH PLAIN'
+}
+Please check your Gmail credentials and App Password
+Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+10:39:57 PM [express] GET /api/properties 401 in 5ms :: {"message":"Access token required"}
+10:56:20 PM [vite] hmr update /src/pages/Units.tsx, /src/index.css?v=myXOU9nh6uVJySJrTVJYd
+10:57:29 PM [vite] hmr update /src/pages/Units.tsx, /src/index.css?v=myXOU9nh6uVJySJrTVJYd
+10:57:47 PM [vite] hmr update /src/pages/Units.tsx, /src/index.css?v=myXOU9nh6uVJySJrTVJYd
+10:58:16 PM [vite] hmr update /src/pages/Units.tsx, /src/index.css?v=myXOU9nh6uVJySJrTVJYd
