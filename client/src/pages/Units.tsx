@@ -1079,29 +1079,13 @@ export default function Units() {
                         Maintenance & Tasks
                       </h4>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
-                        onClick={() => {
-                          toast({
-                            title: "Feature Coming Soon",
-                            description: "Maintenance request creation will be available soon.",
-                          });
-                        }}
-                      >
-                        <Wrench className="h-4 w-4 mr-1" />
-                        New Request
-                      </Button>
-                      <Button 
-                        onClick={() => setIsAddTaskDialogOpen(true)} 
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        <Plus className="mr-1 h-4 w-4" />
-                        Add Task
-                      </Button>
-                    </div>
+                    <Button 
+                      onClick={() => setIsAddTaskDialogOpen(true)} 
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      Add Task
+                    </Button>
                   </div>
                   
                   {/* Status overview cards */}
