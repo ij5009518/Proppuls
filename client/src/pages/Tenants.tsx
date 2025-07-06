@@ -941,7 +941,7 @@ export default function Tenants() {
         <h1 className="text-3xl font-bold text-blue-900 dark:text-blue-100">Tenants</h1>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => {
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
               form.reset({
                 firstName: "",
                 lastName: "",
