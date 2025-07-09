@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Route, Switch, useLocation, Router } from 'wouter';
+import { Route, Switch, useLocation } from 'wouter';
 import { queryClient } from '@/lib/queryClient';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
@@ -41,7 +41,7 @@ import Profile from "@/pages/Profile";
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -63,14 +63,12 @@ function AuthenticatedApp() {
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/tenant" component={TenantPortal} />
         <Route path="/tenant-portal" component={TenantPortal} />
-        <Route>
-          {() => {
-            React.useEffect(() => {
-              setLocation("/login");
-            }, [setLocation]);
-            return null;
-          }}
-        </Route>
+        <Route component={() => {
+          React.useEffect(() => {
+            setLocation("/login");
+          }, []);
+          return null;
+        }} />
       </Switch>
     );
   }
@@ -110,55 +108,14 @@ function AuthenticatedApp() {
   );
 }
 
-// Error Boundary Component
-class RouterErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Router Error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2">Application Error</h2>
-            <p className="text-gray-600">Please refresh the page to continue.</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
 function App() {
   return (
-    <RouterErrorBoundary>
-      <Router>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <AuthenticatedApp />
-            <Toaster />
-          </AuthProvider>
-        </QueryClientProvider>
-      </Router>
-    </RouterErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AuthenticatedApp />
+        <Toaster />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

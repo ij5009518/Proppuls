@@ -916,7 +916,7 @@ export default function Tenants() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-blue-900 dark:text-blue-100">Tenants</h1>
+          <h1 className="text-3xl font-bold">Tenants</h1>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -938,10 +938,10 @@ export default function Tenants() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-blue-900 dark:text-blue-100">Tenants</h1>
+        <h1 className="text-3xl font-bold">Tenants</h1>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
+            <Button onClick={() => {
               form.reset({
                 firstName: "",
                 lastName: "",
@@ -1370,7 +1370,6 @@ export default function Tenants() {
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
             size="sm"
-            className={viewMode === "grid" ? "bg-blue-600 hover:bg-blue-700" : "border-blue-300 text-blue-600 hover:bg-blue-50"}
             onClick={() => setViewMode("grid")}
           >
             <Grid className="h-4 w-4" />
@@ -1378,7 +1377,6 @@ export default function Tenants() {
           <Button
             variant={viewMode === "list" ? "default" : "outline"}
             size="sm"
-            className={viewMode === "list" ? "bg-blue-600 hover:bg-blue-700" : "border-blue-300 text-blue-600 hover:bg-blue-50"}
             onClick={() => setViewMode("list")}
           >
             <List className="h-4 w-4" />
@@ -1394,7 +1392,7 @@ export default function Tenants() {
             return (
               <Card 
                 key={tenant.id} 
-                className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors border-l-4 border-l-blue-600"
+                className="hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => {
                   setSelectedTenant(tenant);
                   setIsViewDialogOpen(true);
@@ -1430,9 +1428,9 @@ export default function Tenants() {
                     </div>
 
                     {/* Contact Information */}
-                    <div className="space-y-1 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                      <p className="text-sm text-blue-600 dark:text-blue-400">{tenant.email}</p>
-                      <p className="text-sm text-blue-600 dark:text-blue-400">{tenant.phone}</p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.email}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{tenant.phone}</p>
                     </div>
 
 
@@ -1457,23 +1455,23 @@ export default function Tenants() {
                         .reduce((sum: number, record: any) => sum + parseFloat(record.amount || 0), 0);
 
                       return (
-                        <div className="pt-2 border-t border-blue-200 dark:border-blue-700">
-                          <div className="grid grid-cols-2 gap-2 text-xs p-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 rounded">
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <div className="grid grid-cols-2 gap-2 text-xs">
                             <div className="flex items-center justify-between">
-                              <span className="text-blue-600 dark:text-blue-400">Total Paid:</span>
+                              <span className="text-gray-600 dark:text-gray-400">Total Paid:</span>
                               <span className="font-medium text-green-600 dark:text-green-400">
                                 {formatCurrency(totalPaid.toString())}
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-blue-600 dark:text-blue-400">Outstanding:</span>
+                              <span className="text-gray-600 dark:text-gray-400">Outstanding:</span>
                               <span className={`font-medium ${apiOutstanding > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
                                 {formatCurrency(apiOutstanding.toString())}
                               </span>
                             </div>
                             {overdueAmount > 0 && (
                               <div className="flex items-center justify-between col-span-2">
-                                <span className="text-blue-600 dark:text-blue-400 flex items-center">
+                                <span className="text-gray-600 dark:text-gray-400 flex items-center">
                                   <AlertTriangle className="h-3 w-3 text-red-500 mr-1" />
                                   Overdue:
                                 </span>
@@ -1500,7 +1498,7 @@ export default function Tenants() {
             return (
               <Card 
                 key={tenant.id} 
-                className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors border-l-4 border-l-blue-600"
+                className="hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => {
                   setSelectedTenant(tenant);
                   setIsViewDialogOpen(true);
@@ -1511,7 +1509,7 @@ export default function Tenants() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-4">
                         <Avatar className="h-12 w-12">
-                          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-semibold">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white font-semibold">
                             {tenant.firstName[0]}{tenant.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
@@ -1871,8 +1869,9 @@ export default function Tenants() {
                   </FormItem>
                 )}
               />
-              {/* Task form with same layout as Tasks page - 4-column grid */}
-              <div className="grid grid-cols-4 gap-4">
+              
+              {/* 3-column grid for Category, Priority, Status */}
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="category"
@@ -1886,14 +1885,9 @@ export default function Tenants() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
                           <SelectItem value="maintenance">Maintenance</SelectItem>
                           <SelectItem value="inspection">Inspection</SelectItem>
-                          <SelectItem value="repair">Repair</SelectItem>
-                          <SelectItem value="cleaning">Cleaning</SelectItem>
-                          <SelectItem value="landscaping">Landscaping</SelectItem>
-                          <SelectItem value="legal">Legal</SelectItem>
-                          <SelectItem value="financial">Financial</SelectItem>
+                          <SelectItem value="communication">Communication</SelectItem>
                           <SelectItem value="administrative">Administrative</SelectItem>
                         </SelectContent>
                       </Select>
@@ -1947,6 +1941,10 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* 2-column grid for Due Date and Assigned To */}
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="dueDate"
@@ -1965,10 +1963,6 @@ export default function Tenants() {
                     </FormItem>
                   )}
                 />
-              </div>
-
-              {/* Second line: Assigned To, Property, Unit, Tenant */}
-              <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="assignedTo"
@@ -1976,12 +1970,16 @@ export default function Tenants() {
                     <FormItem>
                       <FormLabel>Assigned To</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter assignee name" {...field} />
+                        <Input placeholder="Person responsible" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* Property, Unit, and Tenant Selection */}
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={taskForm.control}
                   name="propertyId"
@@ -2161,80 +2159,61 @@ export default function Tenants() {
           </DialogHeader>
           {selectedTenant && (
             <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-blue-50 dark:bg-blue-900/20 p-1 rounded-lg">
-                <TabsTrigger 
-                  value="details"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
-                >
-                  Basic
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="lease"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
-                >
-                  Lease & Screening
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="payments"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
-                >
-                  Payments
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="tasks"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm font-medium"
-                >
-                  Tasks
-                </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="details">Basic</TabsTrigger>
+                <TabsTrigger value="lease">Lease & Screening</TabsTrigger>
+                <TabsTrigger value="payments">Payments</TabsTrigger>
+                <TabsTrigger value="tasks">Tasks </TabsTrigger>
               </TabsList>
 
               <TabsContent value="details" className="space-y-4">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
+                <div className="p-8">
                   <div className="grid grid-cols-2 gap-8">
                     <div>
-                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">First Name</p>
-                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{selectedTenant.firstName}</p>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">First Name</p>
+                        <p className="text-sm text-gray-900">{selectedTenant.firstName}</p>
                       </div>
-                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Email</p>
-                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{selectedTenant.email}</p>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Email</p>
+                        <p className="text-sm text-gray-900">{selectedTenant.email}</p>
                       </div>
-                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Date of Birth</p>
-                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Date of Birth</p>
+                        <p className="text-sm text-gray-900">
                           {selectedTenant.dateOfBirth 
                             ? new Date(selectedTenant.dateOfBirth).toLocaleDateString() 
                             : "Not provided"}
                         </p>
                       </div>
-                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Emergency Contact Name</p>
-                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Emergency Contact Name</p>
+                        <p className="text-sm text-gray-900">
                           {selectedTenant.emergencyContactName || "Not provided"}
                         </p>
                       </div>
                     </div>
                     <div>
-                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Last Name</p>
-                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{selectedTenant.lastName}</p>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Last Name</p>
+                        <p className="text-sm text-gray-900">{selectedTenant.lastName}</p>
                       </div>
-                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Phone</p>
-                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{selectedTenant.phone}</p>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Phone</p>
+                        <p className="text-sm text-gray-900">{selectedTenant.phone}</p>
                       </div>
-                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Status</p>
-                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
-                          <Badge className={getStatusColor(selectedTenant.status)}>
-                            {selectedTenant.status}
-                          </Badge>
-                        </p>
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Status</p>
+                        <Badge 
+                          className={`cursor-pointer ${getStatusColor(selectedTenant.status)}`}
+                          onClick={() => handleEditTenantStatus(selectedTenant)}
+                        >
+                          {selectedTenant.status}
+                        </Badge>
                       </div>
-                      <div className="mb-6 p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Emergency Contact Phone</p>
-                        <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Emergency Contact Phone</p>
+                        <p className="text-sm text-gray-900">
                           {selectedTenant.emergencyContactPhone || "Not provided"}
                         </p>
                       </div>
@@ -2244,46 +2223,41 @@ export default function Tenants() {
               </TabsContent>
 
               <TabsContent value="lease" className="space-y-4">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
+                <div className="space-y-6">
                   <div>
-                    <div className="flex items-center mb-6">
-                      <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                        <FileText className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Lease Details</h3>
-                    </div>
+                    <h3 className="text-lg font-semibold mb-4">Lease Details</h3>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-3">
-                        <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Lease Status:</span>
-                          <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
+                        <div>
+                          <span className="text-sm font-medium text-muted-foreground">Lease Status:</span>
+                          <p className="text-sm">
                             {selectedTenant.leaseStart ? 'Active' : 'No Active Lease'}
                           </p>
                         </div>
                         {selectedTenant.leaseStart && (
-                          <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Start Date:</span>
-                            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{formatDate(selectedTenant.leaseStart)}</p>
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">Start Date:</span>
+                            <p className="text-sm">{formatDate(selectedTenant.leaseStart)}</p>
                           </div>
                         )}
                       </div>
                       <div className="space-y-3">
                         {selectedTenant.leaseEnd && (
-                          <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">End Date:</span>
-                            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{formatDate(selectedTenant.leaseEnd)}</p>
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">End Date:</span>
+                            <p className="text-sm">{formatDate(selectedTenant.leaseEnd)}</p>
                           </div>
                         )}
                         {selectedTenant.monthlyRent && (
-                          <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Monthly Rent:</span>
-                            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{formatCurrency(selectedTenant.monthlyRent)}</p>
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">Monthly Rent:</span>
+                            <p className="text-sm">{formatCurrency(selectedTenant.monthlyRent)}</p>
                           </div>
                         )}
                         {selectedTenant.deposit && (
-                          <div className="p-3 bg-white dark:bg-blue-900/10 rounded border border-blue-200 dark:border-blue-700">
-                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Security Deposit:</span>
-                            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">{formatCurrency(selectedTenant.deposit)}</p>
+                          <div>
+                            <span className="text-sm font-medium text-muted-foreground">Security Deposit:</span>
+                            <p className="text-sm">{formatCurrency(selectedTenant.deposit)}</p>
                           </div>
                         )}
                       </div>

@@ -36,7 +36,7 @@ export default function ResetPassword() {
   } | null>(null);
 
   // Extract token from URL
-  const urlParams = new URLSearchParams(search || "");
+  const urlParams = new URLSearchParams(search);
   const resetToken = urlParams.get("token");
 
   const form = useForm<ResetPasswordForm>({

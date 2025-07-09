@@ -170,7 +170,7 @@ export default function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
                       asChild 
-                      isActive={(location || '') === item.url}
+                      isActive={location === item.url}
                       className="w-full rounded-xl px-3 py-3 font-medium transition-all duration-200 hover:bg-accent/60 hover:shadow-sm data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-md group"
                     >
                       <Link href={item.url} className="flex items-center gap-3">

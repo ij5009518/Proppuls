@@ -28,7 +28,7 @@ export default function TopBar({ onMenuClick, showMenuButton }: TopBarProps) {
   const [location] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const { user, logout } = useAuth();
-  const currentTitle = pageTitle[location || '/'] || "PropertyFlow";
+  const currentTitle = pageTitle[location] || "PropertyFlow";
 
 
 
